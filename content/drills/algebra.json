@@ -1,0 +1,308 @@
+{
+ "id": "algebra",
+ "domain": "quant",
+ "title": "אלגברה ואי-שוויונים",
+ "guide": [
+  "<b>משוואה עם סוגריים ושברים:</b> כופלים את שני האגפים במכנה המשותף, ורק אחר כך פותחים סוגריים. מינוס לפני סוגריים הופך את הסימן של <b>כל</b> איבר בתוכם: <span class=\"ltr\">−3(x − 4) = −3x + 12</span>.",
+  "<b>מערכת משוואות:</b> לפני שפותרים כל נעלם, בודקים מה נשאל. כששואלים על <span class=\"ltr\">x + y</span> או על <span class=\"ltr\">x − y</span>, מחברים או מחסירים את המשוואות. דוגמה: מ-<span class=\"ltr\">4x + y = 14</span> ו-<span class=\"ltr\">x + 4y = 11</span> החיבור נותן <span class=\"ltr\">5(x + y) = 25</span>, כלומר <span class=\"ltr\">x + y = 5</span>, והחיסור נותן <span class=\"ltr\">3(x − y) = 3</span>.",
+  "<b>נוסחאות הכפל המקוצר</b> (צריך לזהות אותן בשני הכיוונים): <span class=\"ltr\">(a + b)² = a² + 2ab + b²</span>, <span class=\"ltr\">(a − b)² = a² − 2ab + b²</span>, <span class=\"ltr\">(a + b)(a − b) = a² − b²</span>. מכאן <span class=\"ltr\">a² + b² = (a + b)² − 2ab</span>. דוגמה: אם <span class=\"ltr\">a − b = 3</span> ו-<span class=\"ltr\">ab = 4</span>, אז <span class=\"ltr\">a² + b² = 9 + 8 = 17</span>.",
+  "<b>פירוק לגורמים:</b> הוצאת גורם משותף והפרש ריבועים חוסכים פתרון של כל נעלם. אם <span class=\"ltr\">x² − y² = 20</span> ו-<span class=\"ltr\">x + y = 10</span>, אז <span class=\"ltr\">x − y = 20 / 10 = 2</span>.",
+  "<b>לא מחלקים במשתנה שעלול להיות 0.</b> <span class=\"ltr\">x² = 5x</span> פותרים כך: <span class=\"ltr\">x(x − 5) = 0</span>, ולכן <span class=\"ltr\">x = 0</span> או <span class=\"ltr\">x = 5</span>. מי שמחלק ב-x מאבד את הפתרון <span class=\"ltr\">x = 0</span>.",
+  "<b>אי-שוויון ומספר שלילי:</b> כופלים או מחלקים במספר שלילי? הופכים את כיוון הסימן. <span class=\"ltr\">−2x + 1 &gt; 9</span>, ולכן <span class=\"ltr\">−2x &gt; 8</span>, ולכן <span class=\"ltr\">x &lt; −4</span>. חיבור או חיסור של מספר לא משנים את הכיוון.",
+  "<b>לא כופלים אי-שוויון במשתנה שסימנו לא ידוע.</b> <span class=\"ltr\">1/x &lt; 2</span> אינו שקול ל-<span class=\"ltr\">x &gt; 1/2</span>: גם כל x שלילי מקיים אותו. הפתרון: <span class=\"ltr\">x &lt; 0</span> או <span class=\"ltr\">x &gt; 1/2</span>. מאותה סיבה <span class=\"ltr\">a/b &gt; 1</span> לא אומר ש-<span class=\"ltr\">a &gt; b</span> (למשל <span class=\"ltr\">a = −3, b = −1</span>).",
+  "<b>חיבור אי-שוויונים:</b> מותר לחבר שני אי-שוויונים באותו כיוון. אסור לחסר אותם זה מזה. כדי למצוא את הטווח של <span class=\"ltr\">a − b</span>, מחברים את הטווח של a לטווח של <span class=\"ltr\">−b</span>: מ-<span class=\"ltr\">1 &lt; b &lt; 4</span> נובע <span class=\"ltr\">−4 &lt; −b &lt; −1</span>.",
+  "<b>סדר בין חזקות של אותו מספר:</b> כש-<span class=\"ltr\">x &gt; 1</span>: <span class=\"ltr\">x &lt; x² &lt; x³</span>. כש-<span class=\"ltr\">0 &lt; x &lt; 1</span>: <span class=\"ltr\">x³ &lt; x² &lt; x &lt; √x</span>, ו-<span class=\"ltr\">1/x &gt; 1</span>. כש-<span class=\"ltr\">x &lt; 0</span>: <span class=\"ltr\">x²</span> חיובי, <span class=\"ltr\">x³</span> שלילי, ו-<span class=\"ltr\">1/x</span> באותו סימן כמו x. שברים בין 0 ל-1 ומספרים שליליים הם המלכודת הקבועה.",
+  "<b>״בהכרח נכון״ והשוואת ביטויים:</b> מחפשים דוגמה נגדית אחת שמקיימת את הנתונים: מספר שלילי, שבר בין 0 ל-1, ו-0 אם מותר. טענה שעומדת בכל הניסיונות מוכיחים בעזרת הפרש: מחסירים את שני הביטויים ובודקים את סימן התוצאה, למשל <span class=\"ltr\">(a + b)² − (a − b)² = 4ab</span>."
+ ],
+ "stims": {},
+ "questions": [
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "פתיחת סוגריים",
+   "level": 1,
+   "stim": null,
+   "stem": "אם <span class=\"ltr\">5(x − 2) − 3(x − 4) = 14</span>, אז x = ?",
+   "fig": null,
+   "options": [
+    "18",
+    "6",
+    "8",
+    "2"
+   ],
+   "answer": 2,
+   "explain": "פותחים סוגריים: <span class=\"ltr\">5x − 10 − 3x + 12 = 14</span>. כאן <span class=\"ltr\">−3 · (−4) = +12</span>, כי מינוס לפני סוגריים הופך את הסימן של כל איבר בתוכם (הכלל ״משוואה עם סוגריים ושברים״). מכנסים איברים: <span class=\"ltr\">2x + 2 = 14</span>, ולכן <span class=\"ltr\">2x = 12</span> ו-<span class=\"ltr\">x = 6</span>. בדיקה: <span class=\"ltr\">5 · 4 − 3 · 2 = 20 − 6 = 14</span>.",
+   "fast": "מציבים את התשובות: <span class=\"ltr\">x = 6</span> נותן <span class=\"ltr\">5 · 4 − 3 · 2 = 14</span>.",
+   "traps": [
+    "פתחו את <span class=\"ltr\">−3(x − 4)</span> כ-<span class=\"ltr\">−3x − 12</span>; אבל מינוס כפול מינוס הוא פלוס.",
+    "",
+    "העבירו את 2 לאגף השני בלי להפוך את סימנו (<span class=\"ltr\">2x = 16</span>).",
+    "כפלו ב-5 רק את x ולא את 2 (<span class=\"ltr\">5x − 2</span> במקום <span class=\"ltr\">5x − 10</span>)."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "סכום נעלמים במערכת",
+   "level": 1,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">3x + 2y = 17</span> ו-<span class=\"ltr\">2x + 3y = 13</span>. מהו <span class=\"ltr\">x + y</span>?",
+   "fig": null,
+   "options": [
+    "30",
+    "4",
+    "5",
+    "6"
+   ],
+   "answer": 4,
+   "explain": "לא צריך לפתור כל נעלם בנפרד (הכלל ״מערכת משוואות״). מחברים את שתי המשוואות: <span class=\"ltr\">5x + 5y = 30</span>, כלומר <span class=\"ltr\">5(x + y) = 30</span>, ולכן <span class=\"ltr\">x + y = 6</span>. בדיקה: חיסור המשוואות נותן <span class=\"ltr\">x − y = 4</span>, ומכאן <span class=\"ltr\">x = 5</span> ו-<span class=\"ltr\">y = 1</span>. ואכן <span class=\"ltr\">15 + 2 = 17</span> ו-<span class=\"ltr\">10 + 3 = 13</span>.",
+   "fast": "כשהמקדמים ״מתחלפים״ (3 ו-2, ואז 2 ו-3), חיבור המשוואות נותן מיד כפולה של <span class=\"ltr\">x + y</span>.",
+   "traps": [
+    "זה <span class=\"ltr\">5x + 5y</span>; שכחו לחלק ב-5.",
+    "זה <span class=\"ltr\">x − y</span>, שמתקבל מחיסור המשוואות.",
+    "זה x בלבד (<span class=\"ltr\">x = 5, y = 1</span>).",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "ריבוע של סכום",
+   "level": 1,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">a + b = 7</span> ו-<span class=\"ltr\">ab = 10</span>. מהו <span class=\"ltr\">a² + b²</span>?",
+   "fig": null,
+   "options": [
+    "29",
+    "49",
+    "39",
+    "69"
+   ],
+   "answer": 1,
+   "explain": "לפי נוסחאות הכפל המקוצר: <span class=\"ltr\">(a + b)² = a² + 2ab + b²</span>, ולכן <span class=\"ltr\">a² + b² = (a + b)² − 2ab = 49 − 20 = 29</span>. בדיקה: המספרים הם 2 ו-5, ו-<span class=\"ltr\">4 + 25 = 29</span>.",
+   "fast": "מנחשים את המספרים: סכום 7 ומכפלה 10 הם 2 ו-5, ו-<span class=\"ltr\">2² + 5² = 29</span>.",
+   "traps": [
+    "",
+    "התעלמו מ-2ab: <span class=\"ltr\">(a + b)²</span> אינו <span class=\"ltr\">a² + b²</span>.",
+    "החסירו ab פעם אחת במקום 2ab.",
+    "הוסיפו 2ab במקום להחסיר."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "היפוך סימן באי-שוויון",
+   "level": 1,
+   "stim": null,
+   "stem": "מהו הפתרון של אי-השוויון <span class=\"ltr\">7 − 3x &gt; 19</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">x &gt; −4</span>",
+    "<span class=\"ltr\">x &lt; 4</span>",
+    "<span class=\"ltr\">x &lt; −4</span>",
+    "<span class=\"ltr\">x &lt; −26/3</span>"
+   ],
+   "answer": 3,
+   "explain": "מחסירים 7 משני האגפים: <span class=\"ltr\">−3x &gt; 12</span>. מחלקים ב-(−3), מספר שלילי, ולכן הופכים את כיוון הסימן (הכלל ״אי-שוויון ומספר שלילי״): <span class=\"ltr\">x &lt; −4</span>. בדיקה: עבור <span class=\"ltr\">x = −5</span> מתקבל <span class=\"ltr\">7 + 15 = 22 &gt; 19</span>, ועבור <span class=\"ltr\">x = 0</span> מתקבל <span class=\"ltr\">7 &gt; 19</span>, שגוי.",
+   "fast": "מציבים <span class=\"ltr\">x = 0</span>: <span class=\"ltr\">7 &gt; 19</span> שגוי, וזה פוסל את תשובות 1 ו-2. מציבים <span class=\"ltr\">x = −5</span>: <span class=\"ltr\">22 &gt; 19</span> נכון, אבל <span class=\"ltr\">−5</span> אינו קטן מ-<span class=\"ltr\">−26/3</span>, וזה פוסל את תשובה 4.",
+   "traps": [
+    "חילקו ב-(−3) ולא הפכו את כיוון הסימן.",
+    "הפכו את הסימן, אבל איבדו את המינוס בתוצאה (<span class=\"ltr\">12 / (−3) = −4</span>).",
+    "",
+    "חיברו 7 ל-19 במקום להחסיר אותו."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "הפרש ריבועים",
+   "level": 2,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">x − y = 3</span> ו-<span class=\"ltr\">x² − y² = 39</span>. מהו x?",
+   "fig": null,
+   "options": [
+    "13",
+    "5",
+    "8",
+    "6.5"
+   ],
+   "answer": 3,
+   "explain": "מפרקים לפי הפרש ריבועים (הכלל ״פירוק לגורמים״): <span class=\"ltr\">x² − y² = (x − y)(x + y)</span>. לכן <span class=\"ltr\">3(x + y) = 39</span>, ו-<span class=\"ltr\">x + y = 13</span>. עכשיו יש מערכת: <span class=\"ltr\">x + y = 13</span> ו-<span class=\"ltr\">x − y = 3</span>. מחברים: <span class=\"ltr\">2x = 16</span>, ולכן <span class=\"ltr\">x = 8</span> (ו-<span class=\"ltr\">y = 5</span>). בדיקה: <span class=\"ltr\">64 − 25 = 39</span>.",
+   "fast": "בודקים מהתשובות: אם <span class=\"ltr\">x = 8</span> אז <span class=\"ltr\">y = 5</span>, ו-<span class=\"ltr\">64 − 25 = 39</span>.",
+   "traps": [
+    "זה <span class=\"ltr\">x + y</span>, לא x.",
+    "זה y, לא x.",
+    "",
+    "חילקו את <span class=\"ltr\">x + y = 13</span> ב-2 ושכחו להשתמש ב-<span class=\"ltr\">x − y = 3</span>."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "לא מחלקים במשתנה",
+   "level": 2,
+   "stim": null,
+   "stem": "מהו סכום כל הפתרונות של המשוואה <span class=\"ltr\">x(x − 5) = 3(x − 5)</span>?",
+   "fig": null,
+   "options": [
+    "8",
+    "3",
+    "15",
+    "5"
+   ],
+   "answer": 1,
+   "explain": "מעבירים הכול לאגף אחד ומוציאים גורם משותף: <span class=\"ltr\">x(x − 5) − 3(x − 5) = (x − 5)(x − 3) = 0</span>. מכפלה שווה 0 כשאחד הגורמים שווה 0, ולכן <span class=\"ltr\">x = 5</span> או <span class=\"ltr\">x = 3</span>, וסכומם 8. מי שמחלק את שני האגפים ב-<span class=\"ltr\">x − 5</span> מקבל רק <span class=\"ltr\">x = 3</span> ומאבד את <span class=\"ltr\">x = 5</span>, כי אסור לחלק בביטוי שעלול להיות 0 (הכלל ״לא מחלקים במשתנה שעלול להיות 0״).",
+   "fast": "רואים מיד ששני האגפים מתאפסים ב-<span class=\"ltr\">x = 5</span>. אם <span class=\"ltr\">x ≠ 5</span>, מותר לצמצם ומקבלים <span class=\"ltr\">x = 3</span>. הסכום 8.",
+   "traps": [
+    "",
+    "חילקו את שני האגפים ב-<span class=\"ltr\">x − 5</span> ואיבדו את הפתרון <span class=\"ltr\">x = 5</span>.",
+    "זו מכפלת הפתרונות, לא סכומם.",
+    "מצאו רק את הפתרון שמאפס את <span class=\"ltr\">x − 5</span> ושכחו את <span class=\"ltr\">x = 3</span>."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "טווח של הפרש",
+   "level": 2,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">2 &lt; a &lt; 5</span> ו-<span class=\"ltr\">−3 &lt; b &lt; 1</span>. מהו הטווח של <span class=\"ltr\">a − b</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">−1 &lt; a − b &lt; 6</span>",
+    "<span class=\"ltr\">4 &lt; a − b &lt; 5</span>",
+    "<span class=\"ltr\">5 &lt; a − b &lt; 8</span>",
+    "<span class=\"ltr\">1 &lt; a − b &lt; 8</span>"
+   ],
+   "answer": 4,
+   "explain": "לא מחסירים אי-שוויונים זה מזה; מחברים את a ל-<span class=\"ltr\">−b</span> (הכלל ״חיבור אי-שוויונים״). מ-<span class=\"ltr\">−3 &lt; b &lt; 1</span> נובע, אחרי כפל ב-(−1) והיפוך הסימנים, <span class=\"ltr\">−1 &lt; −b &lt; 3</span>. מחברים ל-<span class=\"ltr\">2 &lt; a &lt; 5</span> ומקבלים <span class=\"ltr\">1 &lt; a − b &lt; 8</span>. בדיקת קצוות: ההפרש הכי קטן כש-a קטן ו-b גדול (<span class=\"ltr\">2 − 1 = 1</span>), והכי גדול כש-a גדול ו-b קטן (<span class=\"ltr\">5 − (−3) = 8</span>).",
+   "fast": "מינימום: a הכי קטן פחות b הכי גדול, <span class=\"ltr\">2 − 1 = 1</span>. מקסימום: a הכי גדול פחות b הכי קטן, <span class=\"ltr\">5 + 3 = 8</span>.",
+   "traps": [
+    "זה הטווח של <span class=\"ltr\">a + b</span>, לא של <span class=\"ltr\">a − b</span>.",
+    "חיסרו כל גבול מהגבול המקביל לו (<span class=\"ltr\">2 − (−3)</span> ו-<span class=\"ltr\">5 − 1</span>); אסור לחסר אי-שוויונים.",
+    "הגבול התחתון חושב עם b הקטן ביותר; כדי ש-a − b יהיה קטן, b צריך להיות גדול.",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "חזקות של שבר שלילי",
+   "level": 2,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">−1 &lt; x &lt; 0</span>. איזה מהביטויים הבאים הוא הקטן ביותר?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">x³</span>",
+    "<span class=\"ltr\">1/x</span>",
+    "<span class=\"ltr\">x</span>",
+    "<span class=\"ltr\">x²</span>"
+   ],
+   "answer": 2,
+   "explain": "מציבים מספר מהטווח, <span class=\"ltr\">x = −0.5</span>: <span class=\"ltr\">x³ = −0.125</span>, <span class=\"ltr\">1/x = −2</span>, <span class=\"ltr\">x = −0.5</span>, <span class=\"ltr\">x² = 0.25</span>. הקטן ביותר הוא <span class=\"ltr\">1/x</span>. באופן כללי, כש-<span class=\"ltr\">−1 &lt; x &lt; 0</span>: <span class=\"ltr\">1/x &lt; −1</span>, ואילו x ו-<span class=\"ltr\">x³</span> נמצאים בין <span class=\"ltr\">−1</span> ל-0, ו-<span class=\"ltr\">x²</span> חיובי (הכלל ״סדר בין חזקות של אותו מספר״). לכן <span class=\"ltr\">1/x</span> הוא הקטן ביותר לכל x בטווח.",
+   "fast": "הצבה של <span class=\"ltr\">x = −0.5</span> מספיקה: מבין <span class=\"ltr\">−0.125</span>, <span class=\"ltr\">−2</span>, <span class=\"ltr\">−0.5</span> ו-<span class=\"ltr\">0.25</span> הקטן ביותר הוא <span class=\"ltr\">−2</span>.",
+   "traps": [
+    "<span class=\"ltr\">x³</span> שלילי, אבל קרוב יותר ל-0 מ-x (למשל <span class=\"ltr\">(−0.5)³ = −0.125</span>).",
+    "",
+    "x שלילי, אבל <span class=\"ltr\">1/x</span> קטן ממנו: הוא קטן מ-(−1).",
+    "<span class=\"ltr\">x²</span> חיובי, ולכן הוא דווקא הגדול ביותר."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "בהכרח נכון: שני שליליים",
+   "level": 3,
+   "stim": null,
+   "stem": "a ו-b מספרים, ו-<span class=\"ltr\">a &lt; b &lt; 0</span>. איזו מהטענות הבאות <b>בהכרח</b> נכונה?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">a/b &gt; 1</span>",
+    "<span class=\"ltr\">a² &lt; b²</span>",
+    "<span class=\"ltr\">1/a &lt; 1/b</span>",
+    "<span class=\"ltr\">ab &lt; b²</span>"
+   ],
+   "answer": 1,
+   "explain": "שני המספרים שליליים, ו-a רחוק יותר מ-0. לכן <span class=\"ltr\">a/b</span> חיובי (שלילי חלקי שלילי), והערך המוחלט של a גדול משל b, כך ש-<span class=\"ltr\">a/b &gt; 1</span>. דוגמה: <span class=\"ltr\">a = −3, b = −1</span> נותן <span class=\"ltr\">a/b = 3</span>. אותה דוגמה פוסלת את שאר הטענות (הכלל ״בהכרח נכון והשוואת ביטויים״): <span class=\"ltr\">9 &lt; 1</span>, <span class=\"ltr\">−1/3 &lt; −1</span> ו-<span class=\"ltr\">3 &lt; 1</span> שגויות כולן.",
+   "fast": "דוגמה אחת, <span class=\"ltr\">a = −3, b = −1</span>, פוסלת את שלוש הטענות האחרות.",
+   "traps": [
+    "",
+    "a רחוק יותר מ-0, ולכן <span class=\"ltr\">a² &gt; b²</span>; למשל <span class=\"ltr\">(−3)² &gt; (−1)²</span>.",
+    "למספרים באותו סימן ההופכי הופך את הסדר: <span class=\"ltr\">1/(−3) = −1/3</span>, וזה גדול מ-<span class=\"ltr\">−1</span>.",
+    "<span class=\"ltr\">ab − b² = b(a − b)</span> הוא מכפלה של שני מספרים שליליים, ולכן חיובי."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "משתנה במכנה",
+   "level": 3,
+   "stim": null,
+   "stem": "מהו הפתרון של אי-השוויון <span class=\"ltr\">1/x &gt; 1/3</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">x &lt; 3</span>",
+    "<span class=\"ltr\">x &gt; 3</span>",
+    "<span class=\"ltr\">x &lt; 0</span> או <span class=\"ltr\">x &gt; 3</span>",
+    "<span class=\"ltr\">0 &lt; x &lt; 3</span>"
+   ],
+   "answer": 4,
+   "explain": "<span class=\"ltr\">1/x</span> גדול מ-<span class=\"ltr\">1/3</span>, ולכן הוא חיובי, ומכאן ש-x חיובי. עבור x חיובי מותר לכפול ב-3x בלי להפוך את הסימן: <span class=\"ltr\">3 &gt; x</span>. לכן <span class=\"ltr\">0 &lt; x &lt; 3</span>. מי שכופל ב-x מיד מקבל <span class=\"ltr\">x &lt; 3</span>, אבל מספר שלילי כמו <span class=\"ltr\">x = −1</span> נותן <span class=\"ltr\">1/x = −1</span>, שאינו גדול מ-<span class=\"ltr\">1/3</span> (הכלל ״לא כופלים אי-שוויון במשתנה שסימנו לא ידוע״).",
+   "fast": "מציבים <span class=\"ltr\">x = −1</span>: <span class=\"ltr\">−1 &gt; 1/3</span> שגוי, וזה פוסל את תשובות 1 ו-3. מציבים <span class=\"ltr\">x = 1</span>: <span class=\"ltr\">1 &gt; 1/3</span> נכון, וזה פוסל את תשובה 2.",
+   "traps": [
+    "כפלו ב-x בלי לדעת את סימנו. מספרים שליליים קטנים מ-3, אבל אינם מקיימים את אי-השוויון.",
+    "הפכו את שני השברים בלי להפוך את כיוון הסימן; למשל <span class=\"ltr\">x = 6</span> נותן <span class=\"ltr\">1/6 &lt; 1/3</span>.",
+    "זה הפתרון של אי-השוויון ההפוך, <span class=\"ltr\">1/x &lt; 1/3</span>.",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "השוואה בעזרת הפרש",
+   "level": 3,
+   "stim": null,
+   "stem": "x ו-y מספרים חיוביים, ו-<span class=\"ltr\">x &gt; y</span>. נסמן <span class=\"ltr\">A = x/y</span> ו-<span class=\"ltr\">B = (x + 1)/(y + 1)</span>. מה נכון בהכרח?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">A &lt; B</span>",
+    "<span class=\"ltr\">A &gt; B</span>",
+    "<span class=\"ltr\">A = B</span>",
+    "אי אפשר לדעת"
+   ],
+   "answer": 2,
+   "explain": "מחשבים הפרש (הכלל ״בהכרח נכון והשוואת ביטויים״): <span class=\"ltr\">A − B = x/y − (x + 1)/(y + 1) = (x(y + 1) − y(x + 1)) / (y(y + 1)) = (x − y) / (y(y + 1))</span>. המונה חיובי כי <span class=\"ltr\">x &gt; y</span>, והמכנה חיובי כי y חיובי. לכן <span class=\"ltr\">A − B &gt; 0</span>, כלומר <span class=\"ltr\">A &gt; B</span>. דוגמה: <span class=\"ltr\">x = 3, y = 1</span> נותן <span class=\"ltr\">A = 3</span> ו-<span class=\"ltr\">B = 4/2 = 2</span>.",
+   "fast": "מציבים <span class=\"ltr\">x = 3, y = 1</span>: <span class=\"ltr\">A = 3, B = 2</span>. זה פוסל את <span class=\"ltr\">A &lt; B</span> ואת <span class=\"ltr\">A = B</span>. כדי לוודא שזה תמיד כך, מנסים גם שברים, למשל <span class=\"ltr\">x = 1, y = 0.5</span>: <span class=\"ltr\">A = 2, B = 4/3</span>.",
+   "traps": [
+    "הוספה של 1 למונה ולמכנה של שבר שגדול מ-1 מקרבת אותו ל-1, כלומר מקטינה אותו.",
+    "",
+    "השוויון מתקיים רק כש-x = y, וכאן x גדול מ-y.",
+    "ההפרש <span class=\"ltr\">A − B</span> חיובי לכל x ו-y שמקיימים את הנתונים, ולכן היחס ידוע."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "בהכרח נכון: ריבוע",
+   "level": 3,
+   "stim": null,
+   "stem": "x מספר שמקיים <span class=\"ltr\">x² &gt; x</span>. איזו מהטענות הבאות <b>בהכרח</b> נכונה?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">x &gt; 1</span>",
+    "<span class=\"ltr\">x² &gt; 1</span>",
+    "<span class=\"ltr\">1/x &lt; 1</span>",
+    "<span class=\"ltr\">x³ &gt; x²</span>"
+   ],
+   "answer": 3,
+   "explain": "<span class=\"ltr\">x² &gt; x</span> שקול ל-<span class=\"ltr\">x(x − 1) &gt; 0</span>, כלומר <span class=\"ltr\">x &gt; 1</span> או <span class=\"ltr\">x &lt; 0</span> (לא מחלקים ב-x, לפי הכלל ״לא מחלקים במשתנה שעלול להיות 0״). בודקים את <span class=\"ltr\">1/x &lt; 1</span> בשני המקרים: אם <span class=\"ltr\">x &gt; 1</span>, אז <span class=\"ltr\">0 &lt; 1/x &lt; 1</span>; אם <span class=\"ltr\">x &lt; 0</span>, אז <span class=\"ltr\">1/x</span> שלילי, ובוודאי קטן מ-1. שאר הטענות נכשלות במספר שלילי: <span class=\"ltr\">x = −0.5</span> פוסל את <span class=\"ltr\">x &gt; 1</span>, את <span class=\"ltr\">x² &gt; 1</span> ואת <span class=\"ltr\">x³ &gt; x²</span>.",
+   "fast": "מי שמחלק ב-x מקבל <span class=\"ltr\">x &gt; 1</span> ושוכח את המספרים השליליים. בודקים כל תשובה עם <span class=\"ltr\">x = −0.5</span>, שמקיים את הנתון: רק <span class=\"ltr\">1/x = −2 &lt; 1</span> עובר.",
+   "traps": [
+    "גם מספר שלילי מקיים <span class=\"ltr\">x² &gt; x</span>; למשל <span class=\"ltr\">x = −1</span>.",
+    "<span class=\"ltr\">x = −0.5</span> מקיים את הנתון (<span class=\"ltr\">0.25 &gt; −0.5</span>), אבל <span class=\"ltr\">x² = 0.25</span>.",
+    "",
+    "כש-x שלילי, <span class=\"ltr\">x³</span> שלילי ו-<span class=\"ltr\">x²</span> חיובי."
+   ]
+  }
+ ]
+}

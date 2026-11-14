@@ -9,6 +9,7 @@ S.off = S.off || [];        // מבחנים רשמיים: {at, label, dom, n, an
 S.fix = S.fix || {};        // "chapId:n" -> true כשהטעות תוקנה בתרגול טעויות
 S.examDate = S.examDate || '2026-12-04';
 S.wr = S.wr || [];         // מטלות כתיבה: {id, at, text, dur, chk[], gc, gl}
+S.dr = S.dr || {};         // תרגול לפי נושא: drillId -> {שאלה: [ניסיונות, נכון בניסיון האחרון]}
 function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } }
 
 const CH = (window.CHAPTERS || []);
@@ -80,7 +81,7 @@ function overall() {
 
 // ===== מסכים =====
 function navBar() {
-  const it = [['home', '🏠', 'היום'], ['all', '📚', 'פרקים'], ['stats', '📊', 'חוזקות'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['off', '📄', 'רשמי']];
+  const it = [['home', '🏠', 'היום'], ['all', '📚', 'פרקים'], ['stats', '🎯', 'חיזוק'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['off', '📄', 'רשמי']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${view === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
 }
 function render() {
@@ -88,7 +89,7 @@ function render() {
   if (S.cur && view !== 'exam' && view !== 'offx' && view !== 'wx') { // פרק באמצע (רענון / חזרה לאפליקציה)
     view = { off: 'offx', wr: 'wx' }[S.cur.kind] || 'exam';
   }
-  const f = { home, all, stats, fix, off, exam, result, review, offx, offres, settings, practice, write, wx, wres }[view] || home;
+  const f = { home, all, stats, fix, off, exam, result, review, offx, offres, settings, practice, write, wx, wres, drill }[view] || home;
   $app.innerHTML = f();
   if (view === 'exam' || view === 'offx' || view === 'wx') startTick();
 }
@@ -114,7 +115,7 @@ function home() {
       <button class="btn big" onclick="startChap('${id}')">▶️ להתחיל (${c.minutes} דקות)</button></div>`;
   } else h += `<div class="card"><b>סיימת את כל הפרקים שיש כרגע 🎉</b><p class="mut sm">אפשר לעשות פרק רשמי מאתר מאל״ו בלשונית «רשמי», או לתרגל את הטעויות.</p></div>`;
   const last = done().slice(-3).reverse();
-  h += writeCard();
+  h += drillCard() + writeCard();
   if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chapRow).join('')}</div>`;
   h += `<p class="mut sm">* ציון משוער: הערכה גסה מאחוז התשובות הנכונות בכל הפרקים (מילולי וכמותי במשקל שווה). לא ציון רשמי. נקודת הפתיחה שלך: 620.</p>
     <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button></main>` + navBar();
@@ -263,16 +264,17 @@ function review() {
 // ===== חוזקות וחולשות =====
 function stats() {
   const A = answered(), o = overall();
-  if (!A.length && !S.off.length) return `<main><h1>📊 חוזקות וחולשות</h1><div class="card"><p>אחרי הפרק הראשון יופיע כאן פילוח לפי סוג שאלה, נושא ומיומנות, וכמה זמן לוקחת לך כל שאלה.</p></div></main>` + navBar();
+  if (!A.length && !S.off.length) return `<main><h1>🎯 חיזוק</h1><div class="card"><p style="margin:0">אחרי הפרק הראשון יופיע כאן פילוח לפי סוג שאלה, נושא ומיומנות, וכמה זמן לוקחת לך כל שאלה. הנושאים למטה יסתדרו מהחלש לחזק.</p></div><h2>תרגול לפי נושא</h2>${drillList()}</main>` + navBar();
   const hist = done().map(id => { const c = byId[id], a = first(id); return { p: correctOf(c, a) / c.questions.length, d: c.domain[0], l: c.title }; })
     .concat(S.off.filter(x => x.key).map(x => ({ p: offCorrect(x) / x.n, d: 'o', l: x.label, at: x.at })));
   const skills = {}; A.forEach(x => { const k = x.q.skill; if (!k) return; (skills[k] = skills[k] || { n: 0, ok: 0, d: x.c.domain }); skills[k].n++; skills[k].ok += x.ok; });
   const weak = Object.entries(skills).filter(([, v]) => v.ok < v.n).sort((a, b) => (a[1].ok / a[1].n) - (b[1].ok / b[1].n) || b[1].n - a[1].n).slice(0, 8);
   const need = o.p != null && o.p < 0.8 ? `כדי להגיע ל-700 צריך בערך 80% נכון. עכשיו: ${Math.round(o.p * 100)}%.` : o.p != null ? 'את/ה בטווח של 700+. ממשיכים לשמור על הקצב.' : '';
   const dv = A.filter(x => x.c.domain === 'verbal'), dq = A.filter(x => x.c.domain === 'quant');
-  return `<main><h1>📊 חוזקות וחולשות</h1>
+  return `<main><h1>🎯 חוזקות וחולשות</h1>
   <div class="kpis"><div class="kpi"><b>${o.pv != null ? Math.round(o.pv * 100) + '%' : '—'}</b><span>מילולי</span></div><div class="kpi"><b>${o.pq != null ? Math.round(o.pq * 100) + '%' : '—'}</b><span>כמותי</span></div><div class="kpi"><b>${o.p != null ? est(o.p) : '—'}</b><span>ציון משוער*</span></div></div>
   <p class="mut sm">${need} מבוסס על הניסיון הראשון בכל פרק (${A.length} שאלות).</p>
+  <h2>🎯 תרגול לפי נושא · מהחלש לחזק</h2>${drillList()}
   <h2>ההתקדמות</h2><div class="card"><div class="hist">${hist.map(x => `<i class="${x.d}" style="height:${Math.max(4, x.p * 100)}%" title="${esc(x.l)}: ${Math.round(x.p * 100)}%"></i>`).join('')}</div>
   <div class="legend"><span style="--c:var(--o)">מילולי</span><span style="--c:var(--b)">כמותי</span><span style="--c:#9b7bff">רשמי</span></div></div>
   ${weak.length ? `<h2>🎯 המיומנויות שהכי כדאי לחזק</h2><div class="card">${weak.map(([k, v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span><span class="tag ${v.d[0]}">${DOM[v.d]}</span> ${esc(k)}</span><b>${v.ok}/${v.n}</b></div>`).join('')}<button class="btn blue" style="margin-top:12px" onclick="go('fix')">לתרגל את הטעויות</button></div>` : ''}
@@ -377,12 +379,69 @@ function settings() {
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
 }
 function exp() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, off: S.off, fix: S.fix, wr: S.wr, examDate: S.examDate }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, off: S.off, fix: S.fix, wr: S.wr, dr: S.dr, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד מופיע בתיבה — להעתיק ידנית'); });
 }
 function imp() {
   try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('imp').value.trim())))); if (!d.res) throw 0; if (!confirm('לטעון את הגיבוי? זה מחליף את ההתקדמות במכשיר הזה.')) return; Object.assign(S, d); save(); toast('נטען ✓'); go('home'); }
   catch (e) { toast('הקוד לא תקין'); }
+}
+
+// ===== תרגול לפי נושא: דף «מה חשוב לדעת» ושאלות עם משוב מיידי =====
+const DR = (window.DRILLS || []);
+const drById = Object.fromEntries(DR.map(d => [d.id, d]));
+// לאיזה נושא תרגול שייכת שאלה מפרק (לסידור מהחלש לחזק)
+const drillOf = q => ({ analogy: 'analogy', reading: 'reading', chart: 'chart' })[q.type] || ({ coordinates: 'solids', sequences: 'defined_ops', functions: 'algebra', sentence: 'meaning' })[q.topic] || q.topic;
+function drillRank() {
+  const g = {}; answered().forEach(x => { const k = drillOf(x.q); if (!drById[k]) return; (g[k] = g[k] || { n: 0, ok: 0 }); g[k].n++; g[k].ok += x.ok ? 1 : 0; });
+  const prog = d => { const r = S.dr[d.id] || {}; return d.questions.filter((_, i) => r[i] && r[i][1]).length; };
+  return DR.map(d => ({ d, s: g[d.id], p: g[d.id] ? g[d.id].ok / g[d.id].n : null, solved: prog(d) }))
+    .sort((a, b) => (a.p == null) - (b.p == null) || (a.p ?? 0) - (b.p ?? 0) || a.solved / a.d.questions.length - b.solved / b.d.questions.length);
+}
+function drillList() {
+  if (!DR.length) return '<div class="card"><p class="mut">התרגול לפי נושא עוד לא נטען.</p></div>';
+  return `<div class="card list">${drillRank().map(({ d, s, p, solved }) => `<div class="it" onclick="go('drill',{id:'${d.id}',s:'g'})"><span class="tag ${d.domain[0]}">${DOM[d.domain]}</span><div class="grow"><b>${esc(d.title)}</b>
+    <div class="mut sm">${s ? `בפרקים: ${s.ok}/${s.n} (${Math.round(p * 100)}%)` : 'עוד אין נתונים מהפרקים'} · בתרגול: ${solved}/${d.questions.length}</div>
+    ${s ? `<div class="bar ${p < .5 ? 'low' : p < .75 ? 'mid' : ''}" style="margin-top:5px"><i style="width:${Math.round(p * 100)}%"></i></div>` : ''}</div></div>`).join('')}</div>`;
+}
+function drillCard() {
+  const r = drillRank().filter(x => x.s && x.s.n >= 3 && x.solved < x.d.questions.length);
+  if (!r.length) return '';
+  const w = r[0];
+  return `<h2>🎯 לחזק את הנקודה החלשה</h2><div class="card"><b>${esc(w.d.title)}</b><p class="mut sm" style="margin:4px 0 10px">בפרקים: ${w.s.ok}/${w.s.n} נכון. 10-15 דקות של תרגול ממוקד עם דף כללים.</p>
+    <button class="btn blue" onclick="go('drill',{id:'${w.d.id}',s:'g'})">לתרגל את הנושא</button></div>`;
+}
+let DP = null; // השאלה הנוכחית בתרגול נושא: {key, pick, t0, t}
+function drillNext(d) { const r = S.dr[d.id] || {}; let i = d.questions.findIndex((_, k) => !r[k]); if (i < 0) i = d.questions.findIndex((_, k) => !r[k][1]); return i; }
+function drill() {
+  const d = drById[arg.id]; if (!d) return stats();
+  const r = S.dr[d.id] || {}, n = d.questions.length, solved = d.questions.filter((_, i) => r[i] && r[i][1]).length;
+  const top = `<div class="xtop"><button class="icb" onclick="DP=null;go('stats')">→ חזרה</button><span class="ttl">${esc(d.title)} · ${solved}/${n}</span>${arg.s === 'q' ? `<button class="icb" onclick="DP=null;go('drill',{id:'${d.id}',s:'g'})">📘 כללים</button>` : ''}</div>`;
+  if (arg.s === 'g') {
+    const nx = drillNext(d);
+    return top + `<main><h1 style="font-size:20px">📘 מה חשוב לדעת</h1><div class="card fml">${d.guide.map(g => `<p style="margin:8px 0">• ${g}</p>`).join('')}</div>
+      ${nx >= 0 ? `<button class="btn big" onclick="go('drill',{id:'${d.id}',s:'q'})">${solved || Object.keys(r).length ? 'להמשיך לתרגל' : 'להתחיל לתרגל'} (${n - solved} שאלות)</button>`
+        : `<div class="card"><b>פתרת נכון את כל ${n} השאלות בנושא 🎉</b></div><button class="btn ghost" onclick="if(confirm('להתחיל את הנושא מחדש?')){delete S.dr['${d.id}'];save();render()}">להתחיל מחדש</button>`}
+      <p class="mut sm">בלי שעון. אחרי כל שאלה מקבלים מיד את הפתרון ואת הדרך המהירה. שאלה שטעית בה חוזרת בסוף הסבב.</p></main>`;
+  }
+  // אחרי תשובה נשארים על אותה שאלה (עם הפתרון) עד «לשאלה הבאה»
+  const i = DP && DP.pick && DP.key.startsWith(d.id + ':') ? +DP.key.split(':')[1] : drillNext(d);
+  if (i < 0) { arg.s = 'g'; return drill(); }
+  const q = d.questions[i], key = `${d.id}:${i}`;
+  if (!DP || DP.key !== key) DP = { key, pick: 0, t0: Date.now() };
+  const opts = DP.pick ? optsReview(q, DP.pick) : q.options.map((o, k) => `<button class="opt" onclick="dpick(${k + 1})"><span class="num">${k + 1}</span><span>${ot(o)}</span></button>`).join('');
+  const goal = d.domain === 'quant' ? 60 : 50;
+  return top + `<main><div class="qn">שאלה ${i + 1} מתוך ${n} · ${'●'.repeat(q.level || 1)}${'○'.repeat(3 - (q.level || 1))}${q.skill ? ' · ' + esc(q.skill) : ''}${r[i] && r[i][0] > (DP.pick ? 1 : 0) ? ' · ניסיון חוזר' : ''}</div>
+    ${stimHtml(d, q, false)}${qHtml(d, q)}<div class="opts">${opts}</div>
+    ${DP.pick ? `<p style="font-weight:800;font-size:18px;margin-bottom:0;color:${DP.pick === q.answer ? 'var(--gd)' : 'var(--rd)'}">${DP.pick === q.answer ? '✅ נכון!' : '❌ לא נכון. השאלה תחזור בסוף הסבב.'}</p>
+    <p class="mut sm" style="margin-top:4px">${Math.round(DP.t)} שנ׳ ${DP.t > goal * 1.5 ? `· בבחינה יש בערך ${goal} שנ׳ לשאלה. כדאי לקרוא את הדרך המהירה` : ''}</p>${explainHtml(q, DP.pick)}
+    <button class="btn blue big" style="margin-top:16px" onclick="DP=null;render();scrollTo(0,0)">${drillNext(d) >= 0 ? 'לשאלה הבאה' : 'סיום הנושא 🎉'}</button>` : ''}</main>`;
+}
+function dpick(k) {
+  const [id, i] = DP.key.split(':'), q = drById[id].questions[+i];
+  DP.pick = k; DP.t = (Date.now() - DP.t0) / 1000;
+  const r = S.dr[id] = S.dr[id] || {}; r[i] = [((r[i] || [0])[0] || 0) + 1, q.answer === k ? 1 : 0];
+  save(); render();
 }
 
 // ===== מטלת כתיבה: 30 דקות, לפחות 25 שורות, נשפטת בתוכן ובלשון =====

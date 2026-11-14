@@ -1,0 +1,270 @@
+{
+ "id": "defined_ops",
+ "domain": "quant",
+ "title": "פעולות מוגדרות וסדרות",
+ "guide": [
+  "<b>מציבים בדיוק לפי ההגדרה, והסדר חשוב:</b> אם <span class=\"ltr\">a # b = 2a − b</span>, אז <span class=\"ltr\">3 # 5 = 6 − 5 = 1</span>, אבל <span class=\"ltr\">5 # 3 = 10 − 3 = 7</span>. כותבים את ההגדרה ומחליפים אות באות.",
+  "<b>פעולה בתוך פעולה:</b> מחשבים קודם את מה שבסוגריים, והתוצאה נכנסת להגדרה כמספר רגיל. בדרך כלל <span class=\"ltr\">(a # b) # c ≠ a # (b # c)</span>.",
+  "<b>משוואה עם פעולה:</b> פורשים את ההגדרה עם x ופותרים משוואה רגילה. <span class=\"ltr\">x # 4 = 10</span> עם ההגדרה שלמעלה: <span class=\"ltr\">2x − 4 = 10</span>, ולכן <span class=\"ltr\">x = 7</span>.",
+  "<b>תכונות (״נכון בהכרח״):</b> כדי לבדוק חילופיות מחליפים בין a ל-b בהגדרה ומשווים. כדי לפסול טענה מספיקה דוגמה נגדית אחת. כדי לקבל טענה צריך לפשט אותה אלגברית, או לפחות לבדוק כמה הצבות שונות (כולל 0, 1, שליליים ושברים).",
+  "<b>סדרה חשבונית:</b> <span class=\"ltr\">a<sub>n</sub> = a<sub>1</sub> + (n − 1)·d</span>, והסכום <span class=\"ltr\">S<sub>n</sub> = n · (a<sub>1</sub> + a<sub>n</sub>) / 2</span>. בסדרה 5, 8, 11, … האיבר העשירי <span class=\"ltr\">5 + 9 · 3 = 32</span>.",
+  "<b>מלכודת הגדר:</b> בין האיבר הראשון לאיבר ה-n יש <span class=\"ltr\">n − 1</span> צעדים. מספר האיברים מ-a עד b בקפיצות של d: <span class=\"ltr\">(b − a)/d + 1</span>. מ-10 עד 50 בקפיצות של 5 יש <span class=\"ltr\">40/5 + 1 = 9</span> איברים.",
+  "<b>סדרה הנדסית:</b> כל איבר הוא הקודם כפול q: <span class=\"ltr\">a<sub>n</sub> = a<sub>1</sub> · q<sup>n−1</sup></span>. בין האיבר השלישי לשישי יש 3 צעדים, ולכן היחס ביניהם <span class=\"ltr\">q³</span>. בסדרה 3, 6, 12, … האיבר העשירי <span class=\"ltr\">3 · 2<sup>9</sup> = 1536</span>.",
+  "<b>דפוס מחזורי:</b> אם הסדרה חוזרת על עצמה כל k איברים, האיבר ה-n נקבע לפי השארית של n בחלוקה ב-k (שארית 0 = האיבר האחרון במחזור). ספרת האחדות של חזקות 7 חוזרת כל 4: 7, 9, 3, 1. לכן <span class=\"ltr\">7<sup>10</sup></span> מסתיים ב-9 (שארית 2).",
+  "<b>סדרה רקורסיבית</b> (כל איבר מוגדר לפי הקודם לו): מחשבים ביד 4-5 איברים ראשונים. כמעט תמיד מתגלה מחזור או דפוס פשוט, ואז ממשיכים לפי כלל הדפוס המחזורי.",
+  "<b>סכום מצטבר:</b> אם <span class=\"ltr\">S<sub>n</sub></span> הוא סכום n האיברים הראשונים, אז <span class=\"ltr\">a<sub>n</sub> = S<sub>n</sub> − S<sub>n−1</sub></span>. שימושי לזכור: סכום n המספרים האי-זוגיים הראשונים הוא <span class=\"ltr\">n²</span>."
+ ],
+ "stims": {},
+ "questions": [
+  {
+   "n": 1,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "הצבה בפעולה מוגדרת",
+   "level": 1,
+   "stim": null,
+   "stem": "לכל שני מספרים a ו-b מוגדרת הפעולה <span class=\"ltr\">a ★ b = a² − 2b</span>. כמה זה <span class=\"ltr\">5 ★ 3</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">−1</span>",
+    "16",
+    "1",
+    "19"
+   ],
+   "answer": 4,
+   "explain": "מציבים <span class=\"ltr\">a = 5</span> ו-<span class=\"ltr\">b = 3</span> בדיוק לפי ההגדרה: <span class=\"ltr\">5² − 2 · 3 = 25 − 6 = 19</span>.",
+   "fast": "קוראים את ההגדרה במילים: ״הראשון בריבוע, פחות פעמיים השני״, ורק אז מציבים.",
+   "traps": [
+    "החליפו בין a ל-b וחישבו <span class=\"ltr\">3 ★ 5 = 9 − 10</span>.",
+    "חישבו <span class=\"ltr\">a² − b²</span>; לפי ההגדרה מחסרים <span class=\"ltr\">2b</span>, לא <span class=\"ltr\">b²</span>.",
+    "חישבו <span class=\"ltr\">(a − 2b)²</span>; החזקה היא על a בלבד.",
+    ""
+   ]
+  },
+  {
+   "n": 2,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "איבר בסדרה חשבונית",
+   "level": 1,
+   "stim": null,
+   "stem": "בסדרה החשבונית 7, 11, 15, 19, … מהו האיבר העשרים?",
+   "fig": null,
+   "options": [
+    "87",
+    "83",
+    "80",
+    "79"
+   ],
+   "answer": 2,
+   "explain": "ההפרש הקבוע <span class=\"ltr\">d = 4</span>. לפי הנוסחה, ובזהירות ממלכודת הגדר: <span class=\"ltr\">a<sub>20</sub> = 7 + (20 − 1) · 4 = 7 + 76 = 83</span>.",
+   "fast": "האיבר ה-n הוא <span class=\"ltr\">4n + 3</span> (בדיקה: <span class=\"ltr\">4 · 1 + 3 = 7</span>). לכן <span class=\"ltr\">4 · 20 + 3 = 83</span>.",
+   "traps": [
+    "חישבו <span class=\"ltr\">7 + 20 · 4</span>; מהאיבר הראשון לעשרים יש רק 19 צעדים.",
+    "",
+    "חישבו <span class=\"ltr\">20 · 4</span> ושכחו את האיבר הראשון.",
+    "ספרו 18 צעדים במקום 19 (<span class=\"ltr\">7 + 18 · 4</span>)."
+   ]
+  },
+  {
+   "n": 3,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "משוואה עם פעולה",
+   "level": 1,
+   "stim": null,
+   "stem": "לכל שני מספרים a ו-b מוגדרת הפעולה <span class=\"ltr\">a ◆ b = ab + b</span>. אם <span class=\"ltr\">x ◆ 3 = 21</span>, מהו x?",
+   "fig": null,
+   "options": [
+    "6",
+    "5.25",
+    "7",
+    "8"
+   ],
+   "answer": 1,
+   "explain": "לפי ההגדרה, כאשר <span class=\"ltr\">a = x</span> ו-<span class=\"ltr\">b = 3</span>: <span class=\"ltr\">x · 3 + 3 = 21</span>. לכן <span class=\"ltr\">3x = 18</span>, ו-<span class=\"ltr\">x = 6</span>.",
+   "fast": "הצבה מהתשובות: <span class=\"ltr\">6 ◆ 3 = 6 · 3 + 3 = 21</span>.",
+   "traps": [
+    "",
+    "הציבו את x במקום b (<span class=\"ltr\">3 ◆ x = 4x</span>); הסדר בהגדרה חשוב.",
+    "שכחו את <span class=\"ltr\">+ b</span> ופתרו <span class=\"ltr\">3x = 21</span>.",
+    "טעות בסימן: פתרו <span class=\"ltr\">3x − 3 = 21</span>."
+   ]
+  },
+  {
+   "n": 4,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "ספרת אחדות מחזורית",
+   "level": 2,
+   "stim": null,
+   "stem": "מהי ספרת האחדות של <span class=\"ltr\">7<sup>83</sup></span>?",
+   "fig": null,
+   "options": [
+    "7",
+    "9",
+    "3",
+    "1"
+   ],
+   "answer": 3,
+   "explain": "ספרות האחדות של חזקות 7: <span class=\"ltr\">7<sup>1</sup> → 7, 7<sup>2</sup> → 9, 7<sup>3</sup> → 3, 7<sup>4</sup> → 1</span>, ואז הדפוס חוזר (כי <span class=\"ltr\">1 · 7 = 7</span>). המחזור באורך 4. לפי כלל הדפוס המחזורי: <span class=\"ltr\">83 = 4 · 20 + 3</span>, שארית 3, ולכן ספרת האחדות כמו של <span class=\"ltr\">7<sup>3</sup></span>: 3.",
+   "fast": "מכפילים רק את ספרת האחדות: 7, אחר כך 9 (49), 3 (63), 1 (21). שארית 3 ← האיבר השלישי במחזור.",
+   "traps": [
+    "זו ספרת האחדות כשהשארית בחלוקה ב-4 היא 1; השארית של 83 היא 3.",
+    "זו ספרת האחדות כשהשארית בחלוקה ב-4 היא 2.",
+    "",
+    "זו ספרת האחדות כשהמעריך מתחלק ב-4 (שארית 0); 83 אינו מתחלק ב-4."
+   ]
+  },
+  {
+   "n": 5,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "פעולה בתוך פעולה",
+   "level": 2,
+   "stim": null,
+   "stem": "לכל שני מספרים a ו-b מוגדרת הפעולה <span class=\"ltr\">a ⊕ b = ab − (a + b)</span>. כמה זה <span class=\"ltr\">(2 ⊕ 3) ⊕ 4</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">−1</span>",
+    "3",
+    "1",
+    "25"
+   ],
+   "answer": 1,
+   "explain": "קודם הסוגריים: <span class=\"ltr\">2 ⊕ 3 = 6 − 5 = 1</span>. התוצאה נכנסת להגדרה כמספר רגיל: <span class=\"ltr\">1 ⊕ 4 = 4 − 5 = −1</span>.",
+   "fast": "שימו לב: <span class=\"ltr\">1 ⊕ b = b − 1 − b = −1</span> לכל b. ברגע שיצא 1 בשלב הראשון, התשובה היא <span class=\"ltr\">−1</span>.",
+   "traps": [
+    "",
+    "חישבו קודם את <span class=\"ltr\">3 ⊕ 4</span>; הסוגריים קובעים להתחיל ב-<span class=\"ltr\">2 ⊕ 3</span>.",
+    "עצרו אחרי השלב הראשון (<span class=\"ltr\">2 ⊕ 3 = 1</span>).",
+    "פתחו סוגריים בטעות: <span class=\"ltr\">ab − a + b</span> במקום <span class=\"ltr\">ab − a − b</span>."
+   ]
+  },
+  {
+   "n": 6,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "סדרה הנדסית: מציאת האיבר הראשון",
+   "level": 2,
+   "stim": null,
+   "stem": "בסדרה הנדסית האיבר השלישי הוא 12 והאיבר השישי הוא 96. מהו האיבר הראשון?",
+   "fig": null,
+   "options": [
+    "6",
+    "1.5",
+    "<span class=\"ltr\">−44</span>",
+    "3"
+   ],
+   "answer": 4,
+   "explain": "מהאיבר השלישי לשישי יש 3 צעדים, ולכן <span class=\"ltr\">q³ = 96 / 12 = 8</span>, כלומר <span class=\"ltr\">q = 2</span>. מהאיבר השלישי לראשון חוזרים 2 צעדים: <span class=\"ltr\">a<sub>1</sub> = 12 / 2² = 3</span>. בדיקה: 3, 6, 12, 24, 48, 96.",
+   "fast": "אחרי שמצאתם <span class=\"ltr\">q = 2</span>, כותבים את הסדרה אחורה מ-96: 96, 48, 24, 12, 6, 3. שישה איברים, והראשון 3.",
+   "traps": [
+    "חילקו ב-q פעם אחת בלבד; מהאיבר השלישי לראשון יש 2 צעדים.",
+    "חילקו ב-q שלוש פעמים; מהאיבר השלישי לראשון יש רק 2 צעדים.",
+    "התייחסו לסדרה כאל חשבונית (הפרש 28 בכל צעד).",
+    ""
+   ]
+  },
+  {
+   "n": 7,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "ספירת איברים: מלכודת הגדר",
+   "level": 2,
+   "stim": null,
+   "stem": "כמה מספרים שלמים בין 100 ל-400 מתחלקים ב-7 ללא שארית?",
+   "fig": null,
+   "options": [
+    "42",
+    "43",
+    "44",
+    "57"
+   ],
+   "answer": 2,
+   "explain": "הכפולה הראשונה של 7 מעל 100 היא <span class=\"ltr\">105 = 7 · 15</span>, והאחרונה מתחת ל-400 היא <span class=\"ltr\">399 = 7 · 57</span>. לפי כלל הגדר: <span class=\"ltr\">(399 − 105) / 7 + 1 = 42 + 1 = 43</span>.",
+   "fast": "סופרים את המכפילים במקום את המספרים: מ-15 עד 57, כלומר <span class=\"ltr\">57 − 15 + 1 = 43</span>.",
+   "traps": [
+    "חישבו <span class=\"ltr\">(399 − 105) / 7</span> ושכחו להוסיף 1 (מלכודת הגדר).",
+    "",
+    "ספרו גם את 98 או את 406, שאינם בין 100 ל-400.",
+    "זה מספר הכפולות של 7 מ-1 עד 400, כולל אלה שקטנות מ-100."
+   ]
+  },
+  {
+   "n": 8,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "תכונות של פעולה",
+   "level": 3,
+   "stim": null,
+   "stem": "לכל שני מספרים a ו-b מוגדרת הפעולה <span class=\"ltr\">a @ b = a + b − ab</span>. איזה מהבאים <b>אינו</b> נכון בהכרח, לכל מספר a ולכל מספר b?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">a @ b = b @ a</span>",
+    "<span class=\"ltr\">a @ a = a</span>",
+    "<span class=\"ltr\">a @ 1 = 1</span>",
+    "<span class=\"ltr\">a @ 0 = a</span>"
+   ],
+   "answer": 2,
+   "explain": "בודקים כל טענה לפי ההגדרה. 1: <span class=\"ltr\">b + a − ba</span> זהה ל-<span class=\"ltr\">a + b − ab</span>, נכון תמיד. 2: <span class=\"ltr\">a @ a = 2a − a²</span>, וזה שווה ל-a רק כאשר <span class=\"ltr\">a = 0</span> או <span class=\"ltr\">a = 1</span>. דוגמה נגדית: <span class=\"ltr\">2 @ 2 = 4 − 4 = 0 ≠ 2</span>. 3: <span class=\"ltr\">a + 1 − a = 1</span>, נכון תמיד. 4: <span class=\"ltr\">a + 0 − 0 = a</span>, נכון תמיד.",
+   "fast": "מציבים <span class=\"ltr\">a = 2</span> (לא 0 ולא 1, שהם מספרים ״מיוחדים״) בכל טענה. רק טענה 2 נכשלת: <span class=\"ltr\">2 @ 2 = 0</span>.",
+   "traps": [
+    "נכון תמיד: ההגדרה סימטרית ב-a וב-b.",
+    "",
+    "נכון תמיד: <span class=\"ltr\">a + 1 − a · 1 = 1</span>.",
+    "נכון תמיד: <span class=\"ltr\">a + 0 − 0 = a</span>."
+   ]
+  },
+  {
+   "n": 9,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "סדרה רקורסיבית מחזורית",
+   "level": 3,
+   "stim": null,
+   "stem": "בסדרה מסוימת <span class=\"ltr\">a<sub>1</sub> = 2</span>, וכל איבר נקבע לפי הקודם לו: <span class=\"ltr\">a<sub>n+1</sub> = 1 / (1 − a<sub>n</sub>)</span>. מהו סכום 31 האיברים הראשונים בסדרה?",
+   "fig": null,
+   "options": [
+    "15",
+    "46.5",
+    "17",
+    "15.5"
+   ],
+   "answer": 3,
+   "explain": "מחשבים כמה איברים: <span class=\"ltr\">a<sub>2</sub> = 1/(1 − 2) = −1</span>, <span class=\"ltr\">a<sub>3</sub> = 1/(1 + 1) = 1/2</span>, <span class=\"ltr\">a<sub>4</sub> = 1/(1 − 1/2) = 2</span>. חזרנו ל-2, ולכן הסדרה מחזורית באורך 3: <span class=\"ltr\">2, −1, 1/2</span>. סכום מחזור: <span class=\"ltr\">2 − 1 + 0.5 = 1.5</span>. ב-31 איברים יש 10 מחזורים שלמים (30 איברים) ועוד איבר אחד, הראשון במחזור: <span class=\"ltr\">10 · 1.5 + 2 = 17</span>.",
+   "fast": "לפי כלל הסדרה הרקורסיבית: 3-4 איברים ביד חושפים את המחזור. <span class=\"ltr\">31 = 3 · 10 + 1</span>, כלומר 10 מחזורים ועוד 2.",
+   "traps": [
+    "חישבו 10 מחזורים בלבד (30 איברים) ושכחו את האיבר ה-31.",
+    "כפלו את סכום המחזור (1.5) ב-31, מספר האיברים, במקום ב-10, מספר המחזורים.",
+    "",
+    "הוסיפו לעשרת המחזורים את האיבר האחרון במחזור (0.5) במקום את הראשון (2)."
+   ]
+  },
+  {
+   "n": 10,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "איבר מתוך סכום מצטבר",
+   "level": 3,
+   "stim": null,
+   "stem": "בסדרה מסוימת, סכום n האיברים הראשונים שווה ל-<span class=\"ltr\">n² + 2n</span>, לכל n. מהו האיבר העשירי בסדרה?",
+   "fig": null,
+   "options": [
+    "120",
+    "12",
+    "99",
+    "21"
+   ],
+   "answer": 4,
+   "explain": "לפי כלל הסכום המצטבר, האיבר העשירי הוא ההפרש בין סכום 10 האיברים הראשונים לסכום 9 הראשונים. <span class=\"ltr\">S<sub>10</sub> = 100 + 20 = 120</span>, <span class=\"ltr\">S<sub>9</sub> = 81 + 18 = 99</span>. לכן <span class=\"ltr\">a<sub>10</sub> = 120 − 99 = 21</span>.",
+   "fast": "<span class=\"ltr\">a<sub>1</sub> = S<sub>1</sub> = 3</span> ו-<span class=\"ltr\">S<sub>2</sub> = 8</span>, ולכן <span class=\"ltr\">a<sub>2</sub> = 5</span>: סדרה חשבונית עם הפרש 2, ו-<span class=\"ltr\">a<sub>10</sub> = 3 + 9 · 2 = 21</span>.",
+   "traps": [
+    "זה סכום 10 האיברים הראשונים (<span class=\"ltr\">S<sub>10</sub></span>), לא האיבר העשירי.",
+    "חילקו את <span class=\"ltr\">S<sub>10</sub></span> ב-10; זה הממוצע של 10 האיברים, לא האיבר העשירי.",
+    "זה <span class=\"ltr\">S<sub>9</sub></span>, סכום 9 האיברים הראשונים.",
+    ""
+   ]
+  }
+ ]
+}

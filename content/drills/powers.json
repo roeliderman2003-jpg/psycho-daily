@@ -1,0 +1,260 @@
+{
+ "id": "powers",
+ "domain": "quant",
+ "title": "חזקות ושורשים",
+ "guide": [
+  "<b>חוקי החזקות:</b> <span class=\"ltr\">a<sup>m</sup> · a<sup>n</sup> = a<sup>m+n</sup></span>, <span class=\"ltr\">a<sup>m</sup> / a<sup>n</sup> = a<sup>m−n</sup></span>, <span class=\"ltr\">(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup></span>, <span class=\"ltr\">(ab)<sup>n</sup> = a<sup>n</sup>b<sup>n</sup></span>. הם עובדים רק עם בסיס משותף (או מעריך משותף), ולכן קודם כותבים הכול כחזקות של אותו בסיס: <span class=\"ltr\">8 = 2³</span>, <span class=\"ltr\">9 = 3²</span>, <span class=\"ltr\">0.25 = 2<sup>−2</sup></span>.",
+  "<b>חיבור אינו כפל:</b> <span class=\"ltr\">a<sup>m</sup> + a<sup>n</sup></span> אינו <span class=\"ltr\">a<sup>m+n</sup></span>. מוציאים גורם משותף: <span class=\"ltr\">2<sup>10</sup> + 2<sup>10</sup> = 2 · 2<sup>10</sup> = 2<sup>11</sup></span>, ו-<span class=\"ltr\">3<sup>7</sup> − 3<sup>5</sup> = 3<sup>5</sup>(3² − 1) = 8 · 3<sup>5</sup></span>.",
+  "<b>מעריך 0 ומעריך שלילי:</b> <span class=\"ltr\">a<sup>0</sup> = 1</span> (כש-<span class=\"ltr\">a ≠ 0</span>), <span class=\"ltr\">a<sup>−n</sup> = 1/a<sup>n</sup></span>, ובשבר <span class=\"ltr\">(a/b)<sup>−n</sup> = (b/a)<sup>n</sup></span>. מעריך שלילי לא הופך את המספר לשלילי: <span class=\"ltr\">2<sup>−3</sup> = 1/8</span>.",
+  "<b>מעריך שבור:</b> <span class=\"ltr\">a<sup>1/n</sup></span> הוא שורש מסדר n, ו-<span class=\"ltr\">a<sup>m/n</sup> = (<sup>n</sup>√a)<sup>m</sup></span>. נוח לחשב קודם את השורש ואחר כך את החזקה: <span class=\"ltr\">8<sup>2/3</sup> = 2² = 4</span>, <span class=\"ltr\">27<sup>−1/3</sup> = 1/3</span>.",
+  "<b>השוואת חזקות:</b> מביאים לאותו בסיס, או לאותו מעריך בעזרת המחלק המשותף של המעריכים. <span class=\"ltr\">2<sup>30</sup> = 8<sup>10</sup></span> ו-<span class=\"ltr\">3<sup>20</sup> = 9<sup>10</sup></span>, ולכן <span class=\"ltr\">3<sup>20</sup> &gt; 2<sup>30</sup></span>. מעריך גדול יותר לא אומר מספר גדול יותר.",
+  "<b>סימנים ושברים:</b> בסיס שלילי בחזקה זוגית נותן מספר חיובי, ובחזקה אי-זוגית מספר שלילי. שימו לב לסוגריים: <span class=\"ltr\">(−2)<sup>4</sup> = 16</span>, אבל <span class=\"ltr\">−2<sup>4</sup> = −16</span>. בסיס בין 0 ל-1 קטן ככל שהמעריך גדל: <span class=\"ltr\">(1/2)³ &lt; (1/2)²</span>.",
+  "<b>שורשים:</b> <span class=\"ltr\">√(ab) = √a · √b</span>, ולכן מפשטים בעזרת ריבוע שלם: <span class=\"ltr\">√72 = √36 · √2 = 6√2</span>. בחיבור אין כלל כזה: <span class=\"ltr\">√9 + √16 = 7</span>, אבל <span class=\"ltr\">√25 = 5</span>. מחברים רק שורשים עם אותו מספר בפנים: <span class=\"ltr\">2√3 + 5√3 = 7√3</span>.",
+  "<b>שורש של ריבוע:</b> <span class=\"ltr\">√(x²) = |x|</span>, לא x. כש-x שלילי, <span class=\"ltr\">√(x²) = −x</span>. דוגמה: כש-<span class=\"ltr\">x = −3</span>, <span class=\"ltr\">√(x²) = √9 = 3 = −x</span>.",
+  "<b>ספרת האחדות של חזקה</b> חוזרת במחזור. של 2: 2, 4, 8, 6. של 3: 3, 9, 7, 1. של 7: 7, 9, 3, 1. של 8: 8, 4, 2, 6. של 4: 4, 6. של 9: 9, 1. ספרות 0, 1, 5, 6 לא משתנות. במחזור של 4 מחלקים את המעריך ב-4, ולוקחים את המקום לפי השארית (שארית 0 = המקום הרביעי). דוגמה: <span class=\"ltr\">3<sup>22</sup></span>: <span class=\"ltr\">22 = 5 · 4 + 2</span>, המקום השני, 9. בסכום או במכפלה עובדים רק עם ספרות האחדות.",
+  "<b>משוואה עם חזקות:</b> מביאים את שני האגפים לאותו בסיס ומשווים מעריכים: <span class=\"ltr\">4<sup>x</sup> = 8<sup>x−1</sup></span> הופך ל-<span class=\"ltr\">2<sup>2x</sup> = 2<sup>3x−3</sup></span>, ולכן <span class=\"ltr\">2x = 3x − 3</span> ו-<span class=\"ltr\">x = 3</span>. כשנתון <span class=\"ltr\">2<sup>x</sup> = k</span>, כותבים כל ביטוי אחר בעזרת <span class=\"ltr\">2<sup>x</sup></span>: <span class=\"ltr\">4<sup>x</sup> = (2<sup>x</sup>)² = k²</span>."
+ ],
+ "stims": {},
+ "questions": [
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "בסיס משותף",
+   "level": 1,
+   "stim": null,
+   "stem": "מהו ערכו של <span class=\"ltr\">3<sup>8</sup> · 9<sup>−3</sup></span>?",
+   "fig": null,
+   "options": [
+    "243",
+    "9",
+    "<span class=\"ltr\">1/9</span>",
+    "2,187"
+   ],
+   "answer": 2,
+   "explain": "מביאים לבסיס משותף (הכלל ״חוקי החזקות״): <span class=\"ltr\">9 = 3²</span>, ולכן <span class=\"ltr\">9<sup>−3</sup> = (3²)<sup>−3</sup> = 3<sup>−6</sup></span>. עכשיו <span class=\"ltr\">3<sup>8</sup> · 3<sup>−6</sup> = 3<sup>8−6</sup> = 3² = 9</span>.",
+   "fast": "<span class=\"ltr\">9<sup>−3</sup> = 1/9³ = 1/3<sup>6</sup></span>, ו-<span class=\"ltr\">3<sup>8</sup> / 3<sup>6</sup> = 3² = 9</span>.",
+   "traps": [
+    "כתבו את <span class=\"ltr\">9<sup>−3</sup></span> כ-<span class=\"ltr\">3<sup>−3</sup></span>; אבל <span class=\"ltr\">9 = 3²</span>, ולכן <span class=\"ltr\">9<sup>−3</sup> = 3<sup>−6</sup></span>.",
+    "",
+    "חיסרו את המעריכים בסדר הפוך (<span class=\"ltr\">6 − 8</span>).",
+    "חיברו את המעריכים במקום לכפול אותם: <span class=\"ltr\">(3²)<sup>−3</sup></span> אינו <span class=\"ltr\">3<sup>−1</sup></span>."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "מעריך שלילי",
+   "level": 1,
+   "stim": null,
+   "stem": "מהו ערכו של <span class=\"ltr\">(2/3)<sup>−2</sup></span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">4/9</span>",
+    "<span class=\"ltr\">−4/9</span>",
+    "<span class=\"ltr\">−9/4</span>",
+    "<span class=\"ltr\">9/4</span>"
+   ],
+   "answer": 4,
+   "explain": "מעריך שלילי הופך את השבר (הכלל ״מעריך 0 ומעריך שלילי״): <span class=\"ltr\">(2/3)<sup>−2</sup> = (3/2)²</span>. מעלים בריבוע: <span class=\"ltr\">9/4</span>. התוצאה חיובית, כי מעריך שלילי לא משנה את הסימן.",
+   "fast": "הופכים את השבר ומוחקים את המינוס מהמעריך: <span class=\"ltr\">(3/2)² = 9/4 = 2.25</span>.",
+   "traps": [
+    "התעלמו מהמינוס שבמעריך.",
+    "מעריך שלילי אינו הופך את המספר לשלילי; הוא הופך את השבר.",
+    "הפכו את השבר נכון, אבל הוסיפו מינוס מיותר.",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "פישוט שורשים",
+   "level": 1,
+   "stim": null,
+   "stem": "<span class=\"ltr\">√50 + √18 = ?</span>",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">8√2</span>",
+    "<span class=\"ltr\">√68</span>",
+    "<span class=\"ltr\">15√2</span>",
+    "<span class=\"ltr\">34√2</span>"
+   ],
+   "answer": 1,
+   "explain": "מפשטים כל שורש בעזרת ריבוע שלם (הכלל ״שורשים״): <span class=\"ltr\">√50 = √25 · √2 = 5√2</span> ו-<span class=\"ltr\">√18 = √9 · √2 = 3√2</span>. עכשיו לשניהם אותו שורש, ומחברים את המקדמים: <span class=\"ltr\">5√2 + 3√2 = 8√2</span>.",
+   "fast": "הערכה: <span class=\"ltr\">√50 ≈ 7.07</span> ו-<span class=\"ltr\">√18 ≈ 4.24</span>, והסכום כ-11.3. <span class=\"ltr\">8√2 ≈ 11.3</span>, ואילו <span class=\"ltr\">√68 ≈ 8.2</span>.",
+   "traps": [
+    "",
+    "חיברו את המספרים שמתחת לשורש; את זה אסור לעשות.",
+    "כפלו את המקדמים 5 ו-3 במקום לחבר אותם.",
+    "הוציאו את 25 ואת 9 מהשורש בלי להוציא מהם שורש."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "מעריך שבור",
+   "level": 2,
+   "stim": null,
+   "stem": "איזה מהמספרים הבאים הוא הגדול ביותר?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">(1/2)<sup>−3</sup></span>",
+    "<span class=\"ltr\">64<sup>2/3</sup></span>",
+    "<span class=\"ltr\">16<sup>5/4</sup></span>",
+    "<span class=\"ltr\">9<sup>3/2</sup></span>"
+   ],
+   "answer": 3,
+   "explain": "מחשבים כל מספר לפי הכלל ״מעריך שבור״, קודם שורש ואחר כך חזקה. <span class=\"ltr\">(1/2)<sup>−3</sup> = 2³ = 8</span>. <span class=\"ltr\">64<sup>2/3</sup> = (∛64)² = 4² = 16</span>. <span class=\"ltr\">16<sup>5/4</sup> = (<sup>4</sup>√16)<sup>5</sup> = 2<sup>5</sup> = 32</span>. <span class=\"ltr\">9<sup>3/2</sup> = (√9)³ = 3³ = 27</span>. הגדול ביותר: <span class=\"ltr\">16<sup>5/4</sup> = 32</span>.",
+   "fast": "כותבים כחזקות של 2 כשאפשר: <span class=\"ltr\">2³</span>, <span class=\"ltr\">2<sup>4</sup></span>, <span class=\"ltr\">2<sup>5</sup></span>, ומשווים ל-27.",
+   "traps": [
+    "הוא שווה רק 8: המעריך השלילי הופך את השבר ל-2, ו-<span class=\"ltr\">2³ = 8</span>.",
+    "<span class=\"ltr\">∛64 = 4</span>, ו-<span class=\"ltr\">4² = 16</span>.",
+    "",
+    "<span class=\"ltr\">√9 = 3</span> ו-<span class=\"ltr\">3³ = 27</span>. קרוב, אבל קטן מ-32."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "הוצאת חזקה משותפת",
+   "level": 2,
+   "stim": null,
+   "stem": "מהו ערכו של <span class=\"ltr\">(3<sup>12</sup> − 3<sup>10</sup>) / (3<sup>10</sup> + 3<sup>9</sup>)</span>?",
+   "fig": null,
+   "options": [
+    "6",
+    "2",
+    "8",
+    "9"
+   ],
+   "answer": 1,
+   "explain": "אי אפשר לחבר או לחסר חזקות למעריך אחד, ולכן מוציאים גורם משותף (הכלל ״חיבור אינו כפל״). במונה: <span class=\"ltr\">3<sup>12</sup> − 3<sup>10</sup> = 3<sup>10</sup>(3² − 1) = 8 · 3<sup>10</sup></span>. במכנה: <span class=\"ltr\">3<sup>10</sup> + 3<sup>9</sup> = 3<sup>9</sup>(3 + 1) = 4 · 3<sup>9</sup></span>. מחלקים: <span class=\"ltr\">(8 · 3<sup>10</sup>) / (4 · 3<sup>9</sup>) = 2 · 3 = 6</span>.",
+   "fast": "מחלקים מונה ומכנה ב-<span class=\"ltr\">3<sup>9</sup></span>: <span class=\"ltr\">(3³ − 3) / (3 + 1) = 24 / 4 = 6</span>.",
+   "traps": [
+    "",
+    "במכנה הוציאו <span class=\"ltr\">3<sup>10</sup></span> במקום <span class=\"ltr\">3<sup>9</sup></span>: <span class=\"ltr\">3<sup>10</sup> + 3<sup>9</sup></span> אינו <span class=\"ltr\">4 · 3<sup>10</sup></span>.",
+    "חילקו את המונה רק ב-<span class=\"ltr\">3<sup>10</sup></span> והתעלמו מ-<span class=\"ltr\">3<sup>9</sup></span> שבמכנה.",
+    "צמצמו רק את <span class=\"ltr\">3<sup>12</sup> / 3<sup>10</sup></span> והתעלמו משאר האיברים."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "ספרת אחדות",
+   "level": 2,
+   "stim": null,
+   "stem": "מהי ספרת האחדות של <span class=\"ltr\">7<sup>2026</sup></span>?",
+   "fig": null,
+   "options": [
+    "7",
+    "1",
+    "3",
+    "9"
+   ],
+   "answer": 4,
+   "explain": "ספרות האחדות של החזקות של 7 חוזרות במחזור של 4 (הכלל ״ספרת האחדות של חזקה״): <span class=\"ltr\">7¹ = 7</span>, <span class=\"ltr\">7² = 49</span>, <span class=\"ltr\">7³ = 343</span>, <span class=\"ltr\">7<sup>4</sup> = 2,401</span>, כלומר 7, 9, 3, 1, ושוב 7. מחלקים את המעריך ב-4: <span class=\"ltr\">2026 = 506 · 4 + 2</span>. השארית 2, ולכן ספרת האחדות היא השנייה במחזור, 9.",
+   "fast": "השארית בחלוקה ב-4 נקבעת לפי שתי הספרות האחרונות: 26 נותן שארית 2. המקום השני במחזור 7, 9, 3, 1 הוא 9.",
+   "traps": [
+    "זה המקום הראשון במחזור; אבל השארית של 2026 בחלוקה ב-4 היא 2.",
+    "הניחו שכל חזקה זוגית של 7 מסתיימת ב-1. זה נכון רק כשהמעריך מתחלק ב-4.",
+    "זה המקום השלישי במחזור, ששייך לשארית 3.",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "השוואת חזקות",
+   "level": 2,
+   "stim": null,
+   "stem": "איזה מהסידורים הבאים נכון?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">2<sup>75</sup> &lt; 3<sup>50</sup> &lt; 5<sup>25</sup></span>",
+    "<span class=\"ltr\">5<sup>25</sup> &lt; 2<sup>75</sup> &lt; 3<sup>50</sup></span>",
+    "<span class=\"ltr\">5<sup>25</sup> &lt; 3<sup>50</sup> &lt; 2<sup>75</sup></span>",
+    "<span class=\"ltr\">2<sup>75</sup> &lt; 5<sup>25</sup> &lt; 3<sup>50</sup></span>"
+   ],
+   "answer": 2,
+   "explain": "המחלק המשותף של המעריכים 75, 50 ו-25 הוא 25, ולכן מביאים את כולם לחזקת 25 (הכלל ״השוואת חזקות״): <span class=\"ltr\">2<sup>75</sup> = (2³)<sup>25</sup> = 8<sup>25</sup></span>, <span class=\"ltr\">3<sup>50</sup> = (3²)<sup>25</sup> = 9<sup>25</sup></span>, ו-<span class=\"ltr\">5<sup>25</sup></span> נשאר כמו שהוא. כשהמעריך זהה, הבסיס הגדול נותן את המספר הגדול: <span class=\"ltr\">5 &lt; 8 &lt; 9</span>, ולכן <span class=\"ltr\">5<sup>25</sup> &lt; 2<sup>75</sup> &lt; 3<sup>50</sup></span>.",
+   "fast": "מוציאים שורש מסדר 25 מכל המספרים (זה לא משנה את הסדר) ומשווים <span class=\"ltr\">5</span>, <span class=\"ltr\">2³ = 8</span> ו-<span class=\"ltr\">3² = 9</span>.",
+   "traps": [
+    "סידרו לפי הבסיס בלבד; <span class=\"ltr\">5<sup>25</sup></span> הוא דווקא הקטן ביותר.",
+    "",
+    "סידרו לפי המעריך בלבד; אבל <span class=\"ltr\">2<sup>75</sup> = 8<sup>25</sup></span> קטן מ-<span class=\"ltr\">3<sup>50</sup> = 9<sup>25</sup></span>.",
+    "כתבו את <span class=\"ltr\">2<sup>75</sup></span> כ-<span class=\"ltr\">4<sup>25</sup></span>; אבל <span class=\"ltr\">75 = 3 · 25</span>, ולכן <span class=\"ltr\">2<sup>75</sup> = 8<sup>25</sup></span>."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "הצבת חזקה נתונה",
+   "level": 3,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">2<sup>x</sup> = 3</span>. מהו <span class=\"ltr\">8<sup>x+1</sup></span>?",
+   "fig": null,
+   "options": [
+    "24",
+    "35",
+    "216",
+    "54"
+   ],
+   "answer": 3,
+   "explain": "כותבים את הכול בעזרת <span class=\"ltr\">2<sup>x</sup></span> (הכלל ״משוואה עם חזקות״): <span class=\"ltr\">8<sup>x+1</sup> = 8<sup>x</sup> · 8</span>, ו-<span class=\"ltr\">8<sup>x</sup> = (2³)<sup>x</sup> = (2<sup>x</sup>)³ = 3³ = 27</span>. לכן <span class=\"ltr\">8<sup>x+1</sup> = 27 · 8 = 216</span>.",
+   "fast": "<span class=\"ltr\">8<sup>x+1</sup> = 2<sup>3x+3</sup> = (2<sup>x</sup>)³ · 2³ = 27 · 8</span>.",
+   "traps": [
+    "הניחו ש-<span class=\"ltr\">8<sup>x</sup> = 3</span>, כאילו הבסיס הוא 2; אבל <span class=\"ltr\">8<sup>x</sup> = (2<sup>x</sup>)³ = 27</span>.",
+    "פירקו את <span class=\"ltr\">8<sup>x+1</sup></span> לסכום <span class=\"ltr\">8<sup>x</sup> + 8</span> במקום למכפלה <span class=\"ltr\">8<sup>x</sup> · 8</span>.",
+    "",
+    "כתבו <span class=\"ltr\">8<sup>x+1</sup> = 2<sup>3x+1</sup></span>, ושכחו לכפול ב-3 גם את ה-1."
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "שורש של ריבוע",
+   "level": 3,
+   "stim": null,
+   "stem": "x מספר שלילי. מהו ערכו של <span class=\"ltr\">√(x²) + √((x − 3)²)</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">2x − 3</span>",
+    "3",
+    "<span class=\"ltr\">−3</span>",
+    "<span class=\"ltr\">3 − 2x</span>"
+   ],
+   "answer": 4,
+   "explain": "לפי הכלל ״שורש של ריבוע״, <span class=\"ltr\">√(y²) = |y|</span>. x שלילי, ולכן <span class=\"ltr\">|x| = −x</span>. גם <span class=\"ltr\">x − 3</span> שלילי (מספר שלילי פחות 3), ולכן <span class=\"ltr\">|x − 3| = −(x − 3) = 3 − x</span>. הסכום: <span class=\"ltr\">−x + 3 − x = 3 − 2x</span>. בדיקה עם <span class=\"ltr\">x = −1</span>: <span class=\"ltr\">√1 + √16 = 1 + 4 = 5</span>, ו-<span class=\"ltr\">3 − 2 · (−1) = 5</span>.",
+   "fast": "מציבים <span class=\"ltr\">x = −1</span>: הביטוי שווה 5. רק <span class=\"ltr\">3 − 2x</span> נותן 5; האחרים נותנים <span class=\"ltr\">−5</span>, 3 ו-<span class=\"ltr\">−3</span>.",
+   "traps": [
+    "הורידו את השורש עם הריבוע, כאילו <span class=\"ltr\">√(x²) = x</span>. זה נכון רק כשמה שבפנים חיובי.",
+    "את <span class=\"ltr\">√((x − 3)²)</span> כתבו נכון, <span class=\"ltr\">3 − x</span>, אבל את <span class=\"ltr\">√(x²)</span> כתבו כ-x.",
+    "את <span class=\"ltr\">√(x²)</span> כתבו נכון, <span class=\"ltr\">−x</span>, אבל את <span class=\"ltr\">√((x − 3)²)</span> כתבו כ-<span class=\"ltr\">x − 3</span>.",
+    ""
+   ]
+  },
+  {
+   "type": "problem",
+   "topic": "powers",
+   "skill": "אחדות של מכפלה",
+   "level": 3,
+   "stim": null,
+   "stem": "מהי ספרת האחדות של <span class=\"ltr\">2<sup>43</sup> · 3<sup>42</sup></span>?",
+   "fig": null,
+   "options": [
+    "2",
+    "6",
+    "7",
+    "4"
+   ],
+   "answer": 1,
+   "explain": "מוצאים כל ספרת אחדות לפי המחזור (הכלל ״ספרת האחדות של חזקה״). <span class=\"ltr\">43 = 10 · 4 + 3</span>: המקום השלישי במחזור של 2 (2, 4, 8, 6) הוא 8. <span class=\"ltr\">42 = 10 · 4 + 2</span>: המקום השני במחזור של 3 (3, 9, 7, 1) הוא 9. במכפלה כופלים רק את ספרות האחדות: <span class=\"ltr\">8 · 9 = 72</span>, ולכן ספרת האחדות היא 2.",
+   "fast": "<span class=\"ltr\">2<sup>43</sup> · 3<sup>42</sup> = 2 · 6<sup>42</sup></span>. כל חזקה של 6 מסתיימת ב-6, ו-<span class=\"ltr\">2 · 6 = 12</span>: ספרת האחדות 2.",
+   "traps": [
+    "",
+    "<span class=\"ltr\">2<sup>42</sup> · 3<sup>42</sup> = 6<sup>42</sup></span> מסתיים ב-6, אבל שכחו את ה-2 שנשאר.",
+    "חיברו את ספרות האחדות (<span class=\"ltr\">8 + 9 = 17</span>) במקום לכפול אותן.",
+    "לקחו במחזור של 2 את המקום הרביעי (6) במקום השלישי (8): <span class=\"ltr\">6 · 9 = 54</span>."
+   ]
+  }
+ ]
+}
