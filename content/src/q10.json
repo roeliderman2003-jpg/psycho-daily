@@ -1,0 +1,515 @@
+{
+ "id": "q10",
+ "domain": "quant",
+ "title": "כמותי 10",
+ "minutes": 20,
+ "stims": {
+  "c1": {
+   "kind": "chart",
+   "intro": "בתרשים שלפניך מוצג הסכום המצטבר בחיסכון של דנה ושל יואב בסוף כל אחד מהחודשים 1–8 של השנה (באלפי ש״ח). הנקודה 0 בציר האופקי היא תחילת חודש 1; בנקודה זו לא היה לאף אחד מהם חיסכון. החיסכון (נטו) בחודש מסוים הוא הסכום המצטבר בסוף אותו חודש פחות הסכום המצטבר בסוף החודש שלפניו. בחודש שבו הסכום המצטבר ירד, נמשך כסף מהחיסכון.",
+   "html": "<svg viewBox=\"0 0 360 305\" xmlns=\"http://www.w3.org/2000/svg\" direction=\"ltr\"><line x1=\"50.0\" y1=\"245.0\" x2=\"330.0\" y2=\"245.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"228.0\" x2=\"330.0\" y2=\"228.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"211.0\" x2=\"330.0\" y2=\"211.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"194.0\" x2=\"330.0\" y2=\"194.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"177.0\" x2=\"330.0\" y2=\"177.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"160.0\" x2=\"330.0\" y2=\"160.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"143.0\" x2=\"330.0\" y2=\"143.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"126.0\" x2=\"330.0\" y2=\"126.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"109.0\" x2=\"330.0\" y2=\"109.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"92.0\" x2=\"330.0\" y2=\"92.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"75.0\" x2=\"330.0\" y2=\"75.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"50.0\" y1=\"58.0\" x2=\"330.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.22\"/><line x1=\"85.0\" y1=\"262.0\" x2=\"85.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"120.0\" y1=\"262.0\" x2=\"120.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"155.0\" y1=\"262.0\" x2=\"155.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"190.0\" y1=\"262.0\" x2=\"190.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"225.0\" y1=\"262.0\" x2=\"225.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"260.0\" y1=\"262.0\" x2=\"260.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"295.0\" y1=\"262.0\" x2=\"295.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"330.0\" y1=\"262.0\" x2=\"330.0\" y2=\"58.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1\" stroke-opacity=\"0.12\"/><line x1=\"50.0\" y1=\"262.0\" x2=\"338.0\" y2=\"262.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"50.0\" y1=\"262.0\" x2=\"50.0\" y2=\"50.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><text x=\"43.0\" y=\"266.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">0</text><text x=\"43.0\" y=\"249.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">1</text><text x=\"43.0\" y=\"232.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">2</text><text x=\"43.0\" y=\"215.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">3</text><text x=\"43.0\" y=\"198.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">4</text><text x=\"43.0\" y=\"181.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">5</text><text x=\"43.0\" y=\"164.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">6</text><text x=\"43.0\" y=\"147.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">7</text><text x=\"43.0\" y=\"130.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">8</text><text x=\"43.0\" y=\"113.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">9</text><text x=\"43.0\" y=\"96.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">10</text><text x=\"43.0\" y=\"79.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">11</text><text x=\"43.0\" y=\"62.5\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">12</text><text x=\"50.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">0</text><text x=\"85.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">1</text><text x=\"120.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">2</text><text x=\"155.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">3</text><text x=\"190.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">4</text><text x=\"225.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">5</text><text x=\"260.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">6</text><text x=\"295.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">7</text><text x=\"330.0\" y=\"280.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">8</text><text x=\"348.0\" y=\"298.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"end\">חודש</text><text x=\"12.0\" y=\"22.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"start\">אלפי ש״ח</text><polyline points=\"50,262 85,228 120,194 155,177 190,143 225,160 260,143 295,109 330,92\" stroke=\"#ff9600\" fill=\"none\" stroke-width=\"2.4\" stroke-dasharray=\"6 4\"/><rect x=\"46.6\" y=\"258.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"81.6\" y=\"224.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"116.6\" y=\"190.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"151.6\" y=\"173.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"186.6\" y=\"139.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"221.6\" y=\"156.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"256.6\" y=\"139.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"291.6\" y=\"105.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><rect x=\"326.6\" y=\"88.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><polyline points=\"50,262 85,245 120,211 155,194 190,194 225,160 260,109 295,92 330,58\" stroke=\"#1cb0f6\" fill=\"none\" stroke-width=\"2.4\"/><circle cx=\"50\" cy=\"262\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"85\" cy=\"245\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"120\" cy=\"211\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"155\" cy=\"194\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"190\" cy=\"194\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"225\" cy=\"160\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"260\" cy=\"109\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"295\" cy=\"92\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><circle cx=\"330\" cy=\"58\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><line x1=\"200\" y1=\"17\" x2=\"226\" y2=\"17\" stroke=\"#1cb0f6\" fill=\"none\" stroke-width=\"2.4\"/><circle cx=\"213\" cy=\"17\" r=\"3.6\" fill=\"#1cb0f6\" stroke=\"none\"/><text x=\"232.0\" y=\"22.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"start\">דנה</text><line x1=\"272\" y1=\"17\" x2=\"298\" y2=\"17\" stroke=\"#ff9600\" fill=\"none\" stroke-width=\"2.4\" stroke-dasharray=\"6 4\"/><rect x=\"281.6\" y=\"13.6\" width=\"6.8\" height=\"6.8\" fill=\"#ff9600\" stroke=\"none\"/><text x=\"304.0\" y=\"22.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"start\">יואב</text></svg>"
+  }
+ },
+ "questions": [
+  {
+   "n": 1,
+   "type": "problem",
+   "topic": "percent",
+   "skill": "מחיר מקורי לפני הנחה",
+   "level": 1,
+   "stim": null,
+   "stem": "מחיר מעיל אחרי הנחה של 15% הוא 102 ש״ח. מה היה מחיר המעיל לפני ההנחה (בש״ח)?",
+   "fig": null,
+   "options": [
+    "117.3",
+    "120",
+    "117",
+    "86.7"
+   ],
+   "answer": 2,
+   "explain": "אחרי הנחה של 15% נשאר 85% מהמחיר המקורי. נסמן את המחיר המקורי ב-P: <span class=\"ltr\">0.85P = 102</span>, ולכן <span class=\"ltr\">P = 102 / 0.85 = 120</span>. בדיקה: 15% מ-120 הם 18, ו-<span class=\"ltr\">120 − 18 = 102</span>.",
+   "fast": "בודקים את התשובות מהמחיר המקורי: 15% מ-120 הם 18, ו-<span class=\"ltr\">120 − 18 = 102</span>. מתאים.",
+   "traps": [
+    "הוסיפו 15% ל-102, אבל ההנחה חושבה מהמחיר המקורי ולא מהמחיר שאחרי ההנחה.",
+    "",
+    "הוסיפו 15 ש״ח במקום 15%.",
+    "הורידו עוד 15% מ-102 במקום לחזור למחיר המקורי."
+   ]
+  },
+  {
+   "n": 2,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "פעולה מוגדרת מורכבת",
+   "level": 1,
+   "stim": null,
+   "stem": "לכל שני מספרים a ו-b מוגדרת הפעולה <span class=\"ltr\">a # b = a² − 2b</span>. מהו <span class=\"ltr\">(3 # 1) # 2</span>?",
+   "fig": null,
+   "options": [
+    "15",
+    "7",
+    "53",
+    "45"
+   ],
+   "answer": 4,
+   "explain": "מחשבים קודם את הסוגריים: <span class=\"ltr\">3 # 1 = 3² − 2 · 1 = 9 − 2 = 7</span>. התוצאה נכנסת למקום של a בפעולה השנייה: <span class=\"ltr\">7 # 2 = 7² − 2 · 2 = 49 − 4 = 45</span>.",
+   "fast": "סדר הפעולות: קודם הסוגריים, והתוצאה (7) היא ה-a של הפעולה הבאה, וה-2 הוא ה-b.",
+   "traps": [
+    "חישבו <span class=\"ltr\">3 # (1 # 2)</span>: <span class=\"ltr\">1 # 2 = −3</span>, ואז <span class=\"ltr\">3 # (−3) = 9 + 6 = 15</span>. אבל בשאלה הסוגריים סביב <span class=\"ltr\">3 # 1</span>.",
+    "זו רק התוצאה של הסוגריים, <span class=\"ltr\">3 # 1</span>; שכחו את הפעולה השנייה.",
+    "טעות סימן: <span class=\"ltr\">49 + 4</span> במקום <span class=\"ltr\">49 − 4</span>.",
+    ""
+   ]
+  },
+  {
+   "n": 3,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "זווית חיצונית במשולש",
+   "level": 1,
+   "stim": null,
+   "stem": "במשולש ABC שבשרטוט <span class=\"ltr\">AB = AC</span>. הצלע BC הוארכה מעבר ל-C עד הנקודה D, ונתון: <span class=\"ltr\">∠ACD = 112°</span>. מהו גודל הזווית BAC? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 255\" xmlns=\"http://www.w3.org/2000/svg\" direction=\"ltr\"><polygon points=\"130.0,32.0 50,230 210,230\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"210.0\" y1=\"230.0\" x2=\"330.0\" y2=\"230.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"95.6\" y1=\"133.2\" x2=\"84.4\" y2=\"128.7\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.4\"/><line x1=\"175.6\" y1=\"128.7\" x2=\"164.4\" y2=\"133.2\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.4\"/><path d=\"M232.0,230.0 A22,22 0 0 0 201.8,209.6\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.2\"/><text x=\"130.0\" y=\"24.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">A</text><text x=\"38.0\" y=\"235.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">B</text><text x=\"210.0\" y=\"250.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">C</text><text x=\"330.0\" y=\"250.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">D</text><text x=\"250.0\" y=\"204.0\" fill=\"currentColor\" font-size=\"13\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">112°</text></svg>",
+   "options": [
+    "44°",
+    "68°",
+    "56°",
+    "34°"
+   ],
+   "answer": 1,
+   "explain": "הזווית ACB צמודה לזווית ACD, ולכן <span class=\"ltr\">∠ACB = 180° − 112° = 68°</span>. המשולש שווה-שוקיים (<span class=\"ltr\">AB = AC</span>), ולכן זוויות הבסיס שוות: <span class=\"ltr\">∠ABC = ∠ACB = 68°</span>. סכום הזוויות במשולש 180°: <span class=\"ltr\">∠BAC = 180° − 68° − 68° = 44°</span>.",
+   "fast": "זווית חיצונית שווה לסכום שתי הזוויות הפנימיות שאינן צמודות לה: <span class=\"ltr\">112° = ∠A + 68°</span>, ולכן <span class=\"ltr\">∠A = 44°</span>.",
+   "traps": [
+    "",
+    "זו זווית הבסיס ACB, לא זווית הראש.",
+    "הניחו שהזוויות השוות הן A ו-B וחילקו את 112° לשתיים. אבל השוקיים השוות הן AB ו-AC, ולכן הזוויות השוות הן B ו-C.",
+    "חילקו את <span class=\"ltr\">180° − 112° = 68°</span> בין שתי זוויות, אבל 68° היא הזווית C לבדה."
+   ]
+  },
+  {
+   "n": 4,
+   "type": "problem",
+   "topic": "averages",
+   "skill": "שינוי ממוצע בהוספת איבר",
+   "level": 2,
+   "stim": null,
+   "stem": "הגיל הממוצע של 8 עובדים במשרד הוא 35. עובד חדש הצטרף למשרד, והגיל הממוצע של כל העובדים עלה ב-1. בן כמה העובד החדש?",
+   "fig": null,
+   "options": [
+    "36",
+    "43",
+    "44",
+    "45"
+   ],
+   "answer": 3,
+   "explain": "סכום הגילים של 8 העובדים: <span class=\"ltr\">8 · 35 = 280</span>. אחרי ההצטרפות יש 9 עובדים והממוצע 36, ולכן סכום הגילים <span class=\"ltr\">9 · 36 = 324</span>. גיל העובד החדש הוא ההפרש: <span class=\"ltr\">324 − 280 = 44</span>.",
+   "fast": "העובד החדש ״מביא״ את הממוצע החדש (36), ועוד שנה לכל אחד מ-8 העובדים הוותיקים כדי להעלות את הממוצע שלהם: <span class=\"ltr\">36 + 8 = 44</span>.",
+   "traps": [
+    "זה הממוצע החדש, לא גיל העובד החדש.",
+    "הוסיפו לממוצע הישן שנה לכל אחד מ-8 העובדים (<span class=\"ltr\">35 + 8</span>), אבל צריך להתחיל מהממוצע החדש.",
+    "",
+    "הוסיפו לממוצע החדש 9 שנים, כאילו גם העובד החדש צריך להעלות את עצמו."
+   ]
+  },
+  {
+   "n": 5,
+   "type": "problem",
+   "topic": "coordinates",
+   "skill": "משוואת ישר משתי נקודות",
+   "level": 2,
+   "stim": null,
+   "stem": "ישר עובר דרך הנקודות <span class=\"ltr\">(−2, 1)</span> ו-<span class=\"ltr\">(4, 4)</span>. מהו שיעור ה-y של נקודת החיתוך של הישר עם ציר ה-y?",
+   "fig": null,
+   "options": [
+    "−4",
+    "2",
+    "5",
+    "0"
+   ],
+   "answer": 2,
+   "explain": "השיפוע: <span class=\"ltr\">(4 − 1) / (4 − (−2)) = 3/6 = 1/2</span>. משוואת הישר: <span class=\"ltr\">y = x/2 + b</span>. מציבים את הנקודה <span class=\"ltr\">(4, 4)</span>: <span class=\"ltr\">4 = 2 + b</span>, ולכן <span class=\"ltr\">b = 2</span>. נקודת החיתוך עם ציר ה-y היא <span class=\"ltr\">(0, 2)</span>.",
+   "fast": "מ-<span class=\"ltr\">x = −2</span> עד <span class=\"ltr\">x = 0</span> זזים 2 יחידות ימינה, והישר עולה חצי יחידה על כל יחידה: <span class=\"ltr\">1 + 2 · 1/2 = 2</span>.",
+   "traps": [
+    "זה שיעור ה-x של נקודת החיתוך עם ציר ה-x (<span class=\"ltr\">y = 0</span>), לא החיתוך עם ציר ה-y.",
+    "",
+    "השתמשו בשיפוע הפוך (<span class=\"ltr\">6/3 = 2</span>) במקום <span class=\"ltr\">3/6</span>.",
+    "טעות סימן בהצבת <span class=\"ltr\">x = −2</span>: <span class=\"ltr\">1 = 1 + b</span> במקום <span class=\"ltr\">1 = −1 + b</span>."
+   ]
+  },
+  {
+   "n": 6,
+   "type": "problem",
+   "topic": "integers",
+   "skill": "הכלה והפרדה",
+   "level": 2,
+   "stim": null,
+   "stem": "כמה מהמספרים השלמים מ-1 עד 100 (כולל) מתחלקים ב-4 או ב-6 (או בשניהם)?",
+   "fig": null,
+   "options": [
+    "41",
+    "37",
+    "25",
+    "33"
+   ],
+   "answer": 4,
+   "explain": "מתחלקים ב-4: <span class=\"ltr\">100 / 4 = 25</span> מספרים. מתחלקים ב-6: 16 מספרים (<span class=\"ltr\">6 · 16 = 96</span>). המספרים שמתחלקים גם ב-4 וגם ב-6 נספרו פעמיים. הם הכפולות של 12 (המכפלה המשותפת הקטנה, לא <span class=\"ltr\">4 · 6 = 24</span>): 8 מספרים (<span class=\"ltr\">12 · 8 = 96</span>). לכן: <span class=\"ltr\">25 + 16 − 8 = 33</span>.",
+   "fast": "הכלה והפרדה: מחברים את שתי הקבוצות ומורידים את החיתוך פעם אחת. החיתוך הוא כפולות של 12.",
+   "traps": [
+    "חיברו בלי להוריד את המספרים שנספרו פעמיים (כפולות של 12).",
+    "הורידו את כפולות 24 במקום את כפולות 12: למשל 12 ו-36 מתחלקים גם ב-4 וגם ב-6.",
+    "ספרו רק את המתחלקים ב-4.",
+    ""
+   ]
+  },
+  {
+   "n": 7,
+   "type": "problem",
+   "topic": "word",
+   "skill": "הספק משותף ונפרד",
+   "level": 2,
+   "stim": null,
+   "stem": "ברז A ממלא בריכה ריקה ב-6 שעות, וברז B ממלא אותה ב-4 שעות. פתחו את שני הברזים יחד בבריכה ריקה, ואחרי שעה אחת סגרו את ברז A. כמה זמן נוסף, אחרי סגירת ברז A, יידרש לברז B כדי להשלים את מילוי הבריכה?",
+   "fig": null,
+   "options": [
+    "2 שעות ו-20 דקות",
+    "2 שעות ו-24 דקות",
+    "3 שעות",
+    "שעה ו-24 דקות"
+   ],
+   "answer": 1,
+   "explain": "בשעה ברז A ממלא <span class=\"ltr\">1/6</span> מהבריכה וברז B ממלא <span class=\"ltr\">1/4</span>. בשעה הראשונה, יחד: <span class=\"ltr\">1/6 + 1/4 = 5/12</span>. נשאר למלא <span class=\"ltr\">1 − 5/12 = 7/12</span>. ברז B לבדו ממלא <span class=\"ltr\">1/4</span> בשעה, ולכן יידרשו <span class=\"ltr\">(7/12) / (1/4) = 7/3</span> שעות, כלומר 2 שעות ו-20 דקות.",
+   "fast": "נניח שבבריכה 12 ליטר: A ממלא 2 ליטר בשעה ו-B ממלא 3. בשעה הראשונה נכנסו 5 ליטר, נשארו 7, ו-B ממלא אותם ב-<span class=\"ltr\">7/3</span> שעות.",
+   "traps": [
+    "",
+    "זה הזמן שבו שני הברזים יחד היו ממלאים את כל הבריכה (<span class=\"ltr\">12/5</span> שעות).",
+    "הניחו ש-B כבר עבד שעה מתוך 4, ושכחו שגם A מילא חלק מהבריכה באותה שעה.",
+    "החסירו שעה מהזמן של שני הברזים יחד (<span class=\"ltr\">2.4 − 1</span>), כאילו שניהם ממשיכים לעבוד."
+   ]
+  },
+  {
+   "n": 8,
+   "type": "problem",
+   "topic": "probability",
+   "skill": "הסתברות בלי החזרה",
+   "level": 3,
+   "stim": null,
+   "stem": "בקופסה 4 כדורים אדומים ו-3 כדורים כחולים. מוציאים מהקופסה באקראי 2 כדורים, בלי להחזיר. מה ההסתברות ששני הכדורים שהוצאו באותו צבע?",
+   "fig": null,
+   "options": [
+    "25/49",
+    "4/7",
+    "3/7",
+    "2/7"
+   ],
+   "answer": 3,
+   "explain": "מספר הדרכים לבחור 2 כדורים מתוך 7: <span class=\"ltr\">7 · 6 / 2 = 21</span>. שני אדומים: <span class=\"ltr\">4 · 3 / 2 = 6</span> דרכים. שני כחולים: <span class=\"ltr\">3 · 2 / 2 = 3</span> דרכים. ההסתברות: <span class=\"ltr\">(6 + 3) / 21 = 9/21 = 3/7</span>.",
+   "fast": "הכדור הראשון קובע את הצבע: <span class=\"ltr\">4/7 · 3/6 + 3/7 · 2/6 = 12/42 + 6/42 = 18/42 = 3/7</span>.",
+   "traps": [
+    "חישבו כאילו מחזירים את הכדור הראשון: <span class=\"ltr\">(4/7)² + (3/7)² = 25/49</span>.",
+    "זו ההסתברות המשלימה: ששני הכדורים בצבעים שונים.",
+    "",
+    "זו ההסתברות לשני כדורים אדומים בלבד; שכחו את האפשרות של שני כחולים."
+   ]
+  },
+  {
+   "n": 9,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "קריאת שינוי מגרף מצטבר",
+   "level": 1,
+   "stim": "c1",
+   "stem": "באיזה חודש חסכה דנה את הסכום הגדול ביותר?",
+   "fig": null,
+   "options": [
+    "חודש 8",
+    "חודש 5",
+    "חודש 2",
+    "חודש 6"
+   ],
+   "answer": 4,
+   "explain": "החיסכון בכל חודש הוא העלייה בקו של דנה מסוף החודש הקודם. לפי התרשים (באלפי ש״ח): חודש 1: <span class=\"ltr\">1 − 0 = 1</span>, חודש 2: <span class=\"ltr\">3 − 1 = 2</span>, חודש 3: 1, חודש 4: 0, חודש 5: 2, חודש 6: <span class=\"ltr\">9 − 6 = 3</span>, חודש 7: 1, חודש 8: 2. הסכום הגדול ביותר נחסך בחודש 6: 3,000 ש״ח.",
+   "fast": "בגרף מצטבר, החודש שבו חסכו הכי הרבה הוא הקטע התלול ביותר בקו, ולא הנקודה הגבוהה ביותר.",
+   "traps": [
+    "בסוף חודש 8 הסכום המצטבר של דנה הוא הגבוה ביותר, אבל באותו חודש היא חסכה רק 2,000 ש״ח.",
+    "בחודש 5 דנה חסכה 2,000 ש״ח (מ-4 ל-6), פחות מבחודש 6.",
+    "בחודש 2 דנה חסכה 2,000 ש״ח (מ-1 ל-3), פחות מבחודש 6.",
+    ""
+   ]
+  },
+  {
+   "n": 10,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "השוואת שיפועים",
+   "level": 2,
+   "stim": "c1",
+   "stem": "בכמה מהחודשים 1–8 חסך יואב באותו חודש סכום גדול יותר מהסכום שחסכה דנה באותו חודש?",
+   "fig": null,
+   "options": [
+    "4",
+    "3",
+    "2",
+    "5"
+   ],
+   "answer": 2,
+   "explain": "מחשבים לכל חודש את החיסכון של כל אחד (העלייה בקו שלו, באלפי ש״ח). יואב: <span class=\"ltr\">2, 2, 1, 2, −1, 1, 2, 1</span>. דנה: <span class=\"ltr\">1, 2, 1, 0, 2, 3, 1, 2</span>. יואב חסך יותר בחודש 1 (<span class=\"ltr\">2 > 1</span>), בחודש 4 (<span class=\"ltr\">2 > 0</span>) ובחודש 7 (<span class=\"ltr\">2 > 1</span>). בחודשים 2 ו-3 הם חסכו סכום שווה. סך הכול: 3 חודשים.",
+   "fast": "משווים שיפועים ולא גבהים: בכל חודש בודקים איזה קו עלה יותר באותו חודש.",
+   "traps": [
+    "אלה החודשים שבסופם הסכום המצטבר של יואב גדול משל דנה (1–4), אבל לא בכולם הוא חסך באותו חודש יותר ממנה.",
+    "",
+    "פספסו את חודש 1: החיסכון בו נמדד מאפס, כי בתחילת חודש 1 לא היה להם חיסכון.",
+    "ספרו גם את חודשים 2 ו-3, שבהם השניים חסכו סכום שווה."
+   ]
+  },
+  {
+   "n": 11,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "שינוי בהפרש בין סדרות",
+   "level": 2,
+   "stim": "c1",
+   "stem": "באיזה חודש השתנה ההפרש בין הסכום המצטבר של דנה לסכום המצטבר של יואב בסכום הגדול ביותר?",
+   "fig": null,
+   "options": [
+    "חודש 5",
+    "חודש 4",
+    "חודש 6",
+    "חודש 8"
+   ],
+   "answer": 1,
+   "explain": "השינוי בהפרש בחודש מסוים שווה להפרש בין מה שכל אחד מהם חסך באותו חודש. בחודש 5 דנה חסכה 2,000 ש״ח ויואב משך 1,000 ש״ח (הקו שלו ירד מ-7 ל-6), ולכן ההפרש השתנה ב-<span class=\"ltr\">2 − (−1) = 3</span> אלפי ש״ח: מ-3,000 לטובת יואב ל-0. בשאר החודשים השינוי קטן יותר: בחודש 4 ובחודש 6 ב-2,000, ובכל חודש אחר ב-1,000 לכל היותר.",
+   "fast": "מחפשים את החודש שבו שני הקווים זזים בכיוונים מנוגדים: בחודש 5 הקו של דנה עלה והקו של יואב ירד.",
+   "traps": [
+    "",
+    "בסוף חודש 4 ההפרש עצמו הגדול ביותר (3,000 ש״ח), אבל באותו חודש הוא השתנה רק ב-2,000.",
+    "בחודש 6 דנה חסכה הכי הרבה, אבל גם יואב חסך 1,000, ולכן ההפרש השתנה רק ב-2,000.",
+    "בסוף חודש 8 הסכום של דנה הגבוה ביותר, אבל באותו חודש ההפרש השתנה רק ב-1,000."
+   ]
+  },
+  {
+   "n": 12,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "סכום תקופה מגרף מצטבר",
+   "level": 3,
+   "stim": "c1",
+   "stem": "מה היה החיסכון החודשי הממוצע (נטו) של יואב בחודשים 4 עד 8, כולל (בש״ח)? משיכה מהחיסכון נחשבת חיסכון שלילי.",
+   "fig": null,
+   "options": [
+    "1,200",
+    "600",
+    "1,000",
+    "7,800"
+   ],
+   "answer": 3,
+   "explain": "החיסכון הכולל של יואב בחודשים 4–8 הוא השינוי בסכום המצטבר מסוף חודש 3 עד סוף חודש 8: <span class=\"ltr\">10 − 5 = 5</span> אלפי ש״ח. אלה 5 חודשים, ולכן הממוצע <span class=\"ltr\">5 / 5 = 1</span> אלף ש״ח, כלומר 1,000 ש״ח. בדיקה לפי חודשים: <span class=\"ltr\">2 + (−1) + 1 + 2 + 1 = 5</span>.",
+   "fast": "בגרף מצטבר לא מחברים חודש-חודש: החיסכון בתקופה = הערך בסוף התקופה פחות הערך לפני תחילתה (סוף החודש שלפניה).",
+   "traps": [
+    "התעלמו מהמשיכה בחודש 5: <span class=\"ltr\">(2 + 1 + 2 + 1) / 5 = 1.2</span> אלף.",
+    "התחילו מסוף חודש 4 במקום מסוף חודש 3: <span class=\"ltr\">(10 − 7) / 5</span>, וכך החיסכון של חודש 4 נשמט.",
+    "",
+    "זה הממוצע של הסכומים המצטברים בחודשים 4–8, לא ממוצע החיסכון החודשי."
+   ]
+  },
+  {
+   "n": 13,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "המשך מגמה מממוצע",
+   "level": 3,
+   "stim": "c1",
+   "stem": "נניח שמחודש 9 ואילך כל אחד מהשניים חוסך בכל חודש סכום קבוע, השווה לחיסכון החודשי הממוצע (נטו) שלו בחודשים 1–8. בסוף איזה חודש יהיה לראשונה הסכום המצטבר של דנה גדול מזה של יואב ב-3,000 ש״ח לפחות?",
+   "fig": null,
+   "options": [
+    "חודש 11",
+    "חודש 12",
+    "חודש 16",
+    "חודש 20"
+   ],
+   "answer": 2,
+   "explain": "בסוף חודש 8 לדנה 12 אלף ש״ח וליואב 10 אלף, הפרש של 2 אלף. החיסכון החודשי הממוצע בחודשים 1–8: דנה <span class=\"ltr\">12 / 8 = 1.5</span> אלף, יואב <span class=\"ltr\">10 / 8 = 1.25</span> אלף (המשיכה בחודש 5 כבר כלולה בסכום המצטבר). לכן מחודש 9 ההפרש גדל ב-0.25 אלף בכל חודש. כדי שיגדל מ-2 ל-3 אלף צריך <span class=\"ltr\">1 / 0.25 = 4</span> חודשים: <span class=\"ltr\">8 + 4 = 12</span>. בסוף חודש 12 ההפרש בדיוק 3,000 ש״ח, ובסוף חודש 11 הוא רק 2,750.",
+   "fast": "ממוצע חודשי בחודשים 1–8 = הערך בסוף חודש 8 חלקי 8. ההפרש גדל ב-<span class=\"ltr\">1.5 − 1.25 = 0.25</span> לחודש, וחסר עוד 1 (אלף).",
+   "traps": [
+    "טעות של חודש אחד: בסוף חודש 11 ההפרש רק 2,750 ש״ח.",
+    "",
+    "חישבו את הממוצע של יואב בלי המשיכה בחודש 5 (<span class=\"ltr\">11 / 8</span>), ולכן ההפרש גדל רק ב-125 ש״ח לחודש.",
+    "חישבו כאילו ההפרש מתחיל מאפס בסוף חודש 8, ושכחו שהוא כבר 2,000 ש״ח."
+   ]
+  },
+  {
+   "n": 14,
+   "type": "problem",
+   "topic": "solids",
+   "skill": "קובייה צבועה וחתוכה",
+   "level": 2,
+   "stim": null,
+   "stem": "קובייה שאורך צלעה 8 ס״מ נצבעה מכל צדדיה, ואז נחתכה ל-64 קוביות קטנות שאורך הצלע של כל אחת מהן 2 ס״מ. לכמה מהקוביות הקטנות יש לפחות פאה צבועה אחת?",
+   "fig": null,
+   "options": [
+    "48",
+    "96",
+    "8",
+    "56"
+   ],
+   "answer": 4,
+   "explain": "לאורך כל צלע יש <span class=\"ltr\">8 / 2 = 4</span> קוביות קטנות, ובסך הכול <span class=\"ltr\">4 · 4 · 4 = 64</span>. הקוביות שלא נצבעו כלל הן הפנימיות, שאינן נוגעות באף פאה חיצונית. אם מסירים שכבה אחת מכל צד נשארת קובייה של <span class=\"ltr\">2 · 2 · 2 = 8</span> קוביות (<span class=\"ltr\">4 − 2 = 2</span> בכל כיוון). לכן לפחות פאה צבועה אחת יש ל-<span class=\"ltr\">64 − 8 = 56</span> קוביות.",
+   "fast": "משלים: הכול פחות הליבה שלא נצבעה, שהיא קובייה של <span class=\"ltr\">(n − 2)³</span> קוביות.",
+   "traps": [
+    "ספרו רק קוביות עם פאה צבועה אחת (24) או שתיים (24), ושכחו את 8 קוביות הפינה, שלהן שלוש פאות צבועות.",
+    "זה מספר הריבועים הקטנים הצבועים (<span class=\"ltr\">6 · 16</span>); קובייה בפינה או על צלע נספרה כך יותר מפעם אחת.",
+    "אלה הקוביות שלא נצבעו כלל.",
+    ""
+   ]
+  },
+  {
+   "n": 15,
+   "type": "problem",
+   "topic": "sequences",
+   "skill": "סדרה נסיגתית אחורה",
+   "level": 2,
+   "stim": null,
+   "stem": "בסדרה של מספרים, כל איבר החל מהאיבר השלישי שווה לסכום שני האיברים שלפניו. האיבר החמישי בסדרה הוא 21, והאיבר השביעי הוא 55. מהו האיבר הראשון?",
+   "fig": null,
+   "options": [
+    "3",
+    "5",
+    "13",
+    "8"
+   ],
+   "answer": 1,
+   "explain": "האיבר השביעי הוא סכום החמישי והשישי, ולכן <span class=\"ltr\">a<sub>6</sub> = 55 − 21 = 34</span>. עכשיו הולכים אחורה, כי <span class=\"ltr\">a<sub>n</sub> = a<sub>n+2</sub> − a<sub>n+1</sub></span>: <span class=\"ltr\">a<sub>4</sub> = 34 − 21 = 13</span>, <span class=\"ltr\">a<sub>3</sub> = 21 − 13 = 8</span>, <span class=\"ltr\">a<sub>2</sub> = 13 − 8 = 5</span>, <span class=\"ltr\">a<sub>1</sub> = 8 − 5 = 3</span>. בדיקה: <span class=\"ltr\">3, 5, 8, 13, 21, 34, 55</span>.",
+   "fast": "קודם מוצאים את האיבר החסר בין 21 ל-55 (34), ואז מחסירים אחורה עד האיבר הראשון.",
+   "traps": [
+    "",
+    "זה האיבר השני; עצרו צעד אחד מוקדם מדי.",
+    "זה האיבר הרביעי.",
+    "זה האיבר השלישי."
+   ]
+  },
+  {
+   "n": 16,
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "סימנים ואי-שוויונים",
+   "level": 3,
+   "stim": null,
+   "stem": "a ו-b מספרים שונים מאפס. נתון: <span class=\"ltr\">ab < 0</span> וגם <span class=\"ltr\">a + b > 0</span>. איזה מהבאים <b>בהכרח</b> נכון?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">a > 0</span>",
+    "<span class=\"ltr\">a/b < −1</span>",
+    "<span class=\"ltr\">1/a + 1/b < 0</span>",
+    "<span class=\"ltr\">a² > b²</span>"
+   ],
+   "answer": 3,
+   "explain": "מ-<span class=\"ltr\">ab < 0</span>: אחד המספרים חיובי והשני שלילי. מ-<span class=\"ltr\">a + b > 0</span>: החיובי גדול יותר בערכו המוחלט. אבל לא ידוע מי מהם החיובי. נבדוק את <span class=\"ltr\">1/a + 1/b = (a + b) / ab</span>: המונה חיובי והמכנה שלילי, ולכן הביטוי שלילי תמיד. שאר האפשרויות תלויות במי חיובי: עבור <span class=\"ltr\">a = −1, b = 3</span> מתקיים <span class=\"ltr\">a < 0</span>, <span class=\"ltr\">a/b = −1/3</span> ו-<span class=\"ltr\">a² = 1 < 9 = b²</span>.",
+   "fast": "מציבים שני מקרים: <span class=\"ltr\">a = 3, b = −1</span> ו-<span class=\"ltr\">a = −1, b = 3</span>. רק <span class=\"ltr\">1/a + 1/b < 0</span> נכון בשניהם.",
+   "traps": [
+    "ייתכן ש-a הוא השלילי, למשל <span class=\"ltr\">a = −1, b = 3</span>.",
+    "נכון רק כש-a הוא החיובי; עבור <span class=\"ltr\">a = −1, b = 3</span> מתקבל <span class=\"ltr\">a/b = −1/3</span>.",
+    "",
+    "נכון רק כש-a הוא החיובי (הגדול בערכו המוחלט); עבור <span class=\"ltr\">a = −1, b = 3</span> זה לא נכון."
+   ]
+  },
+  {
+   "n": 17,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "גובה ליתר",
+   "level": 3,
+   "stim": null,
+   "stem": "במשולש ABC שבשרטוט <span class=\"ltr\">∠ACB = 90°</span>, ו-CD הוא הגובה ליתר AB. נתון: <span class=\"ltr\">AD = 4</span>, <span class=\"ltr\">DB = 9</span>. מהו שטח המשולש ABC? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 262\" xmlns=\"http://www.w3.org/2000/svg\" direction=\"ltr\"><polygon points=\"40,230 320.0,230 126.2,100.8\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"126.2\" y1=\"100.8\" x2=\"126.2\" y2=\"230.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><polyline points=\"136.2,230.0 136.2,220.0 126.2,220.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.2\"/><polyline points=\"120.1,109.9 129.2,116.0 135.3,106.9\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.2\"/><text x=\"28.0\" y=\"235.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">A</text><text x=\"332.0\" y=\"235.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">B</text><text x=\"126.2\" y=\"91.8\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">C</text><text x=\"126.2\" y=\"250.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">D</text><text x=\"83.1\" y=\"250.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">4</text><text x=\"223.1\" y=\"250.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">9</text></svg>",
+   "options": [
+    "78",
+    "27",
+    "36",
+    "39"
+   ],
+   "answer": 4,
+   "explain": "המשולשים ACD ו-CBD דומים (שניהם דומים למשולש ABC), ולכן <span class=\"ltr\">AD / CD = CD / DB</span>, כלומר <span class=\"ltr\">CD² = AD · DB = 4 · 9 = 36</span> ו-<span class=\"ltr\">CD = 6</span>. היתר: <span class=\"ltr\">AB = 4 + 9 = 13</span>. השטח: <span class=\"ltr\">AB · CD / 2 = 13 · 6 / 2 = 39</span>.",
+   "fast": "הגובה ליתר הוא הממוצע ההנדסי של שני קטעי היתר: <span class=\"ltr\">CD = √(4 · 9) = 6</span>, והשטח <span class=\"ltr\">13 · 6 / 2</span>.",
+   "traps": [
+    "שכחו לחלק ב-2: <span class=\"ltr\">13 · 6 = 78</span>.",
+    "זה שטח המשולש CDB בלבד (<span class=\"ltr\">9 · 6 / 2</span>).",
+    "זה <span class=\"ltr\">CD²</span>, לא השטח.",
+    ""
+   ]
+  },
+  {
+   "n": 18,
+   "type": "problem",
+   "topic": "powers",
+   "skill": "השוואת חזקות",
+   "level": 3,
+   "stim": null,
+   "stem": "איזה מהמספרים הבאים הוא הגדול ביותר?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">3<sup>30</sup></span>",
+    "<span class=\"ltr\">2<sup>50</sup></span>",
+    "<span class=\"ltr\">5<sup>20</sup></span>",
+    "<span class=\"ltr\">10<sup>15</sup></span>"
+   ],
+   "answer": 2,
+   "explain": "מביאים שלושה מהם למעריך משותף 10: <span class=\"ltr\">3<sup>30</sup> = 27<sup>10</sup></span>, <span class=\"ltr\">2<sup>50</sup> = 32<sup>10</sup></span>, <span class=\"ltr\">5<sup>20</sup> = 25<sup>10</sup></span>, ולכן <span class=\"ltr\">2<sup>50</sup></span> הגדול מבין השלושה. משווים אותו ל-<span class=\"ltr\">10<sup>15</sup></span>: <span class=\"ltr\">2<sup>50</sup> = (2<sup>10</sup>)<sup>5</sup> = 1024<sup>5</sup></span>, ואילו <span class=\"ltr\">10<sup>15</sup> = (10<sup>3</sup>)<sup>5</sup> = 1000<sup>5</sup></span>. כיוון ש-<span class=\"ltr\">1024 > 1000</span>, גם <span class=\"ltr\">2<sup>50</sup> > 10<sup>15</sup></span>. לכן <span class=\"ltr\">2<sup>50</sup></span> הגדול ביותר.",
+   "fast": "זוכרים ש-<span class=\"ltr\">2<sup>10</sup> = 1024</span>, קצת יותר מ-<span class=\"ltr\">10<sup>3</sup></span>, ולכן <span class=\"ltr\">2<sup>50</sup></span> קצת יותר מ-<span class=\"ltr\">10<sup>15</sup></span>. את השאר משווים במעריך 10: <span class=\"ltr\">27<sup>10</sup>, 25<sup>10</sup> < 32<sup>10</sup></span>.",
+   "traps": [
+    "<span class=\"ltr\">3<sup>30</sup> = 27<sup>10</sup></span>, קטן מ-<span class=\"ltr\">32<sup>10</sup> = 2<sup>50</sup></span>. הבסיס הגדול יותר מטעה.",
+    "",
+    "<span class=\"ltr\">5<sup>20</sup> = 25<sup>10</sup></span>, הקטן מבין הארבעה.",
+    "<span class=\"ltr\">10<sup>15</sup> = 1000<sup>5</sup></span>, ואילו <span class=\"ltr\">2<sup>50</sup> = 1024<sup>5</sup></span>, ולכן <span class=\"ltr\">2<sup>50</sup></span> גדול ממנו במעט."
+   ]
+  },
+  {
+   "n": 19,
+   "type": "problem",
+   "topic": "word",
+   "skill": "תערובת עם החלפה",
+   "level": 3,
+   "stim": null,
+   "stem": "בכלי יש 40 ליטר משקה, ש-25% ממנו מיץ תפוזים טבעי והשאר מים. מוציאים מהכלי כמות מסוימת של משקה, ומוסיפים במקומה אותה כמות של מיץ תפוזים טבעי. עכשיו יש בכלי שוב 40 ליטר, ו-40% מהם מיץ טבעי. כמה ליטרים של משקה הוציאו מהכלי?",
+   "fig": null,
+   "options": [
+    "8",
+    "6",
+    "10",
+    "15"
+   ],
+   "answer": 1,
+   "explain": "בהתחלה יש בכלי <span class=\"ltr\">40 · 25% = 10</span> ליטר מיץ. בסוף צריכים להיות <span class=\"ltr\">40 · 40% = 16</span> ליטר מיץ. נסמן ב-x את הכמות שהוציאו: יחד איתה יצאו <span class=\"ltr\">0.25x</span> ליטר מיץ, ונכנסו x ליטר מיץ טבעי. לכן <span class=\"ltr\">10 − 0.25x + x = 16</span>, כלומר <span class=\"ltr\">0.75x = 6</span> ו-<span class=\"ltr\">x = 8</span>. בדיקה: נשארו <span class=\"ltr\">32 · 25% = 8</span> ליטר מיץ, ועוד 8 שנוספו: 16 מתוך 40, כלומר 40%.",
+   "fast": "כל ליטר שמוחלף מוסיף רק <span class=\"ltr\">0.75</span> ליטר מיץ נטו (נכנס ליטר מיץ ויצא רבע ליטר מיץ). חסרים 6 ליטר מיץ: <span class=\"ltr\">6 / 0.75 = 8</span>.",
+   "traps": [
+    "",
+    "זה כמה מיץ צריך להוסיף נטו (<span class=\"ltr\">16 − 10</span>); שכחו שבמשקה שהוציאו היה גם מיץ.",
+    "זו כמות המיץ שצריך להוסיף בלי להוציא דבר (<span class=\"ltr\">10 + y = 0.4(40 + y)</span>); אבל אז היו בכלי 50 ליטר.",
+    "זו כמות המים שצריך לאדות כדי להגיע ל-40% (<span class=\"ltr\">10 / 0.4 = 25</span> ליטר), ולא ההחלפה שבשאלה."
+   ]
+  },
+  {
+   "n": 20,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "נקודה בתוך מלבן",
+   "level": 3,
+   "stim": null,
+   "stem": "בשרטוט: ABCD מלבן, והנקודה P נמצאת בתוכו. נתון: <span class=\"ltr\">PA = 3</span>, <span class=\"ltr\">PB = 4</span>, <span class=\"ltr\">PC = 5</span>. מהו אורך הקטע PD? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 262\" xmlns=\"http://www.w3.org/2000/svg\" direction=\"ltr\"><polygon points=\"54,236 306.2,236 306.2,41.8 54,41.8\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"157.9\" y1=\"176.0\" x2=\"54.0\" y2=\"236.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"157.9\" y1=\"176.0\" x2=\"306.2\" y2=\"236.0\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"157.9\" y1=\"176.0\" x2=\"306.2\" y2=\"41.8\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\"/><line x1=\"157.9\" y1=\"176.0\" x2=\"54.0\" y2=\"41.8\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.6\" stroke-dasharray=\"5 4\"/><circle cx=\"157.9\" cy=\"176.0\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><text x=\"42.0\" y=\"242.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">A</text><text x=\"318.2\" y=\"242.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">B</text><text x=\"318.2\" y=\"43.8\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">C</text><text x=\"42.0\" y=\"43.8\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">D</text><text x=\"153.9\" y=\"164.0\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">P</text><text x=\"101.0\" y=\"202.3\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">3</text><text x=\"235.8\" y=\"201.7\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">4</text><text x=\"225.4\" y=\"106.5\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">5</text><text x=\"114.7\" y=\"107.2\" fill=\"currentColor\" font-size=\"15\" font-family=\"Rubik, sans-serif\" text-anchor=\"middle\">?</text></svg>",
+   "options": [
+    "<span class=\"ltr\">4</span>",
+    "<span class=\"ltr\">4√2</span>",
+    "<span class=\"ltr\">3√2</span>",
+    "<span class=\"ltr\">√34</span>"
+   ],
+   "answer": 3,
+   "explain": "מורידים מ-P אנכים לארבע הצלעות. נסמן את המרחקים מ-P: x לצלע AD, y לצלע AB, z לצלע BC ו-w לצלע CD. לפי משפט פיתגורס: <span class=\"ltr\">PA² = x² + y²</span>, <span class=\"ltr\">PB² = z² + y²</span>, <span class=\"ltr\">PC² = z² + w²</span>, <span class=\"ltr\">PD² = x² + w²</span>. לכן <span class=\"ltr\">PA² + PC² = x² + y² + z² + w² = PB² + PD²</span>. מציבים: <span class=\"ltr\">9 + 25 = 16 + PD²</span>, כלומר <span class=\"ltr\">PD² = 18</span> ו-<span class=\"ltr\">PD = √18 = 3√2</span>.",
+   "fast": "במלבן, סכום ריבועי המרחקים מנקודה לשני קודקודים נגדיים שווה לסכום עבור שני הקודקודים האחרים: <span class=\"ltr\">PA² + PC² = PB² + PD²</span>.",
+   "traps": [
+    "חשבו ש-<span class=\"ltr\">PD = PA + PC − PB</span>; האורכים עצמם לא מקיימים קשר כזה, רק הריבועים שלהם.",
+    "חיברו בזוגות שגויים: <span class=\"ltr\">PA² + PD² = PB² + PC²</span> נותן <span class=\"ltr\">PD² = 32</span>. אבל A ו-D אינם קודקודים נגדיים.",
+    "",
+    "זה <span class=\"ltr\">√(PA² + PC²)</span>; שכחו להחסיר את <span class=\"ltr\">PB²</span>."
+   ]
+  }
+ ]
+}

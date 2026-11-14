@@ -26,6 +26,14 @@ for (const f of files) {
   console.log(`${f}: ${c.questions.length} שאלות, פיזור תשובות ${dist.join('/')}`);
   out.push(c);
 }
+// מטלות כתיבה
+let wr = [];
+const wf = path.join(__dirname, 'content', 'writing.json');
+if (fs.existsSync(wf)) {
+  try { wr = JSON.parse(fs.readFileSync(wf, 'utf8')); } catch (e) { errs.push(`writing.json: JSON לא תקין — ${e.message}`); }
+  wr.forEach((w, i) => { for (const k of ['id', 'title', 'background', 'task', 'ideas', 'model', 'notes']) if (!w[k]) errs.push(`writing.json פריט ${i + 1}: חסר ${k}`); });
+  console.log(`writing.json: ${wr.length} מטלות כתיבה`);
+}
 if (errs.length) { console.error('\nשגיאות:\n' + errs.join('\n')); process.exit(1); }
-fs.writeFileSync(path.join(__dirname, 'chapters.js'), '// נוצר אוטומטית מ-content/src ע"י build.js. לא לערוך כאן.\nwindow.CHAPTERS = ' + JSON.stringify(out) + ';\n');
+fs.writeFileSync(path.join(__dirname, 'chapters.js'), '// נוצר אוטומטית מ-content/src ע"י build.js. לא לערוך כאן.\nwindow.CHAPTERS = ' + JSON.stringify(out) + ';\nwindow.WRITING = ' + JSON.stringify(wr) + ';\n');
 console.log(`\nchapters.js: ${out.length} פרקים`);

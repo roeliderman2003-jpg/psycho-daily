@@ -8,6 +8,7 @@ S.res = S.res || {};        // chapId -> [attempt]  attempt = {at, ans[], t[], d
 S.off = S.off || [];        // מבחנים רשמיים: {at, label, dom, n, ans[], key, dur}
 S.fix = S.fix || {};        // "chapId:n" -> true כשהטעות תוקנה בתרגול טעויות
 S.examDate = S.examDate || '2026-12-04';
+S.wr = S.wr || [];         // מטלות כתיבה: {id, at, text, dur, chk[], gc, gl}
 function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } }
 
 const CH = (window.CHAPTERS || []);
@@ -59,7 +60,7 @@ function done() { return ORDER.filter(id => first(id)); }
 function todayId() { return ORDER.find(id => !first(id)) || null; }
 function daysLeft() { const d = new Date(S.examDate + 'T08:00:00'); return Math.ceil((d - new Date()) / 864e5); }
 function streak() {
-  const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.off.forEach(x => days.add(dayKey(x.at)));
+  const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.off.forEach(x => days.add(dayKey(x.at))); S.wr.forEach(x => days.add(dayKey(x.at)));
   let n = 0, t = Date.now(); if (!days.has(dayKey(t))) t -= 864e5;
   while (days.has(dayKey(t))) { n++; t -= 864e5; } return n;
 }
@@ -79,17 +80,17 @@ function overall() {
 
 // ===== מסכים =====
 function navBar() {
-  const it = [['home', '🏠', 'היום'], ['all', '📚', 'פרקים'], ['stats', '📊', 'חוזקות'], ['fix', '🔁', 'טעויות'], ['off', '📄', 'רשמי']];
+  const it = [['home', '🏠', 'היום'], ['all', '📚', 'פרקים'], ['stats', '📊', 'חוזקות'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['off', '📄', 'רשמי']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${view === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
 }
 function render() {
   clearInterval(tick); tick = null;
-  if (S.cur && view !== 'exam' && view !== 'offx') { // פרק באמצע (רענון / חזרה לאפליקציה)
-    view = S.cur.kind === 'off' ? 'offx' : 'exam';
+  if (S.cur && view !== 'exam' && view !== 'offx' && view !== 'wx') { // פרק באמצע (רענון / חזרה לאפליקציה)
+    view = { off: 'offx', wr: 'wx' }[S.cur.kind] || 'exam';
   }
-  const f = { home, all, stats, fix, off, exam, result, review, offx, offres, settings, practice }[view] || home;
+  const f = { home, all, stats, fix, off, exam, result, review, offx, offres, settings, practice, write, wx, wres }[view] || home;
   $app.innerHTML = f();
-  if (view === 'exam' || view === 'offx') startTick();
+  if (view === 'exam' || view === 'offx' || view === 'wx') startTick();
 }
 
 function chapRow(id) {
@@ -105,7 +106,7 @@ function home() {
     <div style="font-size:30px;font-weight:800;margin:4px 0">${dl > 0 ? `עוד ${dl} ימים` : dl === 0 ? 'הבחינה היום 💪' : 'הבחינה עברה'}</div>
     <div class="mut sm">מילולי 23 שאלות · כמותי 20 שאלות · 20 דקות לפרק</div></div>`;
   h += `<div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${st}🔥</b><span>ימים ברצף</span></div><div class="kpi"><b>${o.p != null ? est(o.p) : '—'}</b><span>ציון משוער*</span></div></div>`;
-  if (S.cur) h += `<button class="btn blue big" onclick="go('${S.cur.kind === 'off' ? 'offx' : 'exam'}')">⏱️ להמשיך את הפרק שבאמצע</button>`;
+  if (S.cur) h += `<button class="btn blue big" onclick="go('${{ off: 'offx', wr: 'wx' }[S.cur.kind] || 'exam'}')">⏱️ להמשיך את הפרק שבאמצע</button>`;
   if (id) {
     const c = byId[id];
     h += `<h2>${doneToday ? 'רוצה עוד אחד היום?' : 'פרק היום'}</h2><div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:18px">${esc(c.title)}</b></div>
@@ -113,6 +114,7 @@ function home() {
       <button class="btn big" onclick="startChap('${id}')">▶️ להתחיל (${c.minutes} דקות)</button></div>`;
   } else h += `<div class="card"><b>סיימת את כל הפרקים שיש כרגע 🎉</b><p class="mut sm">אפשר לעשות פרק רשמי מאתר מאל״ו בלשונית «רשמי», או לתרגל את הטעויות.</p></div>`;
   const last = done().slice(-3).reverse();
+  h += writeCard();
   if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chapRow).join('')}</div>`;
   h += `<p class="mut sm">* ציון משוער: הערכה גסה מאחוז התשובות הנכונות בכל הפרקים (מילולי וכמותי במשקל שווה). לא ציון רשמי. נקודת הפתיחה שלך: 620.</p>
     <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button></main>` + navBar();
@@ -139,7 +141,7 @@ function startTick() {
     if (view === 'exam' && document.visibilityState === 'visible') X.t[X.i] = (X.t[X.i] || 0) + Math.min(5, (now - X.last) / 1000);
     X.last = now;
     const el = document.getElementById('tm'); if (el) { el.textContent = mmss(left); el.classList.toggle('warn', left < 120); }
-    if (left <= 0) { toast('⏰ הזמן נגמר — הפרק הוגש'); X.kind === 'off' ? offDone() : submit(true); return; }
+    if (left <= 0) { toast('⏰ הזמן נגמר — הפרק הוגש'); X.kind === 'off' ? offDone() : X.kind === 'wr' ? wDone() : submit(true); return; }
     if (Math.round(now / 1000) % 5 === 0) save();
   };
   upd(); tick = setInterval(upd, 1000);
@@ -375,12 +377,118 @@ function settings() {
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
 }
 function exp() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, off: S.off, fix: S.fix, examDate: S.examDate }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, off: S.off, fix: S.fix, wr: S.wr, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד מופיע בתיבה — להעתיק ידנית'); });
 }
 function imp() {
   try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('imp').value.trim())))); if (!d.res) throw 0; if (!confirm('לטעון את הגיבוי? זה מחליף את ההתקדמות במכשיר הזה.')) return; Object.assign(S, d); save(); toast('נטען ✓'); go('home'); }
   catch (e) { toast('הקוד לא תקין'); }
+}
+
+// ===== מטלת כתיבה: 30 דקות, לפחות 25 שורות, נשפטת בתוכן ובלשון =====
+const WR = (window.WRITING || []);
+const wById = Object.fromEntries(WR.map(w => [w.id, w]));
+const WORDS_PER_LINE = 10; // בדף התשובות של הבחינה בערך 10 מילים בשורה
+const wWords = t => (String(t || '').trim().match(/\S+/g) || []).length;
+const WCHK = [
+  ['c', 'פתחתי בעמדה ברורה שעונה בדיוק על מה שנשאל'],
+  ['c', 'הבאתי לפחות שני טיעונים שונים, כל אחד בפסקה משלו'],
+  ['c', 'כל טיעון מוסבר ומגובה בדוגמה או בראיה'],
+  ['c', 'הצגתי את העמדה הנגדית והתמודדתי איתה'],
+  ['c', 'הסיום מסכם ומחזק את העמדה, ולא רק חוזר עליה'],
+  ['l', 'משלב עיוני אחיד, בלי סלנג ובלי פנייה אישית לקורא'],
+  ['l', 'מילות קישור מגוונות שמראות את הקשר בין הרעיונות (אולם, לפיכך, יתרה מזאת)'],
+  ['l', 'חלוקה ברורה לפסקאות, ומשפטים שלמים שלא ארוכים מדי'],
+  ['l', 'קראתי שוב בסוף ותיקנתי כתיב, התאמה ופיסוק'],
+];
+function nextWrite() { const done = new Set(S.wr.map(x => x.id)); return WR.find(w => !done.has(w.id)) || WR[0]; }
+function writeCard() {
+  if (!WR.length) return '';
+  const last = S.wr[S.wr.length - 1], ago = last ? Math.floor((Date.now() - last.at) / 864e5) : null;
+  const due = ago == null || ago >= 3;
+  return `<h2>✍️ מטלת כתיבה</h2><div class="card"><p class="mut sm" style="margin-top:0">חלק מהציון המילולי. מומלץ פעמיים בשבוע. ${last ? `האחרונה: ${ago === 0 ? 'היום' : ago === 1 ? 'אתמול' : `לפני ${ago} ימים`}.` : 'עוד לא כתבת אף מטלה.'}</p>
+    <button class="btn ${due ? '' : 'ghost'}" onclick="go('write')">${due ? 'לכתוב מטלה (30 דקות)' : 'למטלות הכתיבה'}</button></div>`;
+}
+function write() {
+  const rows = S.wr.slice().reverse().map((x, j) => { const i = S.wr.length - 1 - j, w = wById[x.id]; return `<div class="it" onclick="go('wres',{i:${i}})"><div class="grow"><b>${esc(w ? w.title : x.id)}</b><div class="mut sm">${fmtDate(x.at)} · ${wWords(x.text)} מילים · ${mmss(x.dur)}</div></div><div class="sm">${x.gc ? `תוכן ${x.gc} · לשון ${x.gl}` : x.chk ? `בדיקה עצמית ${x.chk.filter(Boolean).length}/${WCHK.length}` : ''}</div></div>`; }).join('');
+  const n = nextWrite();
+  return `<main><h1>✍️ מטלת כתיבה</h1>
+  <div class="card"><p style="margin-top:0">בבחינה: <b>30 דקות</b>, חיבור של <b>לפחות 25 שורות</b> בסגנון עיוני. שני מעריכים נותנים ציון בשני ממדים: <b>תוכן</b> (איכות הטיעונים וחשיבה ביקורתית) ו<b>לשון</b> (בהירות, משלב אחיד ודיוק). זה לא משנה איזו עמדה בוחרים, רק כמה טוב מנמקים אותה.</p>
+  <p class="mut sm">המבנה שעובד: פתיחה עם עמדה → 2-3 טיעונים, כל אחד בפסקה עם דוגמה → העמדה הנגדית ותשובה לה → סיכום. 3-4 דקות לתכנון, 22 לכתיבה, 4 לקריאה חוזרת.</p></div>
+  ${n ? `<button class="btn big" onclick="wStart('${n.id}')">▶️ מטלה הבאה: ${esc(n.title)}</button>` : ''}
+  <h2>כל הנושאים</h2><div class="card list">${WR.map(w => { const d = S.wr.filter(x => x.id === w.id).length; return `<div class="it" onclick="wStart('${w.id}')"><div class="grow"><b>${esc(w.title)}</b></div><span class="mut sm">${d ? `✓ נכתבה${d > 1 ? ` ${d} פעמים` : ''}` : ''}</span></div>`; }).join('')}</div>
+  ${rows ? `<h2>מה שכתבת</h2><div class="card list">${rows}</div>` : ''}</main>` + navBar();
+}
+function wStart(id) {
+  if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו?')) return;
+  S.cur = { kind: 'wr', id, endAt: Date.now() + 30 * 60e3, start: Date.now(), text: '', last: Date.now() };
+  save(); go('wx');
+}
+function wPrompt(w) {
+  return `<div class="stim open"><div class="st"><span>📝 ${esc(w.title)}</span></div><div class="body">${w.background.map(p => `<p>${esc(p)}</p>`).join('')}<p><b>${esc(w.task)}</b></p></div></div>`;
+}
+function wCount(t) { const n = wWords(t), l = Math.ceil(n / WORDS_PER_LINE); return `${n} מילים · כ-${l} שורות ${l >= 25 ? '✅' : `(עוד כ-${25 - l} שורות למינימום)`}`; }
+function wx() {
+  const X = S.cur, w = wById[X.id], left = (X.endAt - Date.now()) / 1000;
+  return `<div class="xtop"><span class="timer ${left < 300 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">מטלת כתיבה</span><button class="icb" onclick="wDone(1)">הגשה</button></div>
+  <main>${wPrompt(w)}
+  <textarea id="wt" class="txt" style="min-height:52vh;line-height:1.8;font-size:16px;resize:vertical" placeholder="כותבים כאן. הטקסט נשמר כל הזמן, גם אם סוגרים את הדף." oninput="S.cur.text=this.value;document.getElementById('wc').textContent=wCount(this.value);save()">${esc(X.text)}</textarea>
+  <div class="mut sm" id="wc">${wCount(X.text)}</div>
+  <button class="btn" style="margin-top:14px" onclick="wDone(1)">סיום והגשה</button>
+  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></main>`;
+}
+function wDone(ask) {
+  const X = S.cur; if (!X) return;
+  const el = document.getElementById('wt'); if (el) X.text = el.value;
+  if (ask && !confirm(Math.ceil(wWords(X.text) / WORDS_PER_LINE) < 25 ? 'החיבור קצר מ-25 שורות, ובבחינה זה פוגע בציון. להגיש בכל זאת?' : 'להגיש את החיבור?')) return;
+  S.wr.push({ id: X.id, at: Date.now(), text: X.text, dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000), chk: WCHK.map(() => 0) });
+  delete S.cur; save(); go('wres', { i: S.wr.length - 1 });
+}
+function wScore(chk, d) { const idx = WCHK.map((c, i) => c[0] === d ? i : -1).filter(i => i >= 0); const k = idx.filter(i => chk[i]).length; return Math.max(1, Math.round(1 + 5 * k / idx.length)); }
+function feedbackPrompt(x, w) {
+  return `אתה מעריך מנוסה של מטלת הכתיבה בבחינה הפסיכומטרית של מאל״ו. הערך את החיבור שלמטה לפי שני הממדים הרשמיים, כל אחד בסולם 1-6:
+- תוכן: עושר ואיכות הטיעונים, עמדה ברורה, דוגמאות, התמודדות עם עמדה נגדית, חשיבה ביקורתית וארגון.
+- לשון: בהירות הניסוח, משלב עיוני אחיד, מילות קישור, תקינות לשונית (כתיב, התאמה, תחביר, פיסוק).
+החיבור נכתב ב-30 דקות בבחינה, ולכן לא מצופה ממנו להיות מאמר מושלם. הדרישה: לפחות 25 שורות.
+
+תחזיר בעברית:
+1. ציון תוכן וציון לשון, עם נימוק קצר לכל אחד.
+2. שלושה דברים טובים בחיבור.
+3. שלושת השיפורים הכי חשובים, ולכל אחד דוגמה מתוך החיבור וניסוח מתוקן.
+4. רשימת שגיאות הלשון עם התיקון.
+5. מה לעשות אחרת במטלה הבאה, במשפט אחד.
+
+הנושא: ${w.title}
+${w.background.join(' ')}
+${w.task}
+
+החיבור (${wWords(x.text)} מילים, נכתב ב-${mmss(x.dur)} דקות):
+${x.text}`;
+}
+function wres() {
+  const x = S.wr[arg.i], w = wById[x.id]; if (!w) return write();
+  const sc = wScore(x.chk, 'c'), sl = wScore(x.chk, 'l');
+  const chk = WCHK.map(([d, t], i) => `<label style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:20px;height:20px;flex:none;margin-top:2px" ${x.chk[i] ? 'checked' : ''} onchange="S.wr[${arg.i}].chk[${i}]=this.checked?1:0;save();render()"><span><span class="tag">${d === 'c' ? 'תוכן' : 'לשון'}</span> ${t}</span></label>`).join('');
+  const sel = (k, v) => `<select class="txt" style="width:auto;display:inline-block;margin:0 6px" onchange="S.wr[${arg.i}].${k}=+this.value||0;save()"><option value="0">—</option>${[1, 2, 3, 4, 5, 6].map(n => `<option ${v === n ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+  const lines = Math.ceil(wWords(x.text) / WORDS_PER_LINE);
+  return `<main><h1>✍️ ${esc(w.title)}</h1><p class="mut">${wWords(x.text)} מילים · כ-${lines} שורות ${lines >= 25 ? '✅' : '⚠️ פחות מ-25'} · ${mmss(x.dur)}</p>
+  <h2>1. לקבל משוב וציון</h2><div class="card"><p style="margin-top:0">מעתיקים, מדביקים ב-ChatGPT או ב-Claude, ומקבלים ציון תוכן ולשון לפי הקריטריונים של מאל״ו, יחד עם תיקונים.</p>
+  <button class="btn blue" onclick="wCopy(${arg.i})">📋 העתקת החיבור עם הנחיות המשוב</button>
+  <p class="sm" style="margin-bottom:0">הציון שקיבלת: תוכן ${sel('gc', x.gc)} לשון ${sel('gl', x.gl)}</p></div>
+  <h2>2. בדיקה עצמית</h2><div class="card">${chk}<p style="margin-bottom:0"><b>הערכה עצמית: תוכן ${sc}/6 · לשון ${sl}/6</b></p></div>
+  <h2>3. חיבור לדוגמה</h2><div class="card"><details><summary style="font-weight:700;color:var(--b);cursor:pointer">להציג את החיבור לדוגמה</summary>${w.model.map(p => `<p>${esc(p)}</p>`).join('')}
+  <div class="exp"><h4>למה הוא חזק</h4>${w.notes.map(n => `• ${esc(n)}`).join('<br>')}</div></details></div>
+  <div class="card"><details><summary class="mut" style="cursor:pointer">רעיונות לטיעונים בנושא</summary><p><b>בעד:</b> ${w.ideas.for.map(esc).join(' · ')}</p><p><b>נגד:</b> ${w.ideas.against.map(esc).join(' · ')}</p></details></div>
+  <div class="card"><details><summary class="mut" style="cursor:pointer">מה שכתבת</summary><p style="white-space:pre-wrap">${esc(x.text)}</p></details></div>
+  <button class="btn ghost" onclick="go('write')">חזרה למטלות</button></main>` + navBar();
+}
+function wCopy(i) {
+  const x = S.wr[i], t = feedbackPrompt(x, wById[x.id]);
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('הועתק ✓ עכשיו להדביק ב-ChatGPT או ב-Claude'), () => {
+    const m = document.createElement('div'); m.className = 'modal'; m.onclick = e => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="sheet"><h3>להעתיק ידנית</h3><textarea class="txt" rows="12">${esc(t)}</textarea><button class="btn blue" onclick="this.closest('.modal').remove()">סגירה</button></div>`;
+    document.body.appendChild(m); m.querySelector('textarea').select();
+  });
 }
 
 document.addEventListener('visibilitychange', () => { if (S.cur) { S.cur.last = Date.now(); save(); } });
