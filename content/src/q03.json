@@ -1,0 +1,515 @@
+{
+ "id": "q03",
+ "domain": "quant",
+ "title": "כמותי 3",
+ "minutes": 20,
+ "stims": {
+  "c1": {
+   "kind": "chart",
+   "intro": "בתרשים שלפניך מוצג מספר המנויים (באלפים) של שני שירותי סטרימינג, א׳ ו-ב׳, בסוף כל אחת מהשנים 2019 עד 2024. הקו הכחול (עיגולים) מתאר את שירות א׳, והקו הכתום (ריבועים) מתאר את שירות ב׳. כל הערכים בתרשים הם כפולות של 5.",
+   "html": "<svg viewBox=\"0 0 360 262\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><line x1=\"52\" y1=\"205\" x2=\"342\" y2=\"205\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"210\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">0</text><line x1=\"52\" y1=\"190\" x2=\"342\" y2=\"190\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"175\" x2=\"342\" y2=\"175\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"180\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">10</text><line x1=\"52\" y1=\"160\" x2=\"342\" y2=\"160\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"145\" x2=\"342\" y2=\"145\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"150\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">20</text><line x1=\"52\" y1=\"130\" x2=\"342\" y2=\"130\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"115\" x2=\"342\" y2=\"115\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"120\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">30</text><line x1=\"52\" y1=\"100\" x2=\"342\" y2=\"100\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"85\" x2=\"342\" y2=\"85\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"90\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">40</text><line x1=\"52\" y1=\"70\" x2=\"342\" y2=\"70\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"55\" x2=\"342\" y2=\"55\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"60\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">50</text><line x1=\"52\" y1=\"40\" x2=\"342\" y2=\"40\" stroke=\"currentColor\" stroke-opacity=\"0.13\" stroke-width=\"1\"/><line x1=\"52\" y1=\"25\" x2=\"342\" y2=\"25\" stroke=\"currentColor\" stroke-opacity=\"0.35\" stroke-width=\"1\"/><text x=\"36\" y=\"30\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">60</text><line x1=\"52\" y1=\"205\" x2=\"342\" y2=\"205\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"70\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2019</text><text x=\"122\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2020</text><text x=\"174\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2021</text><text x=\"226\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2022</text><text x=\"278\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2023</text><text x=\"330\" y=\"225\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">2024</text><text x=\"70\" y=\"16\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">מנויים (באלפים)</text><polyline points=\"70,175 122,145 174,130 226,100 278,55 330,25\" stroke=\"#1cb0f6\" stroke-width=\"2.5\" fill=\"none\"/><circle cx=\"70\" cy=\"175\" r=\"4.5\" fill=\"#1cb0f6\"/><circle cx=\"122\" cy=\"145\" r=\"4.5\" fill=\"#1cb0f6\"/><circle cx=\"174\" cy=\"130\" r=\"4.5\" fill=\"#1cb0f6\"/><circle cx=\"226\" cy=\"100\" r=\"4.5\" fill=\"#1cb0f6\"/><circle cx=\"278\" cy=\"55\" r=\"4.5\" fill=\"#1cb0f6\"/><circle cx=\"330\" cy=\"25\" r=\"4.5\" fill=\"#1cb0f6\"/><polyline points=\"70,55 122,70 174,70 226,85 278,85 330,115\" stroke=\"#ff9600\" stroke-width=\"2.5\" fill=\"none\"/><rect x=\"65.5\" y=\"50.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><rect x=\"117.5\" y=\"65.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><rect x=\"169.5\" y=\"65.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><rect x=\"221.5\" y=\"80.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><rect x=\"273.5\" y=\"80.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><rect x=\"325.5\" y=\"110.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><line x1=\"250\" y1=\"245\" x2=\"276\" y2=\"245\" stroke=\"#1cb0f6\" stroke-width=\"2.5\"/><circle cx=\"263\" cy=\"245\" r=\"4.5\" fill=\"#1cb0f6\"/><text x=\"312\" y=\"250\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">שירות א׳</text><line x1=\"90\" y1=\"245\" x2=\"116\" y2=\"245\" stroke=\"#ff9600\" stroke-width=\"2.5\"/><rect x=\"98.5\" y=\"240.5\" width=\"9\" height=\"9\" fill=\"#ff9600\"/><text x=\"152\" y=\"250\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">שירות ב׳</text></svg>"
+  }
+ },
+ "questions": [
+  {
+   "n": 1,
+   "type": "problem",
+   "topic": "percent",
+   "skill": "הנחה באחוזים ובשקלים",
+   "level": 1,
+   "stim": null,
+   "stem": "מחירו של מעיל היה 240 ש״ח. בסוף העונה הוזל המעיל ב-15%, ולאחר מכן הוזל המחיר החדש ב-10 ש״ח נוספים. מה המחיר הסופי של המעיל (בש״ח)?",
+   "fig": null,
+   "options": [
+    "194",
+    "195.5",
+    "204",
+    "215"
+   ],
+   "answer": 1,
+   "explain": "15% מ-240 הם <span class=\"ltr\">0.15·240 = 36</span> ש״ח. אחרי ההנחה הראשונה המחיר הוא <span class=\"ltr\">240 − 36 = 204</span> ש״ח. ההנחה השנייה היא 10 ש״ח: <span class=\"ltr\">204 − 10 = 194</span> ש״ח.",
+   "fast": "הנחה של 15% = כפל ב-0.85: ‏<span class=\"ltr\">240·0.85 = 204</span>, ועוד מינוס 10 → 194.",
+   "traps": [
+    "",
+    "הורידו קודם 10 ש״ח ורק אחר כך 15% — סדר הפעולות הפוך.",
+    "זה המחיר אחרי ההנחה של 15% בלבד; שכחו את 10 השקלים.",
+    "הורידו 15 ש״ח במקום 15%."
+   ]
+  },
+  {
+   "n": 2,
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "משוואה ממעלה ראשונה",
+   "level": 1,
+   "stim": null,
+   "stem": "מה הפתרון של המשוואה <span class=\"ltr\">4(x − 3) = 2x + 6</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">−3</span>",
+    "4.5",
+    "9",
+    "18"
+   ],
+   "answer": 3,
+   "explain": "פותחים סוגריים: <span class=\"ltr\">4x − 12 = 2x + 6</span>. מעבירים אגפים: <span class=\"ltr\">4x − 2x = 6 + 12</span>, כלומר <span class=\"ltr\">2x = 18</span>. מחלקים ב-2: <span class=\"ltr\">x = 9</span>.",
+   "fast": "בדיקה בהצבה: <span class=\"ltr\">x = 9</span> נותן בצד שמאל <span class=\"ltr\">4·6 = 24</span> ובצד ימין <span class=\"ltr\">18 + 6 = 24</span>.",
+   "traps": [
+    "טעות בסימן בהעברת אגפים: קיבלו <span class=\"ltr\">2x = −6</span>.",
+    "פתחו סוגריים בטעות: <span class=\"ltr\">4x − 3</span> במקום <span class=\"ltr\">4x − 12</span>.",
+    "",
+    "עצרו ב-<span class=\"ltr\">2x = 18</span> ולא חילקו ב-2."
+   ]
+  },
+  {
+   "n": 3,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "זווית חיצונית במשולש",
+   "level": 1,
+   "stim": null,
+   "stem": "בשרטוט שלפניך הצלע BC במשולש ABC הוארכה עד הנקודה D. גודל הזווית ACD הוא 130°, וגודל הזווית BAC הוא 70°. מה גודל הזווית ABC (המסומנת ב-x)? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 200\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 117.4 35.9 L 40 170 L 230 170 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><line x1=\"230\" y1=\"170\" x2=\"330\" y2=\"170\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M 108.4 51.5 A 18 18 0 0 0 129 49.7\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M 62 170 A 22 22 0 0 0 51 150.9\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M 248 170 A 18 18 0 0 0 218.4 156.2\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"120.8\" y=\"73.7\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">70°</text><text x=\"74.6\" y=\"150\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-style=\"italic\">x</text><text x=\"246.9\" y=\"133.7\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">130°</text><text x=\"117.4\" y=\"25.9\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">A</text><text x=\"36\" y=\"190\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">B</text><text x=\"230\" y=\"190\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">C</text><text x=\"330\" y=\"190\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">D</text></svg>",
+   "options": [
+    "50°",
+    "60°",
+    "70°",
+    "110°"
+   ],
+   "answer": 2,
+   "explain": "הזווית ACB צמודה לזווית ACD, ולכן <span class=\"ltr\">ACB = 180° − 130° = 50°</span>. סכום הזוויות במשולש הוא 180°, ולכן <span class=\"ltr\">ABC = 180° − 70° − 50° = 60°</span>. דרך אחרת: זווית חיצונית שווה לסכום שתי הזוויות הפנימיות שאינן צמודות לה, ולכן <span class=\"ltr\">130° = 70° + x</span>, ו-<span class=\"ltr\">x = 60°</span>.",
+   "fast": "זווית חיצונית = סכום שתי הפנימיות הרחוקות: <span class=\"ltr\">130° − 70° = 60°</span>.",
+   "traps": [
+    "זו הזווית <span class=\"ltr\">ACB (180° − 130°)</span>, לא הזווית שנשאלה.",
+    "",
+    "העתיקו את הזווית A — אין סיבה שהזוויות יהיו שוות.",
+    "חישבו <span class=\"ltr\">180° − 70°</span> והתעלמו מהזווית החיצונית."
+   ]
+  },
+  {
+   "n": 4,
+   "type": "problem",
+   "topic": "averages",
+   "skill": "הוספת איבר לממוצע",
+   "level": 1,
+   "stim": null,
+   "stem": "הממוצע של 5 מספרים הוא 18. הוסיפו לקבוצה מספר שישי, והממוצע של 6 המספרים עלה ל-20. מה המספר שהוסיפו?",
+   "fig": null,
+   "options": [
+    "20",
+    "22",
+    "30",
+    "38"
+   ],
+   "answer": 3,
+   "explain": "סכום 5 המספרים הוא <span class=\"ltr\">5·18 = 90</span>. סכום 6 המספרים הוא <span class=\"ltr\">6·20 = 120</span>. המספר שנוסף הוא ההפרש בין הסכומים: <span class=\"ltr\">120 − 90 = 30</span>.",
+   "fast": "המספר החדש = הממוצע החדש + (מספר האיברים הקודמים × העלייה בממוצע): <span class=\"ltr\">20 + 5·2 = 30</span>.",
+   "traps": [
+    "מספר ששווה לממוצע החדש לא יכול להעלות את הממוצע עד אליו (הממוצע היה רק 18⅓).",
+    "חיברו לממוצע החדש רק את העלייה <span class=\"ltr\">(20 + 2)</span>.",
+    "",
+    "חיברו את שני הממוצעים <span class=\"ltr\">(18 + 20)</span>."
+   ]
+  },
+  {
+   "n": 5,
+   "type": "problem",
+   "topic": "integers",
+   "skill": "זוגיות של ביטויים",
+   "level": 2,
+   "stim": null,
+   "stem": "n הוא מספר שלם אי-זוגי, ו-m הוא מספר שלם זוגי. איזה מהביטויים הבאים הוא <b>בהכרח</b> מספר אי-זוגי?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">n·(m + 1) + n</span>",
+    "<span class=\"ltr\">n² + m² + 1</span>",
+    "<span class=\"ltr\">m·n + n − 1</span>",
+    "<span class=\"ltr\">(n + m)² − m</span>"
+   ],
+   "answer": 4,
+   "explain": "לפי כללי הזוגיות: <span class=\"ltr\">n + m</span> הוא אי-זוגי + זוגי = אי-זוגי. ריבוע של מספר אי-זוגי הוא אי-זוגי, ואי-זוגי פחות זוגי <span class=\"ltr\">(m)</span> הוא אי-זוגי. לכן <span class=\"ltr\">(n + m)² − m</span> תמיד אי-זוגי. שלושת הביטויים האחרים תמיד זוגיים: <span class=\"ltr\">n(m + 1) + n</span> = אי-זוגי + אי-זוגי; <span class=\"ltr\">n² + m² + 1</span> = אי-זוגי + זוגי + 1; <span class=\"ltr\">mn + n − 1</span> = זוגי + אי-זוגי <span class=\"ltr\">− 1</span>.",
+   "fast": "מציבים <span class=\"ltr\">n = 1, m = 2</span>: הביטויים נותנים 4, 6, 2 ו-<span class=\"ltr\">(1 + 2)² − 2 = 7</span> — רק האחרון אי-זוגי.",
+   "traps": [
+    "<span class=\"ltr\">n·(m + 1)</span> הוא אי-זוגי·אי-זוגי = אי-זוגי, ועוד n (אי-זוגי) נותן זוגי.",
+    "אי-זוגי + זוגי + 1 = זוגי.",
+    "זוגי + אי-זוגי <span class=\"ltr\">− 1</span> = זוגי.",
+    ""
+   ]
+  },
+  {
+   "n": 6,
+   "type": "problem",
+   "topic": "coordinates",
+   "skill": "משוואת ישר דרך שתי נקודות",
+   "level": 2,
+   "stim": null,
+   "stem": "ישר עובר דרך הנקודות <span class=\"ltr\">(2, 3)</span> ו-<span class=\"ltr\">(6, 11)</span>. באיזו נקודה הוא חותך את ציר ה-y?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">(0, −1)</span>",
+    "<span class=\"ltr\">(0, 1)</span>",
+    "<span class=\"ltr\">(0, 2)</span>",
+    "<span class=\"ltr\">(0.5, 0)</span>"
+   ],
+   "answer": 1,
+   "explain": "השיפוע: <span class=\"ltr\">(11 − 3)/(6 − 2) = 8/4 = 2</span>. משוואת הישר: <span class=\"ltr\">y = 2x + b</span>. מציבים את הנקודה <span class=\"ltr\">(2, 3)</span>: <span class=\"ltr\">3 = 4 + b</span>, ולכן <span class=\"ltr\">b = −1</span>. החיתוך עם ציר ה-y הוא כאשר <span class=\"ltr\">x = 0</span>, כלומר בנקודה <span class=\"ltr\">(0, −1)</span>.",
+   "fast": "כל צעד של 1 ימינה ב-x מעלה את y ב-2. מ-<span class=\"ltr\">x = 2</span> חוזרים 2 צעדים ל-<span class=\"ltr\">x = 0</span>, ולכן y יורד ב-4: ‏<span class=\"ltr\">3 − 4 = −1</span>.",
+   "traps": [
+    "",
+    "טעות בסימן במציאת b: ‏<span class=\"ltr\">3 = 4 + b</span> נותן <span class=\"ltr\">b = −1</span>, לא 1.",
+    "חישבו את השיפוע הפוך <span class=\"ltr\">(Δx/Δy = 1/2)</span>.",
+    "זו נקודת החיתוך עם ציר ה-x, לא עם ציר ה-y."
+   ]
+  },
+  {
+   "n": 7,
+   "type": "problem",
+   "topic": "word",
+   "skill": "תנועה — השגה",
+   "level": 2,
+   "stim": null,
+   "stem": "רוכב אופניים יצא מעיר A לעיר B במהירות קבועה של 20 קמ״ש. שעה אחריו יצא מ-A רוכב שני, באותה דרך, במהירות קבועה של 30 קמ״ש. שני הרוכבים הגיעו ל-B באותו רגע. מה המרחק בין A ל-B (בק״מ)?",
+   "fig": null,
+   "options": [
+    "30",
+    "40",
+    "50",
+    "60"
+   ],
+   "answer": 4,
+   "explain": "נסמן ב-t את זמן הנסיעה של הרוכב הראשון (בשעות). השני נסע שעה פחות: <span class=\"ltr\">t − 1</span>. המרחקים שווים: <span class=\"ltr\">20t = 30(t − 1)</span>, כלומר <span class=\"ltr\">20t = 30t − 30</span>, ומכאן <span class=\"ltr\">t = 3</span>. המרחק: <span class=\"ltr\">20·3 = 60</span> ק״מ. בדיקה: הרוכב השני נסע 2 שעות, ו-<span class=\"ltr\">30·2 = 60</span>.",
+   "fast": "בדיקת תשובות: המרחק מתחלק ב-20 וב-30, וההפרש בזמנים הוא שעה: ‏<span class=\"ltr\">60/20 = 3</span> ו-<span class=\"ltr\">60/30 = 2</span> ✓.",
+   "traps": [
+    "זה המרחק שהרוכב השני עובר בשעה אחת, לא המרחק כולו.",
+    "הכפילו את מהירות הראשון <span class=\"ltr\">(20)</span> בזמן הנסיעה של השני (2 שעות).",
+    "חיברו את המהירויות <span class=\"ltr\">(20 + 30)</span> כאילו הם נוסעים זה לקראת זה.",
+    ""
+   ]
+  },
+  {
+   "n": 8,
+   "type": "problem",
+   "topic": "probability",
+   "skill": "הוצאה בלי החזרה",
+   "level": 3,
+   "stim": null,
+   "stem": "בקופסה 4 כדורים אדומים ו-6 כדורים כחולים. מוציאים באקראי שני כדורים בזה אחר זה, בלי להחזיר. מה ההסתברות ששני הכדורים יהיו באותו צבע?",
+   "fig": null,
+   "options": [
+    "<span class=\"fr\"><i>7</i><i>15</i></span>",
+    "<span class=\"fr\"><i>1</i><i>2</i></span>",
+    "<span class=\"fr\"><i>13</i><i>25</i></span>",
+    "<span class=\"fr\"><i>8</i><i>15</i></span>"
+   ],
+   "answer": 1,
+   "explain": "שני אדומים: <span class=\"ltr\"><span class=\"fr\"><i>4</i><i>10</i></span>·<span class=\"fr\"><i>3</i><i>9</i></span> = <span class=\"fr\"><i>12</i><i>90</i></span></span>. שני כחולים: <span class=\"ltr\"><span class=\"fr\"><i>6</i><i>10</i></span>·<span class=\"fr\"><i>5</i><i>9</i></span> = <span class=\"fr\"><i>30</i><i>90</i></span></span>. אותו צבע: <span class=\"ltr\"><span class=\"fr\"><i>12</i><i>90</i></span> + <span class=\"fr\"><i>30</i><i>90</i></span> = <span class=\"fr\"><i>42</i><i>90</i></span> = <span class=\"fr\"><i>7</i><i>15</i></span></span>.",
+   "fast": "ספירת זוגות: מספר הזוגות מאותו צבע הוא 6 (אדומים) + 15 (כחולים) = 21, מתוך 45 זוגות אפשריים: <span class=\"ltr\">21/45 = 7/15</span>.",
+   "traps": [
+    "",
+    "ניחוש — יש שתי אפשרויות (אותו צבע או צבעים שונים), אבל הן לא שוות בסיכוי.",
+    "חישוב כאילו מחזירים את הכדור הראשון: <span class=\"ltr\">(16 + 36)/100</span>.",
+    "זו ההסתברות לשני צבעים שונים — המאורע המשלים."
+   ]
+  },
+  {
+   "n": 9,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "קריאת נקודת חיתוך",
+   "level": 1,
+   "stim": "c1",
+   "stem": "באיזו שנה היה מספר המנויים של שירות א׳ <b>לראשונה</b> גדול ממספר המנויים של שירות ב׳?",
+   "fig": null,
+   "options": [
+    "2020",
+    "2021",
+    "2022",
+    "2023"
+   ],
+   "answer": 4,
+   "explain": "קוראים את שני הקווים שנה אחר שנה: 2019: ‏10 מול 50; 2020: ‏20 מול 45; 2021: ‏25 מול 45; 2022: ‏35 מול 40; 2023: ‏50 מול 40. הפעם הראשונה שהקו הכחול נמצא מעל הקו הכתום היא ב-2023.",
+   "fast": "מחפשים איפה הקווים נחתכים: בין 2022 ל-2023. לכן השנה הראשונה שבה א׳ מעל ב׳ היא 2023.",
+   "traps": [
+    "ב-2020 לשירות א׳ היו 20 אלף מנויים ולשירות ב׳ 45 אלף.",
+    "ב-2021 לשירות א׳ היו 25 אלף מנויים ולשירות ב׳ 45 אלף.",
+    "ב-2022 הקווים קרובים (35 מול 40), אבל שירות א׳ עדיין קטן יותר.",
+    ""
+   ]
+  },
+  {
+   "n": 10,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "שינוי בין שנים עוקבות",
+   "level": 1,
+   "stim": "c1",
+   "stem": "בין אילו שתי שנים עוקבות הייתה העלייה הגדולה ביותר במספר המנויים של שירות א׳?",
+   "fig": null,
+   "options": [
+    "מ-2019 ל-2020",
+    "מ-2021 ל-2022",
+    "מ-2022 ל-2023",
+    "מ-2023 ל-2024"
+   ],
+   "answer": 3,
+   "explain": "העליות של שירות א׳ בכל שנה: 2019→2020: ‏10; 2020→2021: ‏5; 2021→2022: ‏10; 2022→2023: ‏15; 2023→2024: ‏10 (באלפים). העלייה הגדולה ביותר, 15 אלף, הייתה מ-2022 ל-2023.",
+   "fast": "מחפשים את הקטע התלול ביותר בקו הכחול — הוא בין 2022 ל-2023.",
+   "traps": [
+    "עלייה של 10 אלף בלבד (מ-10 ל-20).",
+    "עלייה של 10 אלף בלבד (מ-25 ל-35).",
+    "",
+    "שם המספרים הגדולים ביותר (מ-50 ל-60), אבל העלייה היא רק 10 אלף."
+   ]
+  },
+  {
+   "n": 11,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "אחוז ירידה",
+   "level": 1,
+   "stim": "c1",
+   "stem": "בכמה אחוזים ירד מספר המנויים של שירות ב׳ מסוף 2019 עד סוף 2024?",
+   "fig": null,
+   "options": [
+    "20%",
+    "40%",
+    "60%",
+    "66⅔%"
+   ],
+   "answer": 2,
+   "explain": "ב-2019 היו לשירות ב׳ 50 אלף מנויים, וב-2024 — 30 אלף. הירידה: 20 אלף. אחוז השינוי מחושב ביחס לערך ההתחלתי: <span class=\"ltr\">20/50 = 0.4 = 40%</span>.",
+   "fast": "נשארו 30 מתוך 50, כלומר 60%; לכן ירדו <span class=\"ltr\">100% − 60% = 40%</span>.",
+   "traps": [
+    "זו הירידה באלפי מנויים <span class=\"ltr\">(50 − 30 = 20)</span>, לא באחוזים.",
+    "",
+    "זה היחס <span class=\"ltr\">30/50</span> — החלק שנשאר, לא החלק שירד.",
+    "חילקו את הירידה בערך הסופי <span class=\"ltr\">(20/30)</span> במקום בערך ההתחלתי."
+   ]
+  },
+  {
+   "n": 12,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "ממוצע מתרשים",
+   "level": 2,
+   "stim": "c1",
+   "stem": "מה היה הממוצע (באלפים) של מספר המנויים של שירות א׳ בשש השנים המוצגות בתרשים?",
+   "fig": null,
+   "options": [
+    "30",
+    "33⅓",
+    "35",
+    "40"
+   ],
+   "answer": 2,
+   "explain": "ערכי שירות א׳ בשש השנים: 10, 20, 25, 35, 50, 60. הסכום: <span class=\"ltr\">10 + 20 + 25 + 35 + 50 + 60 = 200</span>. הממוצע: <span class=\"ltr\">200/6 = 33⅓</span> אלף.",
+   "fast": "הערכה: רוב הנקודות מתחת ל-35, ושתיים רחוקות מעליו <span class=\"ltr\">(50, 60)</span>. בדיקה מהירה: סטיות מ-35 הן ‎<span class=\"ltr\">−25, −15, −10, 0, +15, +25</span>, סכומן <span class=\"ltr\">−10</span>, ולכן הממוצע <span class=\"ltr\">35 − 10/6 = 33⅓</span>.",
+   "traps": [
+    "זה החציון <span class=\"ltr\">((25 + 35)/2)</span>, לא הממוצע.",
+    "",
+    "ממוצע של הערך הראשון והאחרון בלבד <span class=\"ltr\">((10 + 60)/2)</span>.",
+    "חילקו את הסכום ב-5 במקום ב-<span class=\"ltr\">6 (200/5)</span>."
+   ]
+  },
+  {
+   "n": 13,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "תחזית לפי אחוז שינוי",
+   "level": 3,
+   "stim": "c1",
+   "stem": "נניח שבשנת 2025 ישתנה מספר המנויים של כל אחד מהשירותים <b>באותו אחוז</b> שבו השתנה מסוף 2023 עד סוף 2024. מה יהיה בסוף 2025 ההפרש (באלפים) בין מספר המנויים של שירות א׳ למספר המנויים של שירות ב׳?",
+   "fig": null,
+   "options": [
+    "30",
+    "42",
+    "49.5",
+    "50"
+   ],
+   "answer": 3,
+   "explain": "שירות א׳: מ-50 ל-60 — עלייה של <span class=\"ltr\">10/50 = 20%</span>. ב-<span class=\"ltr\">2025: 60·1.2 = 72</span>. שירות ב׳: מ-40 ל-30 — ירידה של <span class=\"ltr\">10/40 = 25%</span>. ב-<span class=\"ltr\">2025: 30·0.75 = 22.5</span>. ההפרש: <span class=\"ltr\">72 − 22.5 = 49.5</span> אלף.",
+   "fast": "אחוז השינוי מחושב מהערך של 2023, אבל התחזית מוכפלת בערך של 2024: ‏<span class=\"ltr\">60·1.2</span> ו-<span class=\"ltr\">30·0.75</span>. מי שממשיך במספרים <span class=\"ltr\">(+10/−10)</span> מקבל 50 — זו המלכודת.",
+   "traps": [
+    "זה ההפרש ב-2024, בלי התחזית.",
+    "עדכנו רק את שירות א׳ <span class=\"ltr\">(72 − 30)</span> ושכחו את הירידה של שירות ב׳.",
+    "",
+    "המשיכו את השינוי במספרים (עלייה של 10 וירידה של 10: ‏<span class=\"ltr\">70 − 20</span>) ולא באחוזים."
+   ]
+  },
+  {
+   "n": 14,
+   "type": "problem",
+   "topic": "powers",
+   "skill": "חוקי חזקות",
+   "level": 2,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">3<sup>n</sup> = a</span>. למה שווה <span class=\"ltr\">3<sup>n+2</sup> − 3<sup>n−1</sup></span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"fr\"><i>26a</i><i>3</i></span>",
+    "<span class=\"fr\"><i>28a</i><i>3</i></span>",
+    "<span class=\"ltr\">8a</span>",
+    "<span class=\"ltr\">27a</span>"
+   ],
+   "answer": 1,
+   "explain": "<span class=\"ltr\">3<sup>n+2</sup> = 3<sup>n</sup>·3² = 9a</span>. <span class=\"ltr\">3<sup>n−1</sup> = 3<sup>n</sup>/3 = a/3</span>. ההפרש: <span class=\"ltr\">9a − a/3 = 27a/3 − a/3 = 26a/3</span>.",
+   "fast": "מציבים <span class=\"ltr\">n = 1</span>: אז <span class=\"ltr\">a = 3</span>, והביטוי הוא <span class=\"ltr\">27 − 1 = 26</span>. מבין התשובות רק <span class=\"ltr\">26a/3</span> נותנת 26 כש-<span class=\"ltr\">a = 3</span>.",
+   "traps": [
+    "",
+    "חיברו <span class=\"ltr\">a/3</span> במקום לחסר אותו.",
+    "חישבו את 3ⁿ⁻¹ כאילו הוא שווה ל-a (‏<span class=\"ltr\">9a − a</span>).",
+    "חיסרו את המעריכים: <span class=\"ltr\">(n + 2) − (n − 1) = 3</span>, אבל חיסור חזקות אינו חיסור מעריכים."
+   ]
+  },
+  {
+   "n": 15,
+   "type": "problem",
+   "topic": "solids",
+   "skill": "נפח ושטח פנים",
+   "level": 2,
+   "stim": null,
+   "stem": "תיבה שמידותיה <span class=\"ltr\">4 × 6 × 9</span> ס״מ הותכה, ומכל החומר שלה יצקו קובייה. בכמה סמ״ר קטן שטח הפנים של הקובייה משטח הפנים של התיבה? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 195\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 60 170 L 240 170 L 240 90 L 60 90 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><line x1=\"60\" y1=\"90\" x2=\"102\" y2=\"48\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"102\" y1=\"48\" x2=\"282\" y2=\"48\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"240\" y1=\"90\" x2=\"282\" y2=\"48\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"240\" y1=\"170\" x2=\"282\" y2=\"128\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"282\" y1=\"128\" x2=\"282\" y2=\"48\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"60\" y1=\"170\" x2=\"102\" y2=\"128\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"5 4\"/><line x1=\"102\" y1=\"128\" x2=\"282\" y2=\"128\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"5 4\"/><line x1=\"102\" y1=\"128\" x2=\"102\" y2=\"48\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\" stroke-dasharray=\"5 4\"/><text x=\"150\" y=\"190\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">9</text><text x=\"46\" y=\"135\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">4</text><text x=\"275\" y=\"157\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">6</text></svg>",
+   "options": [
+    "0",
+    "12",
+    "84",
+    "102"
+   ],
+   "answer": 2,
+   "explain": "נפח התיבה: <span class=\"ltr\">4·6·9 = 216</span> סמ״ק. לקובייה אותו נפח, וצלעה היא <span class=\"ltr\">∛216 = 6</span> ס״מ. שטח הפנים של התיבה: <span class=\"ltr\">2·(4·6 + 4·9 + 6·9) = 2·(24 + 36 + 54) = 228</span> סמ״ר. שטח הפנים של הקובייה: <span class=\"ltr\">6·6² = 216</span> סמ״ר. ההפרש: <span class=\"ltr\">228 − 216 = 12</span> סמ״ר.",
+   "fast": "שווה לזכור ש-<span class=\"ltr\">216 = 6³</span>. משם רק שני חישובי שטח: 228 מול 216.",
+   "traps": [
+    "גופים בעלי אותו נפח אינם בהכרח בעלי אותו שטח פנים.",
+    "",
+    "חישבו לקובייה רק 4 פאות <span class=\"ltr\">(144)</span> במקום 6.",
+    "שכחו להכפיל ב-2 את שטח התיבה (114 במקום 228)."
+   ]
+  },
+  {
+   "n": 16,
+   "type": "problem",
+   "topic": "defined_ops",
+   "skill": "פעולה מוגדרת",
+   "level": 2,
+   "stim": null,
+   "stem": "לכל שני מספרים <span class=\"ltr\">a ≠ b</span> מוגדרת הפעולה <span class=\"ltr\">a ◇ b = (a + b)/(a − b)</span>. אם <span class=\"ltr\">x ◇ 2 = 3</span>, מה ערכו של x?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">−2</span>",
+    "1",
+    "4",
+    "8"
+   ],
+   "answer": 3,
+   "explain": "לפי ההגדרה, <span class=\"ltr\">x ◇ 2 = (x + 2)/(x − 2)</span>. המשוואה: <span class=\"ltr\">(x + 2)/(x − 2) = 3</span>. כופלים במכנה: <span class=\"ltr\">x + 2 = 3x − 6</span>, ולכן <span class=\"ltr\">2x = 8</span> ו-<span class=\"ltr\">x = 4</span>. בדיקה: <span class=\"ltr\">(4 + 2)/(4 − 2) = 6/2 = 3</span> ✓.",
+   "fast": "בפעולות מוגדרות כדאי להציב את התשובות: <span class=\"ltr\">x = 4</span> נותן <span class=\"ltr\">6/2 = 3</span>.",
+   "traps": [
+    "פתחו את <span class=\"ltr\">3(x − 2)</span> כ-<span class=\"ltr\">3x + 6</span>.",
+    "החליפו את סדר האיברים וחישבו את 2 ◇ x.",
+    "",
+    "עצרו ב-<span class=\"ltr\">2x = 8</span> ולא חילקו ב-2."
+   ]
+  },
+  {
+   "n": 17,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "ריבוע חסום במעגל",
+   "level": 2,
+   "stim": null,
+   "stem": "בשרטוט שלפניך ריבוע ABCD חסום במעגל שמרכזו O ורדיוסו 5. מה השטח המסומן בשרטוט (השטח שבתוך המעגל ומחוץ לריבוע)? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 225\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 88 112 A 92 92 0 1 0 272 112 A 92 92 0 1 0 88 112 Z M 114.9 46.9 L 245.1 46.9 L 245.1 177.1 L 114.9 177.1 Z\" fill=\"currentColor\" fill-opacity=\"0.18\" fill-rule=\"evenodd\" stroke=\"none\"/><circle cx=\"180\" cy=\"112\" r=\"92\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M 114.9 46.9 L 245.1 46.9 L 245.1 177.1 L 114.9 177.1 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><circle cx=\"180\" cy=\"112\" r=\"3\" fill=\"currentColor\"/><line x1=\"180\" y1=\"112\" x2=\"245.1\" y2=\"46.9\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"176\" y=\"130\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">O</text><text x=\"204.5\" y=\"73.5\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">5</text><text x=\"102.9\" y=\"40.9\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">A</text><text x=\"257.1\" y=\"40.9\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">B</text><text x=\"257.1\" y=\"193.1\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">C</text><text x=\"102.9\" y=\"193.1\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">D</text></svg>",
+   "options": [
+    "<span class=\"ltr\">25π − 50</span>",
+    "<span class=\"ltr\">25π − 25</span>",
+    "<span class=\"ltr\">25π − 100</span>",
+    "<span class=\"ltr\">10π − 50</span>"
+   ],
+   "answer": 1,
+   "explain": "שטח המעגל: <span class=\"ltr\">π·5² = 25π</span>. אלכסון הריבוע עובר דרך המרכז, ולכן הוא קוטר המעגל: 10. שטח ריבוע לפי האלכסון: <span class=\"ltr\">d²/2 = 100/2 = 50</span> (או: הצלע <span class=\"ltr\">5√2</span>, והשטח <span class=\"ltr\">(5√2)² = 50</span>). השטח המסומן: <span class=\"ltr\">25π − 50</span>.",
+   "fast": "שטח ריבוע = חצי מריבוע האלכסון — לא צריך לחשב את הצלע.",
+   "traps": [
+    "",
+    "חשבו שצלע הריבוע שווה לרדיוס <span class=\"ltr\">(5)</span>.",
+    "חשבו שצלע הריבוע שווה לקוטר <span class=\"ltr\">(10)</span> — אבל הקוטר הוא האלכסון.",
+    "השתמשו בהיקף המעגל <span class=\"ltr\">(2πr)</span> במקום בשטחו."
+   ]
+  },
+  {
+   "n": 18,
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "אי-שוויונים וערך מוחלט",
+   "level": 3,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">a < 0 < b</span> וגם <span class=\"ltr\">|a| > |b|</span>. איזה מהבאים <b>בהכרח</b> נכון?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">a + b > 0</span>",
+    "<span class=\"ltr\">a² < b²</span>",
+    "<span class=\"ltr\">a + 2b > 0</span>",
+    "<span class=\"ltr\">a·b < −b²</span>"
+   ],
+   "answer": 4,
+   "explain": "מאחר ש-a שלילי, <span class=\"ltr\">|a| = −a</span>, והנתון אומר <span class=\"ltr\">−a > b</span>. כופלים את שני האגפים ב-b, שהוא חיובי, ולכן כיוון אי-השוויון נשמר: <span class=\"ltr\">−ab > b²</span>, כלומר <span class=\"ltr\">ab < −b²</span>. הביטוי הזה נכון תמיד. שלושת האחרים: הראשון והשני תמיד לא נכונים, והרביעי תלוי בערכים.",
+   "fast": "מציבים שתי דוגמאות: <span class=\"ltr\">a = −3, b = 2</span> ואחר כך <span class=\"ltr\">a = −5, b = 2</span>. רק <span class=\"ltr\">a·b < −b²</span> נכון בשתיהן (‏<span class=\"ltr\">−6 < −4</span>, ‏<span class=\"ltr\">−10 < −4</span>).",
+   "traps": [
+    "a שלילי וגדול יותר בערכו המוחלט, ולכן הסכום שלילי.",
+    "‏<span class=\"ltr\">|a| > |b|</span> גורר <span class=\"ltr\">a² > b²</span> — ההפך.",
+    "תלוי במספרים: <span class=\"ltr\">a = −3, b = 2</span> נותן <span class=\"ltr\">1 > 0</span>, אבל <span class=\"ltr\">a = −5, b = 2</span> נותן <span class=\"ltr\">−1</span>.",
+    ""
+   ]
+  },
+  {
+   "n": 19,
+   "type": "problem",
+   "topic": "word",
+   "skill": "הספק — זמן עבודה לא ידוע",
+   "level": 3,
+   "stim": null,
+   "stem": "צינור א׳ לבדו ממלא בריכה ב-6 שעות, וצינור ב׳ לבדו ממלא אותה ב-9 שעות. פתחו את שני הצינורות יחד כשהבריכה ריקה. לאחר זמן מסוים סגרו את צינור א׳, וצינור ב׳ המשיך לבדו עד שהבריכה התמלאה. המילוי כולו נמשך 7 שעות. כמה זמן היה צינור א׳ פתוח?",
+   "fig": null,
+   "options": [
+    "48 דקות",
+    "שעה ו-20 דקות",
+    "שעתיים",
+    "4 שעות"
+   ],
+   "answer": 2,
+   "explain": "צינור ב׳ היה פתוח כל 7 השעות, ובקצב של <span class=\"ltr\">1/9</span> בריכה לשעה הוא מילא <span class=\"ltr\">7/9</span> מהבריכה. את <span class=\"ltr\">2/9</span> הנותרים מילא צינור א׳. קצבו של צינור א׳ הוא <span class=\"ltr\">1/6</span> בריכה לשעה, ולכן הוא היה פתוח <span class=\"ltr\">(2/9) ÷ (1/6) = 12/9 = 4/3</span> שעות, כלומר שעה ו-20 דקות.",
+   "fast": "הטריק: צינור ב׳ עבד כל הזמן. מחשבים כמה הוא מילא, והשאר שייך לצינור א׳ — בלי משוואה.",
+   "traps": [
+    "חילקו את <span class=\"ltr\">2/9</span> בקצב המשותף <span class=\"ltr\">(5/18)</span> — אבל את חלקו של צינור ב׳ כבר ספרו.",
+    "",
+    "חישבו לפי הקצב של צינור ב׳ (‏<span class=\"ltr\">2/9 · 9</span>) במקום לפי הקצב של צינור א׳.",
+    "הניחו שצינור ב׳ לא עבד בזמן שצינור א׳ היה פתוח: <span class=\"ltr\">t/6 + (7 − t)/9 = 1</span>."
+   ]
+  },
+  {
+   "n": 20,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "גובה ליתר במשולש ישר-זווית",
+   "level": 3,
+   "stim": null,
+   "stem": "במשולש ABC הזווית C ישרה, ו-CD הוא הגובה ליתר AB. נתון: <span class=\"ltr\">AD = 4, DB = 9</span>. מה שטח המשולש ABC? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 340 210\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 40 180 L 300 180 L 120 60 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><line x1=\"120\" y1=\"60\" x2=\"120\" y2=\"180\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M 131 180 L 131 169 L 120 169\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M 113.9 69.2 L 123.1 75.3 L 129.2 66.1\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"80\" y=\"198\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">4</text><text x=\"210\" y=\"198\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">9</text><text x=\"28\" y=\"185\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">A</text><text x=\"312\" y=\"185\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">B</text><text x=\"120\" y=\"50\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">C</text><text x=\"120\" y=\"200\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">D</text></svg>",
+   "options": [
+    "18",
+    "26",
+    "36",
+    "39"
+   ],
+   "answer": 4,
+   "explain": "במשולש ישר-זווית הגובה ליתר יוצר שני משולשים דומים (ACD ו-CBD), ולכן <span class=\"ltr\">AD/CD = CD/DB</span>, כלומר <span class=\"ltr\">CD² = AD·DB = 4·9 = 36</span>, ו-<span class=\"ltr\">CD = 6</span>. היתר: <span class=\"ltr\">AB = 4 + 9 = 13</span>. השטח: <span class=\"ltr\">(AB·CD)/2 = (13·6)/2 = 39</span>.",
+   "fast": "לזכור: הגובה ליתר הוא הממוצע הגאומטרי של קטעי היתר: <span class=\"ltr\">√(4·9) = 6</span>.",
+   "traps": [
+    "חישבו <span class=\"ltr\">4·9/2</span> — כאילו AD ו-DB הם הניצבים.",
+    "השתמשו ב-<span class=\"ltr\">AD = 4</span> כגובה <span class=\"ltr\">(13·4/2)</span> במקום ב-CD.",
+    "זה <span class=\"ltr\">CD² = AD·DB</span>, לא השטח.",
+    ""
+   ]
+  }
+ ]
+}

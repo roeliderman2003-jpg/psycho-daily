@@ -1,0 +1,515 @@
+{
+ "id": "q04",
+ "domain": "quant",
+ "title": "כמותי 4",
+ "minutes": 20,
+ "stims": {
+  "c1": {
+   "kind": "chart",
+   "intro": "בתרשים שלפניך מוצגת התפלגות המכירות בחודש מסוים בשלושה סניפים של רשת חנויות ספרים, לפי סוג הספר: ספרי ילדים, פרוזה וספרי עיון. כל פס מתאר סניף אחד, והמספרים בתוך הפס הם האחוז של כל סוג מכלל הספרים שנמכרו באותו סניף. מעל כל פס רשום מספר הספרים הכולל שנמכר בסניף בחודש זה.",
+   "html": "<svg viewBox=\"0 0 360 250\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><text x=\"180\" y=\"28\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\" font-weight=\"bold\">סניף א׳ — סה״כ 400 ספרים</text><rect x=\"212\" y=\"37\" width=\"128\" height=\"32\" fill=\"#1cb0f6\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"276\" y=\"58\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">40%</text><rect x=\"100\" y=\"37\" width=\"112\" height=\"32\" fill=\"#ff9600\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"156\" y=\"58\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">35%</text><rect x=\"20\" y=\"37\" width=\"80\" height=\"32\" fill=\"currentColor\" fill-opacity=\"0.12\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"60\" y=\"58\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">25%</text><text x=\"180\" y=\"96\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\" font-weight=\"bold\">סניף ב׳ — סה״כ 600 ספרים</text><rect x=\"260\" y=\"105\" width=\"80\" height=\"32\" fill=\"#1cb0f6\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"300\" y=\"126\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">25%</text><rect x=\"116\" y=\"105\" width=\"144\" height=\"32\" fill=\"#ff9600\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"188\" y=\"126\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">45%</text><rect x=\"20\" y=\"105\" width=\"96\" height=\"32\" fill=\"currentColor\" fill-opacity=\"0.12\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"68\" y=\"126\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">30%</text><text x=\"180\" y=\"164\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\" font-weight=\"bold\">סניף ג׳ — סה״כ 700 ספרים</text><rect x=\"244\" y=\"173\" width=\"96\" height=\"32\" fill=\"#1cb0f6\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"292\" y=\"194\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">30%</text><rect x=\"148\" y=\"173\" width=\"96\" height=\"32\" fill=\"#ff9600\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"196\" y=\"194\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">30%</text><rect x=\"20\" y=\"173\" width=\"128\" height=\"32\" fill=\"currentColor\" fill-opacity=\"0.12\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"84\" y=\"194\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\" font-weight=\"bold\">40%</text><rect x=\"322\" y=\"225\" width=\"14\" height=\"14\" fill=\"#1cb0f6\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"286\" y=\"236\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">ספרי ילדים</text><rect x=\"217\" y=\"225\" width=\"14\" height=\"14\" fill=\"#ff9600\" fill-opacity=\"0.55\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"181\" y=\"236\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">פרוזה</text><rect x=\"107\" y=\"225\" width=\"14\" height=\"14\" fill=\"currentColor\" fill-opacity=\"0.12\" stroke=\"currentColor\" stroke-width=\"1\"/><text x=\"71\" y=\"236\" font-size=\"13\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"rtl\">ספרי עיון</text></svg>"
+  }
+ },
+ "questions": [
+  {
+   "n": 1,
+   "type": "problem",
+   "topic": "percent",
+   "skill": "חלוקה לפי יחס",
+   "level": 1,
+   "stim": null,
+   "stem": "בכיתה 36 תלמידים. היחס בין מספר הבנים למספר הבנות בכיתה הוא <span class=\"ltr\">4 : 5</span>. כמה בנות יש בכיתה?",
+   "fig": null,
+   "options": [
+    "4",
+    "9",
+    "16",
+    "20"
+   ],
+   "answer": 4,
+   "explain": "היחס <span class=\"ltr\">4 : 5</span> אומר שהכיתה מחולקת ל-<span class=\"ltr\">4 + 5 = 9</span> חלקים שווים. כל חלק: <span class=\"ltr\">36 ÷ 9 = 4</span> תלמידים. הבנות הן 5 חלקים: <span class=\"ltr\">5·4 = 20</span> (והבנים 16; בדיקה: <span class=\"ltr\">16 + 20 = 36</span>).",
+   "fast": "הבנות הן <span class=\"fr\"><i>5</i><i>9</i></span> מהכיתה: <span class=\"ltr\">36·5/9 = 20</span>.",
+   "traps": [
+    "זה ערכו של חלק אחד <span class=\"ltr\">(36 ÷ 9)</span>, לא מספר הבנות.",
+    "חילקו את 36 ל-4 במקום ל-9 חלקים.",
+    "זה מספר הבנים.",
+    ""
+   ]
+  },
+  {
+   "n": 2,
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "מערכת משוואות",
+   "level": 1,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">x + y = 10</span> ו-<span class=\"ltr\">x − y = 4</span>. מה ערכו של <span class=\"ltr\">x·y</span>?",
+   "fig": null,
+   "options": [
+    "7",
+    "21",
+    "40",
+    "84"
+   ],
+   "answer": 2,
+   "explain": "מחברים את שתי המשוואות: <span class=\"ltr\">2x = 14</span>, ולכן <span class=\"ltr\">x = 7</span>. מציבים: <span class=\"ltr\">y = 10 − 7 = 3</span>. המכפלה: <span class=\"ltr\">7·3 = 21</span>.",
+   "fast": "אפשר בלי למצוא את x ו-y: <span class=\"ltr\">(x + y)² − (x − y)² = 4xy</span>, כלומר <span class=\"ltr\">100 − 16 = 84 = 4xy</span>, ו-<span class=\"ltr\">xy = 21</span>.",
+   "traps": [
+    "זה ערכו של x, לא המכפלה.",
+    "",
+    "כפלו את אגפי הימין <span class=\"ltr\">(10·4)</span> — זה <span class=\"ltr\">x² − y²</span>, לא xy.",
+    "<span class=\"ltr\">(x + y)² − (x − y)² = 4xy</span> — שכחו לחלק ב-4."
+   ]
+  },
+  {
+   "n": 3,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "זוויות חד-צדדיות בין מקבילים",
+   "level": 1,
+   "stim": null,
+   "stem": "בשרטוט שלפניך שני הישרים האופקיים מקבילים, וישר שלישי חותך אותם. לפי הנתונים בשרטוט, מה ערכו של x? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 360 210\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><line x1=\"20\" y1=\"60\" x2=\"340\" y2=\"60\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"20\" y1=\"160\" x2=\"340\" y2=\"160\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"136.3\" y1=\"197.6\" x2=\"200.1\" y2=\"22.4\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M 180.2 76.9 A 18 18 0 0 0 204.4 60\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M 172 160 A 22 22 0 0 0 157.5 139.3\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"231.3\" y=\"98.8\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">(3x+10)°</text><text x=\"206.4\" y=\"141.9\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">(2x+20)°</text></svg>",
+   "options": [
+    "10",
+    "30",
+    "34",
+    "42"
+   ],
+   "answer": 2,
+   "explain": "שתי הזוויות נמצאות בין הישרים המקבילים ובאותו צד של החותך — הן זוויות חד-צדדיות, וסכומן 180°. לכן <span class=\"ltr\">(3x + 10) + (2x + 20) = 180</span>, כלומר <span class=\"ltr\">5x + 30 = 180</span>, ‏<span class=\"ltr\">5x = 150</span> ו-<span class=\"ltr\">x = 30</span>. בדיקה: הזוויות הן 100° ו-80°, וסכומן 180° ✓.",
+   "fast": "מציבים את התשובות: רק <span class=\"ltr\">x = 30</span> נותן זוויות שסכומן 180° (‏<span class=\"ltr\">100° + 80°</span>).",
+   "traps": [
+    "השוו בין הזוויות כאילו הן מתחלפות או מתאימות — אבל הן חד-צדדיות, וסכומן 180°.",
+    "",
+    "חיסרו רק את 10 מ-180 (‏<span class=\"ltr\">5x = 170</span>) ושכחו את 20.",
+    "טעות בסימן: <span class=\"ltr\">5x = 180 + 30</span>."
+   ]
+  },
+  {
+   "n": 4,
+   "type": "problem",
+   "topic": "averages",
+   "skill": "תיקון טעות בממוצע",
+   "level": 1,
+   "stim": null,
+   "stem": "ממוצע הציונים של 20 תלמידים במבחן חושב והתקבל 75. אחר כך התברר שהציון של אחד התלמידים נרשם בטעות 54 במקום 94. מה הממוצע הנכון?",
+   "fig": null,
+   "options": [
+    "73",
+    "75",
+    "77",
+    "79"
+   ],
+   "answer": 3,
+   "explain": "סכום הציונים שחושב: <span class=\"ltr\">20·75 = 1500</span>. הציון הנכון גבוה ב-<span class=\"ltr\">94 − 54 = 40</span> מהציון שנרשם, ולכן הסכום הנכון הוא 1540. הממוצע הנכון: <span class=\"ltr\">1540 ÷ 20 = 77</span>.",
+   "fast": "ההפרש מתחלק בין כל התלמידים: <span class=\"ltr\">40 ÷ 20 = 2</span>, ולכן הממוצע עולה ב-2.",
+   "traps": [
+    "הורידו במקום להוסיף — הציון הנכון גבוה מהציון שנרשם.",
+    "חשבו שתיקון של ציון אחד לא משנה את הממוצע.",
+    "",
+    "חילקו את ההפרש <span class=\"ltr\">(40)</span> ב-10 במקום ב-20."
+   ]
+  },
+  {
+   "n": 5,
+   "type": "problem",
+   "topic": "integers",
+   "skill": "פירוק לגורמים ראשוניים",
+   "level": 2,
+   "stim": null,
+   "stem": "מהו המספר השלם החיובי הקטן ביותר שיש לכפול בו את 360 כדי לקבל ריבוע של מספר שלם?",
+   "fig": null,
+   "options": [
+    "2",
+    "5",
+    "10",
+    "40"
+   ],
+   "answer": 3,
+   "explain": "מפרקים לגורמים ראשוניים: <span class=\"ltr\">360 = 2³·3²·5</span>. בריבוע שלם כל החזקות זוגיות. ‏<span class=\"ltr\">3²</span> כבר בחזקה זוגית; ל-<span class=\"ltr\">2³</span> חסר עוד גורם 2, ול-5 חסר עוד גורם 5. לכן הכופל הקטן ביותר הוא <span class=\"ltr\">2·5 = 10</span>, ואכן <span class=\"ltr\">360·10 = 3600 = 60²</span>.",
+   "fast": "בודקים את התשובות מהקטנה לגדולה: 720 ו-1800 אינם ריבועים, ‏<span class=\"ltr\">3600 = 60²</span> ✓.",
+   "traps": [
+    "‏<span class=\"ltr\">360·2 = 720</span> — החזקה של 5 עדיין אי-זוגית, ו-720 אינו ריבוע.",
+    "‏<span class=\"ltr\">360·5 = 1800</span> — החזקה של 2 עדיין אי-זוגית <span class=\"ltr\">(2³)</span>, ו-1800 אינו ריבוע.",
+    "",
+    "‏<span class=\"ltr\">360·40 = 14400 = 120²</span> — זה אכן ריבוע, אבל 40 אינו הכופל הקטן ביותר."
+   ]
+  },
+  {
+   "n": 6,
+   "type": "problem",
+   "topic": "sequences",
+   "skill": "סדרה חשבונית",
+   "level": 2,
+   "stim": null,
+   "stem": "בסדרה חשבונית האיבר השלישי הוא 11 והאיבר השמיני הוא 31. מהו האיבר העשרים בסדרה?",
+   "fig": null,
+   "options": [
+    "75",
+    "79",
+    "80",
+    "83"
+   ],
+   "answer": 2,
+   "explain": "בין האיבר השלישי לאיבר השמיני יש 5 צעדים, וההפרש ביניהם <span class=\"ltr\">31 − 11 = 20</span>. לכן ההפרש הקבוע הוא <span class=\"ltr\">d = 20 ÷ 5 = 4</span>. מהאיבר השמיני לאיבר העשרים יש <span class=\"ltr\">20 − 8 = 12</span> צעדים: <span class=\"ltr\">31 + 12·4 = 31 + 48 = 79</span>.",
+   "fast": "מספר הצעדים בין שני איברים הוא ההפרש בין המקומות שלהם <span class=\"ltr\">(20 − 8 = 12)</span>, לא מספר האיברים.",
+   "traps": [
+    "ספרו 11 צעדים מהאיבר השמיני לעשרים במקום 12.",
+    "",
+    "הכפילו את מקום האיבר בהפרש <span class=\"ltr\">(20·4)</span> והתעלמו מהאיבר הראשון.",
+    "חישבו <span class=\"ltr\">a₁ + 20d</span> במקום <span class=\"ltr\">a₁ + 19d</span>."
+   ]
+  },
+  {
+   "n": 7,
+   "type": "problem",
+   "topic": "word",
+   "skill": "תערובות — מיהול",
+   "level": 2,
+   "stim": null,
+   "stem": "בכלי יש 30 ליטר תמיסה שריכוז המלח בה הוא 20%. כמה ליטר מים יש להוסיף לכלי כדי שריכוז המלח יירד ל-12%?",
+   "fig": null,
+   "options": [
+    "2.4",
+    "8",
+    "20",
+    "50"
+   ],
+   "answer": 3,
+   "explain": "כמות המלח: 20% מ-<span class=\"ltr\">30 = 6</span> ליטר, והיא לא משתנה כשמוסיפים מים. בתמיסה החדשה 6 הליטרים האלה הם 12% מהנפח, ולכן הנפח החדש הוא <span class=\"ltr\">6 ÷ 0.12 = 50</span> ליטר. יש להוסיף <span class=\"ltr\">50 − 30 = 20</span> ליטר מים.",
+   "fast": "הריכוז יורד פי <span class=\"ltr\">20/12 = 5/3</span>, ולכן הנפח גדל פי <span class=\"ltr\">5/3</span>: ‏<span class=\"ltr\">30·5/3 = 50</span>, כלומר תוספת של 20 ליטר.",
+   "traps": [
+    "חישבו 8% מ-30 (ההפרש בין הריכוזים).",
+    "חיסרו את האחוזים <span class=\"ltr\">(20 − 12)</span>.",
+    "",
+    "זה הנפח הכולל של התמיסה החדשה, לא כמות המים שהוסיפו."
+   ]
+  },
+  {
+   "n": 8,
+   "type": "problem",
+   "topic": "functions",
+   "skill": "סימטריה של פרבולה",
+   "level": 3,
+   "stim": null,
+   "stem": "הפונקציה f מוגדרת כך: <span class=\"ltr\">f(x) = x² − 4x</span>. לאיזה ערך של x מתקיים <span class=\"ltr\">f(x) = f(x + 2)</span>?",
+   "fig": null,
+   "options": [
+    "1",
+    "2",
+    "3",
+    "4"
+   ],
+   "answer": 1,
+   "explain": "מחשבים: <span class=\"ltr\">f(x + 2) = (x + 2)² − 4(x + 2) = x² + 4x + 4 − 4x − 8 = x² − 4</span>. משווים ל-<span class=\"ltr\">f(x)</span>: <span class=\"ltr\">x² − 4x = x² − 4</span>, כלומר <span class=\"ltr\">−4x = −4</span> ו-<span class=\"ltr\">x = 1</span>. בדיקה: <span class=\"ltr\">f(1) = 1 − 4 = −3</span> ו-<span class=\"ltr\">f(3) = 9 − 12 = −3</span> ✓.",
+   "fast": "ציר הסימטריה של הפרבולה הוא <span class=\"ltr\">x = 2</span> (באמצע בין השורשים 0 ו-4). שתי נקודות במרחק 2 זו מזו עם אותו ערך הן 1 ו-3, ולכן <span class=\"ltr\">x = 1</span>.",
+   "traps": [
+    "",
+    "זה ציר הסימטריה של הפרבולה, לא ה-x המבוקש.",
+    "זה <span class=\"ltr\">x + 2</span> — הנקודה השנייה בזוג.",
+    "‏4 הוא שורש של f (‏<span class=\"ltr\">f(4) = 0</span>), אבל <span class=\"ltr\">f(6) = 12</span>."
+   ]
+  },
+  {
+   "n": 9,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "מאחוזים למספרים",
+   "level": 1,
+   "stim": "c1",
+   "stem": "באיזה סניף נמכר מספר ספרי הפרוזה <b>הקטן</b> ביותר?",
+   "fig": null,
+   "options": [
+    "סניף א׳",
+    "סניף ב׳",
+    "סניף ג׳",
+    "אי אפשר לדעת מהתרשים"
+   ],
+   "answer": 1,
+   "explain": "מחשבים את מספר ספרי הפרוזה בכל סניף: א׳: 35% מ-<span class=\"ltr\">400 = 140</span>; ב׳: 45% מ-<span class=\"ltr\">600 = 270</span>; ג׳: 30% מ-<span class=\"ltr\">700 = 210</span>. הקטן ביותר — סניף א׳.",
+   "fast": "בתרשים אחוזים אסור להשוות אחוזים בין סניפים בגדלים שונים — תמיד להכפיל בסך הכול.",
+   "traps": [
+    "",
+    "בסניף ב׳ נמכרו הכי הרבה ספרי פרוזה (45% מ-<span class=\"ltr\">600 = 270</span>).",
+    "בסניף ג׳ האחוז הקטן ביותר <span class=\"ltr\">(30%)</span>, אבל הסניף גדול: 30% מ-<span class=\"ltr\">700 = 210</span>.",
+    "התרשים נותן גם את מספר הספרים הכולל בכל סניף, ולכן אפשר לחשב."
+   ]
+  },
+  {
+   "n": 10,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "הפרש בין קטגוריות",
+   "level": 1,
+   "stim": "c1",
+   "stem": "בסניף א׳, בכמה ספרים עלה מספר ספרי הילדים שנמכרו על מספר ספרי העיון שנמכרו?",
+   "fig": null,
+   "options": [
+    "15",
+    "25",
+    "40",
+    "60"
+   ],
+   "answer": 4,
+   "explain": "בסניף א׳ נמכרו 400 ספרים. ספרי ילדים: 40% מ-<span class=\"ltr\">400 = 160</span>. ספרי עיון: 25% מ-<span class=\"ltr\">400 = 100</span>. ההפרש: <span class=\"ltr\">160 − 100 = 60</span> ספרים.",
+   "fast": "ההפרש באחוזים הוא 15%, ו-15% מ-<span class=\"ltr\">400 = 60</span>.",
+   "traps": [
+    "זה ההפרש באחוזים <span class=\"ltr\">(40% − 25%)</span>, לא במספר ספרים.",
+    "זה האחוז של ספרי העיון, לא הפרש.",
+    "זה האחוז של ספרי הילדים, לא הפרש.",
+    ""
+   ]
+  },
+  {
+   "n": 11,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "יחס בין סניפים",
+   "level": 2,
+   "stim": "c1",
+   "stem": "מה היחס בין מספר ספרי הפרוזה שנמכרו בסניף ב׳ לבין מספר ספרי הפרוזה שנמכרו בסניף א׳?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">9 : 7</span>",
+    "<span class=\"ltr\">3 : 2</span>",
+    "<span class=\"ltr\">14 : 27</span>",
+    "<span class=\"ltr\">27 : 14</span>"
+   ],
+   "answer": 4,
+   "explain": "סניף ב׳: 45% מ-<span class=\"ltr\">600 = 270</span> ספרי פרוזה. סניף א׳: 35% מ-<span class=\"ltr\">400 = 140</span> ספרי פרוזה. היחס: <span class=\"ltr\">270 : 140 = 27 : 14</span>.",
+   "fast": "יחס המספרים = יחס האחוזים × יחס הסכומים: <span class=\"ltr\">(45/35)·(600/400) = (9/7)·(3/2) = 27/14</span>.",
+   "traps": [
+    "זה יחס האחוזים <span class=\"ltr\">(45% : 35%)</span>, בלי להתחשב בגודל הסניפים.",
+    "זה היחס בין מספרי הספרים הכוללים בסניפים <span class=\"ltr\">(600 : 400)</span>.",
+    "היחס הפוך — סניף א׳ ראשון.",
+    ""
+   ]
+  },
+  {
+   "n": 12,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "שינוי בסך ובחלק",
+   "level": 2,
+   "stim": "c1",
+   "stem": "בחודש שאחרי החודש המוצג גדל מספר הספרים הכולל שנמכר בסניף א׳ ב-25%, ואילו מספר ספרי הילדים שנמכרו בו לא השתנה. איזה אחוז מהספרים שנמכרו בסניף א׳ בחודש הזה היו ספרי ילדים?",
+   "fig": null,
+   "options": [
+    "15%",
+    "30%",
+    "32%",
+    "50%"
+   ],
+   "answer": 3,
+   "explain": "בחודש המוצג: 40% מ-<span class=\"ltr\">400 = 160</span> ספרי ילדים. בחודש הבא הסך הוא <span class=\"ltr\">400·1.25 = 500</span>, וספרי הילדים עדיין 160. האחוז: <span class=\"ltr\">160/500 = 0.32 = 32%</span>.",
+   "fast": "החלק של ספרי הילדים קטן פי 1.25: ‏<span class=\"ltr\">40% ÷ 1.25 = 32%</span>.",
+   "traps": [
+    "חיסרו 25 מ-40 (‏<span class=\"ltr\">40% − 25%</span>).",
+    "הקטינו את 40% ברבע <span class=\"ltr\">(40·0.75)</span> — אבל צריך לחלק ב-1.25.",
+    "",
+    "הגדילו את 40% ב-<span class=\"ltr\">25% (40·1.25)</span> — אבל ספרי הילדים לא גדלו."
+   ]
+  },
+  {
+   "n": 13,
+   "type": "chart",
+   "topic": "chart",
+   "skill": "הגעה לחלק רצוי",
+   "level": 3,
+   "stim": "c1",
+   "stem": "בסניף ג׳ רוצים שבחודש הבא ספרי העיון יהוו 50% מכלל הספרים שיימכרו בסניף, בלי לשנות את מספר ספרי הילדים ואת מספר ספרי הפרוזה. בכמה ספרים צריך לגדול מספר ספרי העיון שנמכרים בסניף ג׳, לעומת החודש המוצג?",
+   "fig": null,
+   "options": [
+    "70",
+    "140",
+    "280",
+    "420"
+   ],
+   "answer": 2,
+   "explain": "בסניף ג׳ נמכרו 700 ספרים: ילדים <span class=\"ltr\">30% = 210</span>, פרוזה <span class=\"ltr\">30% = 210</span>, עיון <span class=\"ltr\">40% = 280</span>. כדי שספרי העיון יהיו 50%, מספרם צריך להיות שווה לסכום כל השאר: <span class=\"ltr\">210 + 210 = 420</span>. התוספת: <span class=\"ltr\">420 − 280 = 140</span>.",
+   "fast": "‏50% פירושו שוויון בין ספרי העיון לכל השאר. השאר הם 60% מ-<span class=\"ltr\">700 = 420</span>, וכבר יש 280.",
+   "traps": [
+    "חישבו 50% מהסך הנוכחי <span class=\"ltr\">(350)</span> פחות 280 — אבל הסך גדל כשמוסיפים ספרים.",
+    "",
+    "הכפילו את מספר ספרי העיון — זה יותר מהדרוש.",
+    "זה מספר ספרי העיון הדרוש, לא התוספת."
+   ]
+  },
+  {
+   "n": 14,
+   "type": "problem",
+   "topic": "powers",
+   "skill": "פישוט שורשים",
+   "level": 1,
+   "stim": null,
+   "stem": "למה שווה הביטוי <span class=\"ltr\">√50 + √18 − √8</span>?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">√60</span>",
+    "<span class=\"ltr\">4√2</span>",
+    "<span class=\"ltr\">6√2</span>",
+    "<span class=\"ltr\">10√2</span>"
+   ],
+   "answer": 3,
+   "explain": "מוציאים מכל שורש את הריבוע הגדול שבתוכו: <span class=\"ltr\">√50 = √(25·2) = 5√2</span>, <span class=\"ltr\">√18 = √(9·2) = 3√2</span>, <span class=\"ltr\">√8 = √(4·2) = 2√2</span>. הביטוי: <span class=\"ltr\">5√2 + 3√2 − 2√2 = 6√2</span>.",
+   "fast": "הערכה: <span class=\"ltr\">√50 ≈ 7.07, √18 ≈ 4.24, √8 ≈ 2.83</span>, והתוצאה כ-8.49. גם <span class=\"ltr\">6√2 ≈ 6·1.414 ≈ 8.49</span> ✓.",
+   "traps": [
+    "חיברו וחיסרו את המספרים שמתחת לשורש — זה אסור.",
+    "פירקו את <span class=\"ltr\">√8</span> כ-<span class=\"ltr\">4√2</span> במקום <span class=\"ltr\">2√2</span>.",
+    "",
+    "חיברו את כל השורשים, כולל <span class=\"ltr\">√8</span> שצריך לחסר <span class=\"ltr\">(5 + 3 + 2)</span>."
+   ]
+  },
+  {
+   "n": 15,
+   "type": "problem",
+   "topic": "coordinates",
+   "skill": "שיפוע וחיתוך עם ציר y",
+   "level": 2,
+   "stim": null,
+   "stem": "הישר <span class=\"ltr\">y = ax + b</span> עובר ברביע הראשון, ברביע השני וברביע הרביעי, ואינו עובר ברביע השלישי. איזה מהבאים בהכרח נכון?",
+   "fig": null,
+   "options": [
+    "<span class=\"ltr\">a < 0</span> וגם <span class=\"ltr\">b > 0</span>",
+    "<span class=\"ltr\">a > 0</span> וגם <span class=\"ltr\">b > 0</span>",
+    "<span class=\"ltr\">a < 0</span> וגם <span class=\"ltr\">b < 0</span>",
+    "<span class=\"ltr\">a > 0</span> וגם <span class=\"ltr\">b < 0</span>"
+   ],
+   "answer": 1,
+   "explain": "ישר שעובר גם ברביע השני (x שלילי, y חיובי) וגם ברביע הרביעי (x חיובי, y שלילי) יורד משמאל לימין, ולכן השיפוע a שלילי. כדי שיעבור ברביע הראשון ולא בשלישי, הוא צריך לחתוך את ציר ה-y מעל הראשית, כלומר <span class=\"ltr\">b > 0</span>. ואכן: כש-x שלילי, y גדול מ-b ולכן חיובי (רביע שני); כש-x חיובי קטן, y עדיין חיובי (רביע ראשון); וכש-x גדול, y שלילי (רביע רביעי).",
+   "fast": "משרטטים ביד ישר יורד שחותך את ציר ה-y בחלק החיובי — ורואים שהוא עובר בדיוק ברביעים השני, הראשון והרביעי.",
+   "traps": [
+    "",
+    "ישר כזה עולה ועובר ברביעים הראשון, השני והשלישי.",
+    "ישר כזה עובר ברביעים השני, השלישי והרביעי.",
+    "ישר כזה עובר ברביעים הראשון, השלישי והרביעי."
+   ]
+  },
+  {
+   "n": 16,
+   "type": "problem",
+   "topic": "probability",
+   "skill": "מאורע משלים",
+   "level": 2,
+   "stim": null,
+   "stem": "מטילים שתי קוביות משחק הוגנות (בכל אחת המספרים 1 עד 6). מה ההסתברות שמכפלת שתי התוצאות תהיה מספר זוגי?",
+   "fig": null,
+   "options": [
+    "<span class=\"fr\"><i>1</i><i>4</i></span>",
+    "<span class=\"fr\"><i>1</i><i>2</i></span>",
+    "<span class=\"fr\"><i>2</i><i>3</i></span>",
+    "<span class=\"fr\"><i>3</i><i>4</i></span>"
+   ],
+   "answer": 4,
+   "explain": "מכפלה היא אי-זוגית רק כששתי התוצאות אי-זוגיות. ההסתברות לכך: <span class=\"ltr\"><span class=\"fr\"><i>3</i><i>6</i></span>·<span class=\"fr\"><i>3</i><i>6</i></span> = <span class=\"fr\"><i>1</i><i>4</i></span></span>. לכן ההסתברות למכפלה זוגית היא <span class=\"ltr\">1 − <span class=\"fr\"><i>1</i><i>4</i></span> = <span class=\"fr\"><i>3</i><i>4</i></span></span> (‏27 מתוך 36 תוצאות).",
+   "fast": "כשהמאורע הוא «לפחות אחד...», מחשבים את המשלים: «אף אחד» — כאן שתי התוצאות אי-זוגיות.",
+   "traps": [
+    "זו ההסתברות למכפלה אי-זוגית (שתי התוצאות אי-זוגיות).",
+    "הניחו שזוגי ואי-זוגי שווים בסיכוי גם במכפלה.",
+    "ספרו 3 מקרים (זוגי·זוגי, זוגי·אי-זוגי, אי-זוגי·אי-זוגי), 2 מהם זוגיים — אבל המקרים אינם שווי סיכוי.",
+    ""
+   ]
+  },
+  {
+   "n": 17,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "שטח משולש במלבן",
+   "level": 2,
+   "stim": null,
+   "stem": "בשרטוט שלפניך מלבן ABCD שבו <span class=\"ltr\">AB = 10</span> ו-<span class=\"ltr\">BC = 6</span>. הנקודה E נמצאת על הצלע CD. מה שטח המשולש ABE? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 340 210\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 50 180 L 290 180 L 190 36 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"currentColor\" stroke-linejoin=\"round\" fill-opacity=\"0.15\"/><path d=\"M 50 180 L 290 180 L 290 36 L 50 36 Z\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><text x=\"38\" y=\"186\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">A</text><text x=\"302\" y=\"186\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">B</text><text x=\"302\" y=\"40\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">C</text><text x=\"38\" y=\"40\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">D</text><text x=\"190\" y=\"27\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">E</text><text x=\"170\" y=\"200\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">10</text><text x=\"306\" y=\"113\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">6</text></svg>",
+   "options": [
+    "15",
+    "30",
+    "60",
+    "אי אפשר לדעת, כי מיקום הנקודה E אינו ידוע"
+   ],
+   "answer": 2,
+   "explain": "בסיס המשולש הוא <span class=\"ltr\">AB = 10</span>. הגובה לבסיס הזה הוא המרחק מ-E לצלע AB. מאחר ש-E נמצאת על CD, שמקבילה ל-AB, המרחק הזה שווה ל-<span class=\"ltr\">BC = 6</span>. השטח: <span class=\"ltr\">(10·6)/2 = 30</span> — חצי משטח המלבן, בלי קשר למיקום של E.",
+   "fast": "מזיזים את E לקודקוד D: מתקבל המשולש ABD, שהוא חצי מלבן: <span class=\"ltr\">60/2 = 30</span>.",
+   "traps": [
+    "חילקו את שטח המלבן ב-4.",
+    "",
+    "זה שטח המלבן כולו.",
+    "הגובה מ-E לצלע AB שווה ל-6 בכל מקום על CD, ולכן השטח קבוע."
+   ]
+  },
+  {
+   "n": 18,
+   "type": "problem",
+   "topic": "algebra",
+   "skill": "השוואת שברים אלגבריים",
+   "level": 3,
+   "stim": null,
+   "stem": "נתון: <span class=\"ltr\">x > 1</span>. איזה מהביטויים הבאים הוא <b>בהכרח</b> הגדול ביותר?",
+   "fig": null,
+   "options": [
+    "<span class=\"fr\"><i>x + 2</i><i>x + 1</i></span>",
+    "<span class=\"fr\"><i>x + 1</i><i>x</i></span>",
+    "<span class=\"fr\"><i>x</i><i>x − 1</i></span>",
+    "<span class=\"fr\"><i>x + 1</i><i>x − 1</i></span>"
+   ],
+   "answer": 4,
+   "explain": "כותבים כל ביטוי בצורה 1 + שארית: <span class=\"ltr\">(x + 2)/(x + 1) = 1 + 1/(x + 1)</span>; <span class=\"ltr\">(x + 1)/x = 1 + 1/x</span>; <span class=\"ltr\">x/(x − 1) = 1 + 1/(x − 1)</span>; <span class=\"ltr\">(x + 1)/(x − 1) = 1 + 2/(x − 1)</span>. כש-<span class=\"ltr\">x > 1</span>, המכנה <span class=\"ltr\">x − 1</span> הוא הקטן ביותר (וחיובי), והמונה 2 הוא הגדול ביותר. לכן <span class=\"ltr\">2/(x − 1)</span> היא התוספת הגדולה ביותר, לכל <span class=\"ltr\">x > 1</span>.",
+   "fast": "מציבים <span class=\"ltr\">x = 2</span>: מקבלים <span class=\"ltr\">4/3, 3/2, 2, 3</span>. ובודקים עוד ערך, <span class=\"ltr\">x = 10</span>: ‏<span class=\"ltr\">12/11, 11/10, 10/9, 11/9</span> — בשני המקרים <span class=\"ltr\">(x + 1)/(x − 1)</span> הגדול ביותר.",
+   "traps": [
+    "שווה ל-<span class=\"ltr\">1 + 1/(x + 1)</span> — הקטן מכולם.",
+    "שווה ל-<span class=\"ltr\">1 + 1/x</span>, וזה קטן מ-<span class=\"ltr\">1 + 2/(x − 1)</span>.",
+    "שווה ל-<span class=\"ltr\">1 + 1/(x − 1)</span>, אבל לביטוי <span class=\"ltr\">(x + 1)/(x − 1)</span> תוספת כפולה: <span class=\"ltr\">2/(x − 1)</span>.",
+    ""
+   ]
+  },
+  {
+   "n": 19,
+   "type": "problem",
+   "topic": "geometry",
+   "skill": "זווית היקפית על קוטר",
+   "level": 3,
+   "stim": null,
+   "stem": "בשרטוט שלפניך AB הוא קוטר של מעגל שמרכזו O ורדיוסו 5. הנקודה C נמצאת על המעגל, ו-<span class=\"ltr\">AC = 6</span>. מה השטח המסומן בשרטוט (החלק של חצי העיגול שמעל AB שנמצא מחוץ למשולש ABC)? (השרטוט אינו בהכרח בקנה מידה)",
+   "fig": "<svg viewBox=\"0 0 340 262\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Rubik, sans-serif\"><path d=\"M 70 150 A 100 100 0 0 1 270 150 Z M 70 150 L 142 54 L 270 150 Z\" fill=\"currentColor\" fill-opacity=\"0.18\" fill-rule=\"evenodd\" stroke=\"none\"/><circle cx=\"170\" cy=\"150\" r=\"100\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><line x1=\"70\" y1=\"150\" x2=\"270\" y2=\"150\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M 70 150 L 142 54 L 270 150\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\" stroke-linejoin=\"round\"/><circle cx=\"170\" cy=\"150\" r=\"3\" fill=\"currentColor\"/><path d=\"M 136 62 L 144 68 L 150 60\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/><text x=\"57\" y=\"155\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">A</text><text x=\"283\" y=\"155\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">B</text><text x=\"170\" y=\"169\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">O</text><text x=\"138\" y=\"44\" font-size=\"15\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">C</text><text x=\"94\" y=\"100\" font-size=\"14\" fill=\"currentColor\" text-anchor=\"middle\" direction=\"ltr\">6</text></svg>",
+   "options": [
+    "<span class=\"ltr\">12.5π − 24</span>",
+    "<span class=\"ltr\">25π − 24</span>",
+    "<span class=\"ltr\">12.5π − 48</span>",
+    "<span class=\"ltr\">12.5π − 30</span>"
+   ],
+   "answer": 1,
+   "explain": "זווית היקפית שנשענת על קוטר היא זווית ישרה, ולכן <span class=\"ltr\">ACB = 90°</span>. הקוטר <span class=\"ltr\">AB = 10</span>, ולפי משפט פיתגורס <span class=\"ltr\">BC = √(10² − 6²) = √64 = 8</span>. שטח המשולש: <span class=\"ltr\">(6·8)/2 = 24</span>. שטח חצי העיגול: <span class=\"ltr\">π·5²/2 = 12.5π</span>. השטח המסומן: <span class=\"ltr\">12.5π − 24</span>.",
+   "fast": "קוטר + נקודה על המעגל = משולש ישר-זווית. ו-6-8-10 הוא פי 2 מהמשולש 3-4-5.",
+   "traps": [
+    "",
+    "חיסרו את המשולש משטח העיגול כולו, ולא מחצי עיגול.",
+    "שכחו לחלק ב-2 בחישוב שטח המשולש <span class=\"ltr\">(6·8)</span>.",
+    "חישבו את שטח המשולש כ-<span class=\"ltr\">AB·AC/2 = 10·6/2</span>, אבל AB ו-AC אינם ניצבים."
+   ]
+  },
+  {
+   "n": 20,
+   "type": "problem",
+   "topic": "percent",
+   "skill": "שינוי באחוזים מבסיסים שונים",
+   "level": 3,
+   "stim": null,
+   "stem": "מחירו של מוצר א׳ גבוה ב-25% ממחירו של מוצר ב׳. מחירו של מוצר א׳ ירד ב-p%, ומחירו של מוצר ב׳ עלה ב-p% (אותו p). לאחר השינויים המחירים של שני המוצרים שווים. מה ערכו של p?",
+   "fig": null,
+   "options": [
+    "11⅑",
+    "12.5",
+    "20",
+    "25"
+   ],
+   "answer": 1,
+   "explain": "נניח שמחיר ב׳ הוא 100, ואז מחיר א׳ הוא 125. אחרי השינוי: <span class=\"ltr\">125·(1 − p/100) = 100·(1 + p/100)</span>. כלומר <span class=\"ltr\">125 − 1.25p = 100 + p</span>, ומכאן <span class=\"ltr\">25 = 2.25p</span>, ו-<span class=\"ltr\">p = 25/2.25 = 100/9 = 11⅑</span>. בדיקה: <span class=\"ltr\">125·(8/9) = 111⅑</span> וגם <span class=\"ltr\">100·(10/9) = 111⅑</span> ✓.",
+   "fast": "בודקים את 12.5: א׳ יורד ל-109.375 וב׳ עולה ל-112.5 — ב׳ כבר עבר את א׳, ולכן p קטן מ-12.5. מבין התשובות רק 11⅑ קטנה יותר.",
+   "traps": [
+    "",
+    "חילקו את הפער של 25% שווה בשווה <span class=\"ltr\">(25/2)</span> — אבל האחוזים מחושבים מבסיסים שונים.",
+    "זה האחוז שבו צריך להוזיל את א׳ לבדו כדי שיהיה שווה ל-ב׳ <span class=\"ltr\">(25/125)</span>.",
+    "הניחו שצריך לשנות כל מחיר בכל הפער של 25%."
+   ]
+  }
+ ]
+}
