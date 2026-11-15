@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>פרק ביום · פסיכומטרי</title>
-<meta name="description" content="תרגול לפסיכומטרי מהבחינות הרשמיות של מאל״ו: פרק ביום בזמן של הבחינה, דף תשובות, בדיקה מול המפתח הרשמי, חוזקות וחולשות ומטלות כתיבה.">
+<meta name="description" content="תרגול לפסיכומטרי מהבחינות הרשמיות של מאל״ו: פרק ביום בזמן של הבחינה, דף תשובות, המפתח הרשמי והסבר לכל שאלה, חוזקות וחולשות ומטלות כתיבה.">
 <meta name="theme-color" content="#1cb0f6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -102,9 +102,6 @@ table.dt th{background:var(--bg)}
 .fr i{font-style:normal}.fr i:first-child{border-bottom:1.5px solid currentColor;padding:0 2px}
 .xnav{display:flex;gap:10px;margin-top:16px}
 .xnav .btn{flex:1}
-.exp{border-radius:14px;background:var(--soft);padding:12px 14px;margin-top:14px;line-height:1.7}
-.exp h4{margin:0 0 4px;font-size:14px;color:var(--b)}
-.exp+.exp{margin-top:8px}
 .big-score{font-size:46px;font-weight:800;text-align:center;margin:4px 0 0}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#3c3c3c;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:50;font-size:14px;max-width:90vw}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
@@ -121,6 +118,10 @@ table.dt th{background:var(--bg)}
 .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px;margin:8px 0 14px}
 .rq{border:2px solid var(--line);border-radius:10px;padding:5px 2px;text-align:center;font-size:13px;line-height:1.3}
 .rq b{display:block;font-size:15px}.rq span{direction:ltr;display:block}
+.rq{cursor:pointer}
+.qx{border:2px solid var(--line);border-radius:14px;margin:8px 0;background:var(--bg)}.qx.bad{border-color:var(--r)}.qx.skip{border-color:var(--r);border-style:dashed}.qx.ok{border-color:var(--g)}
+.qx summary{display:flex;gap:8px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none}.qx summary::-webkit-details-marker{display:none}.qx summary .grow{flex:1}
+.qx .xp{margin:0;padding:0 12px 12px;line-height:1.75;font-size:15px}.xp{line-height:1.75;font-size:15px}
 .rq.ok{background:var(--okbg);border-color:var(--g)}.rq.bad{background:var(--badbg);border-color:var(--r)}.rq.skip{background:var(--soft);border-color:var(--r);border-style:dashed}
 .bub button{border:2px solid var(--line);border-radius:50%;aspect-ratio:1;max-width:44px;width:100%;justify-self:center;background:var(--bg);font-weight:700}
 .bub button.on{background:var(--b);border-color:var(--b);color:#fff}
@@ -143,6 +144,7 @@ input.key{direction:ltr;letter-spacing:3px;font-variant-numeric:tabular-nums}
 <body>
 <div id="app"></div>
 <script src="chapters.js"></script>
+<script src="sol.js" onerror="0"></script>
 <script src="app.js"></script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>

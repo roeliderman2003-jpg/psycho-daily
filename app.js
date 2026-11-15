@@ -1,7 +1,7 @@
 'use strict';
 // פרק ביום — תרגול לפסיכומטרי רק מחומרים רשמיים של מאל״ו.
-// כל שאלה, נושא חיבור והסבר נפתחים מהקבצים של מאל״ו באתר שלהם. האפליקציה לא מכילה שאלות.
-// היא מוסיפה: טיימר בזמן של הבחינה, דף תשובות, בדיקה מול מפתח התשובות (שמקלידים מהקובץ), מעקב ופילוח לפי סוג שאלה.
+// השאלות ונושאי החיבור נפתחים מהקבצים של מאל״ו באתר שלהם. האפליקציה לא מכילה שאלות.
+// היא מוסיפה: טיימר בזמן של הבחינה, דף תשובות, מפתח התשובות הרשמי והסבר לכל שאלה (sol.js, מוצפן), מעקב ופילוח לפי סוג שאלה.
 // מפת הבחינות (עמודים, פרקים וטווחי סוגי שאלות) ב-chapters.js, נבנית מ-content/exams ע"י build.js.
 
 const LS = 'pd2';
@@ -12,6 +12,24 @@ S.fix = S.fix || {};    // "מפתח:מספר שאלה" -> true כשטעות נ�
 S.wr = S.wr || [];      // מטלות כתיבה: {src, at, text, dur, gc, gl}
 S.read = S.read || {};  // קובצי הדרכה של מאל״ו שסומנו כנקראו
 S.examDate = S.examDate || '2026-12-04';
+// מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
+let SOL = {};
+const PK = 'pd2k';
+async function unseal(pass) {
+  if (!window.SOLX || !window.crypto || !crypto.subtle) return false;
+  try {
+    const u = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: u(SOLX.salt), iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u(SOLX.iv) }, key, u(SOLX.data));
+    SOL = JSON.parse(new TextDecoder().decode(pt)); return true;
+  } catch (e) { return false; }
+}
+async function setCode(v) {
+  v = String(v || '').trim(); if (!v) return;
+  if (await unseal(v)) { try { localStorage.setItem(PK, v); } catch (e) { } toast('המפתחות וההסברים נפתחו ✓'); render(); }
+  else toast('הקוד לא נכון');
+}
 function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } }
 
 const EX = (window.EXAMS || []);
@@ -63,7 +81,11 @@ const link = (u, t, cls = 'btn ghost') => `<a class="${cls}" style="text-decorat
 
 // ===== חישובים (רק מהתשובות שלך מול המפתח הרשמי) =====
 const first = k => (S.res[k] || [])[0];
-const keyOf = k => S.keys[k] || '';
+const keyOf = k => (SOL[k] && SOL[k].k) || S.keys[k] || '';
+const expOf = (k, n) => (SOL[k] && SOL[k].x[n - 1]) || '';
+const locked = () => !!window.SOLX && !Object.keys(SOL).length;
+const expHtml = t => esc(t).replace(/\n/g, '<br>');
+const EXP_NOTE = 'ההסברים נכתבו לפי המפתח הרשמי של מאל״ו. מאל״ו לא מפרסמים הסברים לבחינות, רק את המפתח.';
 const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + (x && x === +key[i] ? 1 : 0), 0) : null; };
 const done = () => CH.filter(x => first(x.key));
 const todayCh = () => CH.find(x => !first(x.key)) || null;
@@ -115,6 +137,7 @@ function home() {
     <div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${p(pv)}</b><span>נכון במילולי</span></div><div class="kpi"><b>${p(pq)}</b><span>נכון בכמותי</span></div></div>`;
   if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
   else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
+  if (locked()) h += codeCard();
   const miss = done().filter(y => !keyOf(y.key));
   if (miss.length) h += `<div class="card"><b>⚠️ ${miss.length} פרקים בלי מפתח תשובות</b><p class="mut sm" style="margin:4px 0 8px">בלי המפתח אין ציון ולא רואים איפה טעית.</p><button class="btn blue" onclick="go('keyin',{key:'${miss[0].key}'})">להקליד מפתח</button></div>`;
   const last = done().slice(-3).reverse();
@@ -175,7 +198,7 @@ function keyin() {
   <input class="txt key" id="ki" inputmode="numeric" maxlength="${c.questions}" value="${esc(keyOf(arg.key))}" placeholder="${'·'.repeat(c.questions)}" oninput="document.getElementById('kc').textContent=this.value.replace(/[^1-4]/g,'').length+'/${c.questions}'">
   <div class="mut sm" id="kc">${keyOf(arg.key).length}/${c.questions}</div>
   <button class="btn blue" style="margin-top:10px" onclick="saveKey('${arg.key}')">לבדוק</button></div>
-  <p class="mut sm">המפתח נשמר, ופעם הבאה שתעשה את הפרק הזה לא צריך להקליד שוב.</p></main>` + navBar();
+  <p class="mut sm">המפתח נשמר, ופעם הבאה שתעשה את הפרק הזה לא צריך להקליד שוב.</p>${locked() ? codeCard() : ''}</main>` + navBar();
 }
 function saveKey(k) {
   const n = chByKey[k].c.questions, v = (document.getElementById('ki').value || '').replace(/[^1-4]/g, '');
@@ -192,15 +215,22 @@ function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
   const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i], type: typeOf(c, i + 1), flag: a.flag && a.flag[i] }));
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
-  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}"><b>${y.n}</b><span>${y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
+  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})"><b>${y.n}</b><span>${y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
+  const hasExp = items.some(y => expOf(arg.key, y.n));
+  let lastT = null;
+  const exps = hasExp ? items.map(y => {
+    const t = y.type, hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok ? '' : 'open'}><summary><b>שאלה ${y.n}</b><span class="grow"></span><span class="sm">${y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary><p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+  }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
   <div class="card" style="margin-top:12px"><b>הציון המשוער לפי מאל״ו</b><p class="sm" style="margin:4px 0 8px">בסוף הקובץ יש טבלה רשמית שממירה את מספר התשובות הנכונות לציון משוער${e.scorePages ? `, <b>בעמודים ${e.scorePages[0]} עד ${e.scorePages[1]}</b>` : ''}. בשביל ציון בתחום צריך את שני הפרקים של אותו תחום מאותה בחינה.</p>${e.scorePages ? link(pdf(e, e.scorePages[0]), '📄 לטבלת הציונים של מאל״ו') : link(NITE_SCORES, 'ציונים באתר מאל״ו ↗')}</div>
-  <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו</p><div class="rgrid">${grid}</div>
+  <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו${hasExp ? '. לוחצים על שאלה כדי לראות את ההסבר.' : ''}</p><div class="rgrid">${grid}</div>
   ${c.sections && c.sections.length ? `<h2>לפי סוג שאלה</h2><div class="card">${breakdown(items, y => y.type, t => TYPE_HE[t] || t)}</div>` : ''}
-  <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח. הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
+  ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
+  <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">${hasExp ? 'קוראים את ההסבר, ואחרי יום או יומיים פותרים את השאלה שוב בלי שעון בלשונית «טעויות».' : 'פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח.'} הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
   <div class="row">${link(pdf(e, c.page), '📄 לשאלות בקובץ')}<button class="btn blue" onclick="go('fix')">לתרגל את הטעויות</button></div></div>
-  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב</button><button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button></div></main>` + navBar();
+  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
 }
 
 // ===== חוזקות: רק מהתשובות שלך מול המפתח הרשמי =====
@@ -237,6 +267,7 @@ function retry() {
   <main><div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''}), עמודים ${c.page} עד ${c.endPage} בקובץ.</p>${link(pdf(e, c.page), '📄 לפתוח בקובץ')}</div>
   <p>התשובה שלך עכשיו:</p><div class="bub big">${opts}</div>
   ${RP ? `<p style="font-weight:800;font-size:18px;color:${RP === right ? 'var(--gd)' : 'var(--rd)'}">${RP === right ? '✅ נכון! השאלה יוצאת מהרשימה.' : `❌ התשובה הנכונה לפי המפתח: ${right}`}</p>
+  ${expOf(arg.key, n) ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(expOf(arg.key, n))}</p></div>` : ''}
   <button class="btn blue big" onclick="RP=0;${mistakes().length ? `go('retry',{key:'${mistakes()[0].key}',n:${mistakes()[0].n}})` : `go('fix')`}">לטעות הבאה</button>` : ''}</main>`;
 }
 
@@ -298,11 +329,15 @@ function settings() {
   return `<main><h1>⚙️ הגדרות</h1><div class="card"><b>תאריך הבחינה</b>
   <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';save();render()">${l}</button>`).join('')}</div>
   <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;save();render()"></div>
+  ${window.SOLX ? `<div class="card"><b>מפתחות והסברים</b><p class="mut sm" style="margin:4px 0 8px">${locked() ? 'נעולים. צריך את קוד הגישה פעם אחת במכשיר.' : `פתוחים ✓ (${Object.keys(SOL).length} פרקים)`}</p>${locked() ? codeInput() : ''}</div>` : ''}
   <div class="card"><b>גיבוי והעברה למכשיר אחר</b><p class="mut sm">ההתקדמות נשמרת בדפדפן של המכשיר הזה. כדי להעביר: מעתיקים את הקוד ומדביקים אותו במכשיר השני.</p>
   <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
-  <div class="card"><b>על האפליקציה</b><p class="mut sm">כל השאלות, נושאי החיבור, ההסברים, המפתחות וטבלאות הציון הם של מאל״ו, ונפתחים מהאתר שלהם. האפליקציה רק מוסיפה טיימר, דף תשובות, בדיקה מול המפתח שאתה מקליד ומעקב. מוצר אישי, לא קשור למאל״ו.</p></div>
+  <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו. השאלות נפתחות מהאתר שלהם, והמפתחות שמורים כאן מוצפנים. ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
 }
+function openQ(n) { const d = document.getElementById('q' + n); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }
+function codeInput() { return `<div class="row"><input class="txt" id="cd" placeholder="קוד גישה" autocomplete="off" style="margin:0"><button class="btn blue" style="width:auto;padding:12px 18px" onclick="setCode(document.getElementById('cd').value)">לפתוח</button></div>`; }
+function codeCard() { return `<div class="card"><b>🔒 המפתחות וההסברים נעולים במכשיר הזה</b><p class="sm" style="margin:4px 0 8px">פותחים פעם אחת עם הקישור המלא שקיבלת, או מקלידים כאן את קוד הגישה.</p>${codeInput()}</div>`; }
 function expo() {
   const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
@@ -314,3 +349,10 @@ function impo() {
 
 try { localStorage.removeItem('pd1'); } catch (e) { } // הגרסה הקודמת עם שאלות שלא ממאל״ו
 render();
+(async () => { // פתיחת המפתחות וההסברים: מהקישור (#k=...) או מהקוד שנשמר
+  let p = null; const m = location.hash.match(/k=([\w-]+)/);
+  if (m) { p = m[1]; history.replaceState(null, '', location.pathname + location.search); }
+  if (!p) try { p = localStorage.getItem(PK); } catch (e) { }
+  if (p && await unseal(p)) { try { localStorage.setItem(PK, p); } catch (e) { } render(); }
+  else if (m) toast('הקוד בקישור לא נכון');
+})();
