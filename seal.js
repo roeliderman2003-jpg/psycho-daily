@@ -15,7 +15,7 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith(
     const x = (s.chapters || [])[i];
     if (!x || x.key.length !== c.questions || /[^1-4]/.test(x.key)) return errs.push(`${f}: פרק ${i + 1} מפתח לא תקין`);
     const exp = (x.exp || []).slice(0, c.questions);
-    out[`${s.id}:${i}`] = { k: x.key, x: exp, d: x.doubt || [] };
+    out[`${s.id}:${i}`] = { k: x.key, x: exp, d: x.doubt || [], v: x.void || [] };
     nq += c.questions; nx += exp.filter(Boolean).length;
   });
 }

@@ -82,11 +82,12 @@ const link = (u, t, cls = 'btn ghost') => `<a class="${cls}" style="text-decorat
 // ===== חישובים (רק מהתשובות שלך מול המפתח הרשמי) =====
 const first = k => (S.res[k] || [])[0];
 const keyOf = k => (SOL[k] && SOL[k].k) || S.keys[k] || '';
+const isVoid = (k, n) => !!(SOL[k] && SOL[k].v && SOL[k].v.includes(n)); // שאלה שמאל״ו ביטלו: לא נחשבת טעות
 const expOf = (k, n) => (SOL[k] && SOL[k].x[n - 1]) || '';
 const locked = () => !!window.SOLX && !Object.keys(SOL).length;
 const expHtml = t => esc(t).replace(/\n/g, '<br>');
 const EXP_NOTE = 'ההסברים נכתבו לפי המפתח הרשמי של מאל״ו. מאל״ו לא מפרסמים הסברים לבחינות, רק את המפתח.';
-const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + (x && x === +key[i] ? 1 : 0), 0) : null; };
+const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + ((x && x === +key[i]) || isVoid(k, i + 1) ? 1 : 0), 0) : null; };
 const done = () => CH.filter(x => first(x.key));
 const todayCh = () => CH.find(x => !first(x.key)) || null;
 function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
@@ -97,7 +98,7 @@ function streak() {
 }
 function answered() { // כל שאלה שנענתה בניסיון הראשון, בפרקים שיש להם מפתח
   const out = [];
-  done().forEach(({ e, c, key }) => { const a = first(key), k = keyOf(key); if (!k) return; for (let i = 0; i < c.questions; i++) out.push({ e, c, key, n: i + 1, type: typeOf(c, i + 1), a: a.ans[i], right: +k[i], ok: a.ans[i] === +k[i] }); });
+  done().forEach(({ e, c, key }) => { const a = first(key), k = keyOf(key); if (!k) return; for (let i = 0; i < c.questions; i++) out.push({ e, c, key, n: i + 1, type: typeOf(c, i + 1), a: a.ans[i], right: +k[i], ok: a.ans[i] === +k[i] || isVoid(key, i + 1) }); });
   return out;
 }
 
@@ -213,14 +214,14 @@ function breakdown(items, keyf, label) {
 }
 function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
-  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i], type: typeOf(c, i + 1), flag: a.flag && a.flag[i] }));
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i] }));
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
-  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})"><b>${y.n}</b><span>${y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
+  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})"><b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
   const hasExp = items.some(y => expOf(arg.key, y.n));
   let lastT = null;
   const exps = hasExp ? items.map(y => {
     const t = y.type, hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok ? '' : 'open'}><summary><b>שאלה ${y.n}</b><span class="grow"></span><span class="sm">${y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary><p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok ? '' : 'open'}><summary><b>שאלה ${y.n}</b><span class="grow"></span><span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary><p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
