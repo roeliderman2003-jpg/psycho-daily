@@ -1,0 +1,25 @@
+{
+  "id": "spring_2022",
+  "title": "אביב 2022",
+  "url": "https://www.nite.org.il/wp-content/uploads/2022/05/psychometric_spring_2022_acc.pdf",
+  "pages": 48,
+  "english": false,
+  "writing": { "page": 3, "printed": 2 },
+  "chapters": [
+    { "domain": "verbal", "label": "חשיבה מילולית – פרק ראשון", "page": 5, "printed": 4, "endPage": 12, "questions": 23, "minutes": 20,
+      "sections": [ { "type": "analogy", "from": 1, "to": 6 }, { "type": "inference", "from": 7, "to": 17 }, { "type": "reading", "from": 18, "to": 23 } ] },
+    { "domain": "verbal", "label": "חשיבה מילולית – פרק שני", "page": 13, "printed": 12, "endPage": 20, "questions": 23, "minutes": 20,
+      "sections": [ { "type": "analogy", "from": 1, "to": 6 }, { "type": "inference", "from": 7, "to": 17 }, { "type": "reading", "from": 18, "to": 23 } ] },
+    { "domain": "quant", "label": "חשיבה כמותית – פרק ראשון", "page": 21, "printed": 20, "endPage": 28, "questions": 20, "minutes": 20,
+      "sections": [ { "type": "problem", "from": 1, "to": 8 }, { "type": "chart", "from": 9, "to": 12 }, { "type": "problem", "from": 13, "to": 20 } ] },
+    { "domain": "quant", "label": "חשיבה כמותית – פרק שני", "page": 29, "printed": 28, "endPage": 36, "questions": 20, "minutes": 20,
+      "sections": [ { "type": "problem", "from": 1, "to": 8 }, { "type": "chart", "from": 9, "to": 12 }, { "type": "problem", "from": 13, "to": 20 } ] }
+  ],
+  "formulasPage": 21,
+  "answerSheetPages": [37, 39],
+  "examplesPages": [40, 44],
+  "keyPage": 45,
+  "scorePages": [46, 48],
+  "skipped": [],
+  "notes": "אין פרק אנגלית. בפרק הכמותי השני השאלות 9-12 הן «הסקה מטבלה» ורשומות כ-chart. חמישה עמודי דוגמאות לחיבור (40-44) ולכן 48 עמודים. עמוד 38 הוא צד אנגלית של דף התשובות."
+}

@@ -1,371 +1,296 @@
 'use strict';
-// פרק ביום — תרגול יומי לפסיכומטרי הדו-תחומי (מדצמבר 2026).
-// הפרקים ב-chapters.js (נבנה מ-content/src ע"י build.js). ההתקדמות נשמרת במכשיר (localStorage), עם גיבוי ידני בהגדרות.
+// פרק ביום — תרגול לפסיכומטרי רק מחומרים רשמיים של מאל״ו.
+// כל שאלה, נושא חיבור והסבר נפתחים מהקבצים של מאל״ו באתר שלהם. האפליקציה לא מכילה שאלות.
+// היא מוסיפה: טיימר בזמן של הבחינה, דף תשובות, בדיקה מול מפתח התשובות (שמקלידים מהקובץ), מעקב ופילוח לפי סוג שאלה.
+// מפת הבחינות (עמודים, פרקים וטווחי סוגי שאלות) ב-chapters.js, נבנית מ-content/exams ע"י build.js.
 
-const LS = 'pd1';
+const LS = 'pd2';
 const S = (() => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { return {}; } })();
-S.res = S.res || {};        // chapId -> [attempt]  attempt = {at, ans[], t[], dur}
-S.off = S.off || [];        // מבחנים רשמיים: {at, label, dom, n, ans[], key, dur}
-S.fix = S.fix || {};        // "chapId:n" -> true כשהטעות תוקנה בתרגול טעויות
+S.res = S.res || {};    // מפתח פרק -> [ניסיונות] ניסיון = {at, ans[], dur}
+S.keys = S.keys || {};  // מפתח פרק -> מחרוזת התשובות הנכונות שהוקלדה מהקובץ
+S.fix = S.fix || {};    // "מפתח:מספר שאלה" -> true כשטעות נפתרה נכון בניסיון חוזר
+S.wr = S.wr || [];      // מטלות כתיבה: {src, at, text, dur, gc, gl}
+S.read = S.read || {};  // קובצי הדרכה של מאל״ו שסומנו כנקראו
 S.examDate = S.examDate || '2026-12-04';
-S.wr = S.wr || [];         // מטלות כתיבה: {id, at, text, dur, chk[], gc, gl}
-S.dr = S.dr || {};         // תרגול לפי נושא: drillId -> {שאלה: [ניסיונות, נכון בניסיון האחרון]}
 function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } }
 
-const CH = (window.CHAPTERS || []);
-const byId = Object.fromEntries(CH.map(c => [c.id, c]));
+const EX = (window.EXAMS || []);
 const DOM = { verbal: 'מילולי', quant: 'כמותי' };
 const TYPE_HE = { analogy: 'אנלוגיות', inference: 'הבנה והסקה', reading: 'הבנת הנקרא', problem: 'שאלות ובעיות', chart: 'הסקה מתרשים' };
-const TOPIC_HE = {
-  analogy: 'אנלוגיות', reading: 'הבנת הנקרא', passage: 'הבנת הנקרא', inference: 'הבנה והסקה', problem: 'שאלות ובעיות',
-  logic: 'שאלות היגיון', short_text: 'טקסט קצר וטיעון', meaning: 'משמעות משפט', sentence: 'השלמת משפט',
-  algebra: 'אלגברה', percent: 'אחוזים ויחסים', word: 'בעיות מילוליות', averages: 'ממוצעים', integers: 'מספרים שלמים',
-  powers: 'חזקות ושורשים', geometry: 'גאומטריה', solids: 'גופים ונפחים', coordinates: 'מערכת צירים', probability: 'הסתברות וקומבינטוריקה',
-  sequences: 'סדרות', defined_ops: 'פעולות מוגדרות', functions: 'פונקציות', chart: 'תרשימים',
-};
-// סדר הימים: מילולי, כמותי, מילולי, כמותי...
-const ORDER = (() => {
-  const v = CH.filter(c => c.domain === 'verbal').map(c => c.id).sort(), q = CH.filter(c => c.domain === 'quant').map(c => c.id).sort();
-  const out = []; for (let i = 0; i < Math.max(v.length, q.length); i++) { if (v[i]) out.push(v[i]); if (q[i]) out.push(q[i]); }
-  return out;
-})();
-// מבחנים רשמיים באתר מאל״ו (לא מועתקים לכאן — נפתחים מהאתר שלהם)
-const NITE_PAGE = 'https://www.nite.org.il/two-domain-psychometric-entrance-test/preparation-1/#practice-tests';
-const NITE_PDFS = [
-  ['חורף 2025', 'https://www.nite.org.il/wp-content/uploads/2026/01/psychometric_winter_2025_acc.pdf'],
-  ['סתיו 2025', 'https://www.nite.org.il/wp-content/uploads/2025/10/psychometric_autumn_2025_acc.pdf'],
-  ['קיץ 2025', 'https://www.nite.org.il/wp-content/uploads/2025/08/psychometric_summer_2025_acc.pdf'],
-  ['אביב 2024', 'https://www.nite.org.il/wp-content/uploads/2024/05/psychometric_spring_2024_acc.pdf'],
-  ['אביב 2022', 'https://www.nite.org.il/wp-content/uploads/2022/05/psychometric_spring_2022_acc.pdf'],
+// כל הפרקים של כל הבחינות, מהבחינה החדשה לישנה. סדר הימים: מילולי, כמותי, מילולי, כמותי באותה בחינה.
+const CH = [];
+EX.forEach(e => {
+  const v = e.chapters.filter(c => c.domain === 'verbal'), q = e.chapters.filter(c => c.domain === 'quant');
+  for (let i = 0; i < Math.max(v.length, q.length); i++) [v[i], q[i]].forEach(c => { if (c) CH.push({ e, c, key: `${e.id}:${e.chapters.indexOf(c)}` }); });
+});
+const chByKey = Object.fromEntries(CH.map(x => [x.key, x]));
+const pdf = (e, page) => e.url + (page ? `#page=${page}` : '');
+const typeOf = (c, n) => { const s = (c.sections || []).find(s => n >= s.from && n <= s.to); return s ? s.type : null; };
+
+// חומרים רשמיים נוספים של מאל״ו
+const NITE_PREP = 'https://www.nite.org.il/two-domain-psychometric-entrance-test/preparation-1/';
+const NITE_TIPS = 'https://www.nite.org.il/two-domain-psychometric-entrance-test/tips/';
+const NITE_FORMAT = 'https://www.nite.org.il/two-domain-psychometric-entrance-test/format/';
+const NITE_SCORES = 'https://www.nite.org.il/two-domain-psychometric-entrance-test/scores/';
+const PSYCHORESHET = 'https://practice.nite.org.il/psycho_he_short';
+const U = 'https://www.nite.org.il/wp-content/uploads/';
+const GUIDES = [
+  ['verbal', 'אנלוגיות: דוגמאות והסברים', U + '2020/07/VE-Analogies_acc.pdf', 'analogy'],
+  ['verbal', 'הבנה והסקה: דוגמאות והסברים', U + '2020/07/VE-Inference_acc.pdf', 'inference'],
+  ['verbal', 'הבנת הנקרא: דוגמאות והסברים', U + '2020/07/VE-Text-Comprehension_acc.pdf', 'reading'],
+  ['verbal', 'חשיבה מילולית: המדריך המלא', U + '2020/07/Verbal-Reasoning-HE_acc.pdf', null],
+  ['quant', 'שאלות ובעיות: דוגמאות והסברים', U + '2020/07/QU_Questions-Problems_acc-1.pdf', 'problem'],
+  ['quant', 'הסקה מתרשים: דוגמאות והסברים', U + '2020/07/QU-Graph-Comprehension_acc.pdf', 'chart'],
+  ['quant', 'חשיבה כמותית: המדריך המלא', U + '2020/12/quantitive-hebrew-acc.pdf', null],
+  ['writing', 'מטלת הכתיבה: הסבר ודוגמאות', U + '2020/07/Writing-Task_acc.pdf', null],
 ];
+// מטלות כתיבה רשמיות עם חיבורים לדוגמה שמאל״ו העריכו (קוד = שנה וחודש של המועד)
+const WT = ['2020/07/1210', '2020/07/1212', '2020/07/1302', '2020/07/1304|-1', '2020/07/1307', '2020/07/1310', '2020/07/1312', '2020/07/1402', '2020/07/1404', '2020/07/1407|-2', '2020/07/1410', '2020/07/1412', '2020/07/1502', '2020/07/1504', '2020/07/1507', '2020/07/1509', '2020/07/1512', '2020/07/1602|-1', '2020/07/1604|-1', '2020/07/1607', '2020/08/1609', '2020/08/1612', '2020/08/1702', '2020/11/1704', '2020/11/1707', '2020/11/1709']
+  .map(s => { const [p, suf] = s.split('|'), code = p.slice(-4); return { id: 'w' + code, title: `מטלת כתיבה — ${+code.slice(2)}/20${code.slice(0, 2)}`, url: `${U}${p}-Writing-Task_acc${suf || ''}.pdf` }; });
+const WT_ALL = EX.filter(e => e.writing && e.writing.page).map(e => ({ id: 'x' + e.id, title: `מטלת הכתיבה — ${e.title}`, url: pdf(e, e.writing.page), ex: e.examplesPages ? pdf(e, e.examplesPages[0]) : null, exLabel: e.examplesPages ? `עמודים ${e.examplesPages[0]} עד ${e.examplesPages[1]}` : '' }))
+  .concat(WT.map(w => ({ ...w, ex: w.url, exLabel: 'באותו קובץ' })));
 
 let view = 'home', arg = null, tick = null;
 const $app = document.getElementById('app');
-// תשובה בלי אותיות עבריות (מספר, ביטוי, אחוז) מוצגת משמאל לימין, כדי ש-33⅓% לא יתהפך
-const ot = o => /[א-ת]/.test(String(o).replace(/<[^>]+>/g, '')) ? o : `<span class="ltr">${o}</span>`;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
 const mmss = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const fmtDate = t => new Date(t).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
-function toast(m) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+function toast(m) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
 function go(v, a) { view = v; arg = a ?? null; render(); scrollTo(0, 0); }
+const link = (u, t, cls = 'btn ghost') => `<a class="${cls}" style="text-decoration:none" href="${u}" target="_blank" rel="noopener">${t}</a>`;
 
-// ===== חישובים =====
-const first = id => (S.res[id] || [])[0];
-const correctOf = (c, a) => c.questions.reduce((k, q, i) => k + (a.ans[i] === q.answer ? 1 : 0), 0);
-// הערכה גסה: אחוז תשובות נכונות → ציון כללי 200-800. מאל״ו לא מפרסם טבלה; זו הערכה לפי ניסיון מקובל (כ-64% ≈ 620, כ-80% ≈ 700).
-const EST = [[0, 300], [0.25, 420], [0.4, 500], [0.5, 550], [0.6, 600], [0.7, 650], [0.8, 700], [0.9, 745], [1, 790]];
-function est(p) { for (let i = 1; i < EST.length; i++) if (p <= EST[i][0]) { const [a, x] = EST[i - 1], [b, y] = EST[i]; return Math.round((x + (y - x) * (p - a) / (b - a)) / 5) * 5; } return 790; }
-function done() { return ORDER.filter(id => first(id)); }
-function todayId() { return ORDER.find(id => !first(id)) || null; }
-function daysLeft() { const d = new Date(S.examDate + 'T08:00:00'); return Math.ceil((d - new Date()) / 864e5); }
+// ===== חישובים (רק מהתשובות שלך מול המפתח הרשמי) =====
+const first = k => (S.res[k] || [])[0];
+const keyOf = k => S.keys[k] || '';
+const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + (x && x === +key[i] ? 1 : 0), 0) : null; };
+const done = () => CH.filter(x => first(x.key));
+const todayCh = () => CH.find(x => !first(x.key)) || null;
+function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
 function streak() {
-  const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.off.forEach(x => days.add(dayKey(x.at))); S.wr.forEach(x => days.add(dayKey(x.at)));
+  const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.wr.forEach(x => days.add(dayKey(x.at)));
   let n = 0, t = Date.now(); if (!days.has(dayKey(t))) t -= 864e5;
   while (days.has(dayKey(t))) { n++; t -= 864e5; } return n;
 }
-// כל השאלות שנענו בניסיון הראשון: לפילוח
-function answered() {
+function answered() { // כל שאלה שנענתה בניסיון הראשון, בפרקים שיש להם מפתח
   const out = [];
-  for (const id of done()) { const c = byId[id], a = first(id); c.questions.forEach((q, i) => out.push({ c, q, i, a: a.ans[i], t: a.t[i] || 0, ok: a.ans[i] === q.answer })); }
+  done().forEach(({ e, c, key }) => { const a = first(key), k = keyOf(key); if (!k) return; for (let i = 0; i < c.questions; i++) out.push({ e, c, key, n: i + 1, type: typeOf(c, i + 1), a: a.ans[i], right: +k[i], ok: a.ans[i] === +k[i] }); });
   return out;
-}
-function overall() {
-  const A = answered(); const by = d => A.filter(x => x.c.domain === d);
-  const v = by('verbal'), q = by('quant');
-  const pv = v.length ? v.filter(x => x.ok).length / v.length : null, pq = q.length ? q.filter(x => x.ok).length / q.length : null;
-  const p = pv != null && pq != null ? (pv + pq) / 2 : (pv ?? pq);
-  return { pv, pq, p, n: A.length };
 }
 
 // ===== מסכים =====
 function navBar() {
-  const it = [['home', '🏠', 'היום'], ['all', '📚', 'פרקים'], ['stats', '🎯', 'חיזוק'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['off', '📄', 'רשמי']];
+  const it = [['home', '🏠', 'היום'], ['all', '📚', 'בחינות'], ['stats', '🎯', 'חוזקות'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${view === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
 }
 function render() {
   clearInterval(tick); tick = null;
-  if (S.cur && view !== 'exam' && view !== 'offx' && view !== 'wx') { // פרק באמצע (רענון / חזרה לאפליקציה)
-    view = { off: 'offx', wr: 'wx' }[S.cur.kind] || 'exam';
-  }
-  const f = { home, all, stats, fix, off, exam, result, review, offx, offres, settings, practice, write, wx, wres, drill }[view] || home;
+  if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry }[view] || home;
   $app.innerHTML = f();
-  if (view === 'exam' || view === 'offx' || view === 'wx') startTick();
+  if (view === 'exam' || view === 'wx') startTick();
 }
-
-function chapRow(id) {
-  const c = byId[id], a = first(id), n = c.questions.length;
-  const right = a ? `<b>${correctOf(c, a)}/${n}</b> <span class="mut sm">${fmtDate(a.at)}</span>` : '<span class="mut sm">עוד לא נעשה</span>';
-  return `<div class="it" onclick="${a ? `go('result',{id:'${id}',k:0})` : `startChap('${id}')`}"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><div class="grow"><b>${esc(c.title)}</b><div class="mut sm">${n} שאלות · ${c.minutes} דקות</div></div><div>${right}</div></div>`;
+const chTitle = x => `${x.e.title} · ${x.c.label || DOM[x.c.domain]}`;
+function chRow(x) {
+  const a = first(x.key), sc = scored(x.key);
+  const right = a ? (sc != null ? `<b>${sc}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>') + ` <span class="mut sm">${fmtDate(a.at)}</span>` : '<span class="mut sm">עוד לא נעשה</span>';
+  return `<div class="it" onclick="${a ? `go('${keyOf(x.key) ? 'result' : 'keyin'}',{key:'${x.key}'})` : `go('home',{pick:'${x.key}'})`}"><span class="tag ${x.c.domain[0]}">${DOM[x.c.domain]}</span><div class="grow"><b>${esc(x.e.title)}</b><div class="mut sm">${esc(x.c.label || '')} · ${x.c.questions} שאלות · ${x.c.minutes} דק׳</div></div><div>${right}</div></div>`;
 }
-
+function chCard(x) {
+  const { e, c } = x;
+  return `<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:17px">${esc(e.title)}</b></div>
+    <p class="mut sm" style="margin:2px 0 10px">${esc(c.label || '')} · ${c.questions} שאלות · ${c.minutes} דקות · <b>עמודים ${c.page} עד ${c.endPage} בקובץ</b>${c.printed ? ` (בדף: ${c.printed})` : ''}</p>
+    <div class="row">${link(pdf(e, c.page), '📄 לפתוח את הפרק')}<button class="btn" onclick="startChap('${x.key}')">▶️ טיימר ודף תשובות</button></div>
+    <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
+}
 function home() {
-  const id = todayId(), dl = daysLeft(), o = overall(), st = streak();
-  const doneToday = done().some(x => dayKey(first(x).at) === dayKey(Date.now()));
+  const dl = daysLeft(), st = streak(), A = answered();
+  const pv = A.filter(x => x.c.domain === 'verbal'), pq = A.filter(x => x.c.domain === 'quant');
+  const p = l => l.length ? Math.round(100 * l.filter(x => x.ok).length / l.length) + '%' : '—';
+  const pick = arg && arg.pick ? chByKey[arg.pick] : null, x = pick || todayCh();
   let h = `<main><div class="card hero"><div class="mut sm">הפסיכומטרי הדו-תחומי · ${new Date(S.examDate).toLocaleDateString('he-IL')}</div>
     <div style="font-size:30px;font-weight:800;margin:4px 0">${dl > 0 ? `עוד ${dl} ימים` : dl === 0 ? 'הבחינה היום 💪' : 'הבחינה עברה'}</div>
-    <div class="mut sm">מילולי 23 שאלות · כמותי 20 שאלות · 20 דקות לפרק</div></div>`;
-  h += `<div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${st}🔥</b><span>ימים ברצף</span></div><div class="kpi"><b>${o.p != null ? est(o.p) : '—'}</b><span>ציון משוער*</span></div></div>`;
-  if (S.cur) h += `<button class="btn blue big" onclick="go('${{ off: 'offx', wr: 'wx' }[S.cur.kind] || 'exam'}')">⏱️ להמשיך את הפרק שבאמצע</button>`;
-  if (id) {
-    const c = byId[id];
-    h += `<h2>${doneToday ? 'רוצה עוד אחד היום?' : 'פרק היום'}</h2><div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:18px">${esc(c.title)}</b></div>
-      <p class="mut sm" style="margin:4px 0 12px">${c.questions.length} שאלות · ${c.minutes} דקות · ${typesLine(c)}. אפשר לעבור בין השאלות ולשנות תשובה עד שהזמן נגמר, בדיוק כמו בבחינה.</p>
-      <button class="btn big" onclick="startChap('${id}')">▶️ להתחיל (${c.minutes} דקות)</button></div>`;
-  } else h += `<div class="card"><b>סיימת את כל הפרקים שיש כרגע 🎉</b><p class="mut sm">אפשר לעשות פרק רשמי מאתר מאל״ו בלשונית «רשמי», או לתרגל את הטעויות.</p></div>`;
+    <div class="mut sm">${CH.length} פרקים אמיתיים מ-${EX.length} בחינות של מאל״ו</div></div>
+    <div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${p(pv)}</b><span>נכון במילולי</span></div><div class="kpi"><b>${p(pq)}</b><span>נכון בכמותי</span></div></div>`;
+  if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
+  else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
+  const miss = done().filter(y => !keyOf(y.key));
+  if (miss.length) h += `<div class="card"><b>⚠️ ${miss.length} פרקים בלי מפתח תשובות</b><p class="mut sm" style="margin:4px 0 8px">בלי המפתח אין ציון ולא רואים איפה טעית.</p><button class="btn blue" onclick="go('keyin',{key:'${miss[0].key}'})">להקליד מפתח</button></div>`;
   const last = done().slice(-3).reverse();
-  h += drillCard() + writeCard();
-  if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chapRow).join('')}</div>`;
-  h += `<p class="mut sm">* ציון משוער: הערכה גסה מאחוז התשובות הנכונות בכל הפרקים (מילולי וכמותי במשקל שווה). לא ציון רשמי. נקודת הפתיחה שלך: 620.</p>
+  if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chRow).join('')}</div>`;
+  h += `<div class="card"><b>מאל״ו:</b> <span class="sm">הציון מחושב רק לפי התשובות הנכונות, ואין הפחתת נקודות על תשובה שגויה. השאירו כדקה בסוף הפרק כדי לסמן תשובה בכל שאלה שלא הגעתם אליה.</span> ${link(NITE_TIPS, 'כל ההנחיות לנבחנים ↗', 'sm')}</div>
     <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button></main>` + navBar();
   return h;
 }
-function typesLine(c) { const t = []; c.questions.forEach(q => { if (!t.includes(q.type)) t.push(q.type); }); return t.map(x => TYPE_HE[x]).join(', '); }
-
 function all() {
-  return `<main><h1>📚 כל הפרקים</h1><p class="mut sm">הסדר הוא סדר הימים: מילולי וכמותי לסירוגין. אפשר לבחור כל פרק.</p><div class="card list">${ORDER.map(chapRow).join('')}</div></main>` + navBar();
+  return `<main><h1>📚 הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית.</p>
+  ${EX.map(e => `<h2 style="display:flex;justify-content:space-between;align-items:center">${esc(e.title)} ${link(e.url, 'הקובץ ↗', 'sm')}</h2><div class="card list">${CH.filter(x => x.e === e).map(chRow).join('')}</div>`).join('')}
+  <p class="mut sm">המקור: ${link(NITE_PREP, 'דף ההכנה של מאל״ו', 'sm')}</p></main>` + navBar();
 }
 
-// ===== פרק בזמן =====
-function startChap(id) {
-  const c = byId[id]; if (!c) return;
+// ===== פרק בזמן: טיימר + דף תשובות =====
+function startChap(k) {
+  const x = chByKey[k]; if (!x) return;
   if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו ולהתחיל את זה?')) return;
-  const n = c.questions.length;
-  S.cur = { kind: 'chap', id, endAt: Date.now() + c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), t: Array(n).fill(0), flag: Array(n).fill(0), i: 0, last: Date.now() };
+  const n = x.c.questions;
+  S.cur = { kind: 'chap', key: k, endAt: Date.now() + x.c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), flag: Array(n).fill(0), last: Date.now() };
   save(); go('exam');
 }
 function startTick() {
   const upd = () => {
     const X = S.cur; if (!X) return;
-    const now = Date.now(), left = (X.endAt - now) / 1000;
-    if (view === 'exam' && document.visibilityState === 'visible') X.t[X.i] = (X.t[X.i] || 0) + Math.min(5, (now - X.last) / 1000);
-    X.last = now;
-    const el = document.getElementById('tm'); if (el) { el.textContent = mmss(left); el.classList.toggle('warn', left < 120); }
-    if (left <= 0) { toast('⏰ הזמן נגמר — הפרק הוגש'); X.kind === 'off' ? offDone() : X.kind === 'wr' ? wDone() : submit(true); return; }
-    if (Math.round(now / 1000) % 5 === 0) save();
+    const left = (X.endAt - Date.now()) / 1000;
+    const el = document.getElementById('tm'); if (el) { el.textContent = mmss(left); el.classList.toggle('warn', left < (X.kind === 'wr' ? 300 : 60)); }
+    if (left <= 0) { toast('⏰ הזמן נגמר'); X.kind === 'wr' ? wDone() : submit(true); return; }
   };
   upd(); tick = setInterval(upd, 1000);
 }
-function stimHtml(c, q, openAll) {
-  if (!q.stim) return '';
-  const s = c.stims[q.stim]; if (!s) return '';
-  if (s.kind === 'passage') {
-    const ps = s.paras.map((p, i) => `<p><b class="pn">(${i + 1})</b>${p}</p>`).join('');
-    return `<div class="stim ${openAll ? 'open' : ''}" id="stim"><div class="st"><span>📖 ${esc(s.title || 'קטע קריאה')}</span>${openAll ? '' : `<button class="icb" onclick="document.getElementById('stim').classList.toggle('open')">הגדלה</button>`}</div><div class="body">${ps}</div></div>`;
-  }
-  return `<div class="stim open"><div class="st"><span>📊 ${s.intro || ''}</span></div><div class="body">${s.html || ''}</div></div>`;
-}
-function qHtml(c, q) {
-  const an = q.type === 'analogy';
-  return `${q.fig ? `<div class="fig">${q.fig}</div>` : ''}<div class="stem ${an ? 'an' : ''}">${q.stem}</div>`;
-}
 function exam() {
-  const X = S.cur, c = byId[X.id], q = c.questions[X.i], n = c.questions.length, left = (X.endAt - Date.now()) / 1000;
-  const grid = c.questions.map((_, i) => `<button class="${X.ans[i] ? 'ans' : ''} ${i === X.i ? 'cur' : ''} ${X.flag[i] ? 'flag' : ''}" onclick="jump(${i})">${i + 1}</button>`).join('');
-  const opts = q.options.map((o, k) => `<button class="opt ${X.ans[X.i] === k + 1 ? 'sel' : ''}" onclick="pick(${k + 1})"><span class="num">${k + 1}</span><span>${ot(o)}</span></button>`).join('');
-  const nAns = X.ans.filter(Boolean).length;
-  return `<div class="xtop"><span class="timer ${left < 120 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(c.title)} · ${nAns}/${n} נענו</span>
-    ${c.domain === 'quant' ? `<button class="icb" onclick="formulas()">נוסחאות</button>` : ''}<button class="icb ${X.flag[X.i] ? 'on' : ''}" onclick="flag()">🚩</button></div>
-    <main><div class="grid">${grid}</div>${stimHtml(c, q)}<div class="qn">שאלה ${X.i + 1} מתוך ${n} · ${TYPE_HE[q.type]}</div>${qHtml(c, q)}<div class="opts">${opts}</div>
-    <div class="xnav"><button class="btn ghost" ${X.i === 0 ? 'disabled' : ''} onclick="jump(${X.i - 1})">→ הקודמת</button>${X.i < n - 1 ? `<button class="btn blue" onclick="jump(${X.i + 1})">הבאה ←</button>` : `<button class="btn" onclick="submit()">הגשה ✓</button>`}</div>
-    <button class="btn ghost" style="margin-top:22px" onclick="submit()">סיום והגשת הפרק</button>
-    <p class="mut sm" style="text-align:center;margin-top:14px">טיפ מהבחינה: אין ניקוד שלילי — לא משאירים שאלה ריקה. נתקעת? מסמנים 🚩 ועוברים.</p>
-    <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי להגיש</button></p></main>`;
+  const X = S.cur, x = chByKey[X.key], { e, c } = x, left = (X.endAt - Date.now()) / 1000;
+  let lastType = null;
+  const rows = X.ans.map((a, i) => {
+    const t = typeOf(c, i + 1), head = t && t !== lastType ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastType = t;
+    return head + `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${a === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`;
+  }).join('');
+  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · ${X.ans.filter(Boolean).length}/${c.questions}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
+  <main><p class="mut sm" style="margin-top:0">${esc(c.label || '')}: עמודים ${c.page} עד ${c.endPage} בקובץ.${c.domain === 'quant' && e.formulasPage ? ` נוסחאות: עמוד ${e.formulasPage}.` : ''}</p>${rows}
+  <button class="btn" style="margin-top:18px" onclick="submit()">סיום והגשה</button>
+  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></main>`;
 }
-function quit() { if (!confirm('לצאת מהפרק? התשובות לא יישמרו, ואפשר להתחיל אותו מחדש.')) return; delete S.cur; save(); go('home'); }
-function pick(k) { const X = S.cur; X.ans[X.i] = X.ans[X.i] === k ? 0 : k; save(); render(); }
-function jump(i) { const X = S.cur, n = byId[X.id].questions.length; if (i < 0 || i >= n) return; X.i = i; save(); render(); scrollTo(0, 0); }
-function flag() { const X = S.cur; X.flag[X.i] = X.flag[X.i] ? 0 : 1; save(); render(); }
+function bub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; save(); const y = scrollY; render(); scrollTo(0, y); }
+function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); const y = scrollY; render(); scrollTo(0, y); }
+function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) return; delete S.cur; save(); go('home'); }
 function submit(auto) {
-  const X = S.cur; if (!X) return; const c = byId[X.id];
-  if (!auto) {
-    const empty = X.ans.filter(a => !a).length, left = Math.round((X.endAt - Date.now()) / 60000);
-    if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה${left > 0 ? ` ועוד כ-${left} דקות` : ''}. להגיש בכל זאת?` : left > 0 ? `נשארו עוד כ-${left} דקות לבדיקה. להגיש?` : 'להגיש?')) return;
-  }
-  const at = { at: Date.now(), ans: X.ans.slice(), t: X.t.map(x => Math.round(x)), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) };
-  (S.res[X.id] = S.res[X.id] || []).push(at);
-  const k = S.res[X.id].length - 1; delete S.cur; save(); go('result', { id: c.id, k });
+  const X = S.cur; if (!X) return;
+  if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
+  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
 }
-
-function formulas() {
-  const m = document.createElement('div'); m.className = 'modal'; m.onclick = e => { if (e.target === m) m.remove(); };
-  m.innerHTML = `<div class="sheet fml"><h3>דף נוסחאות</h3>
-  <b>אחוזים:</b> x% מ-A = A·x/100 · עלייה ב-p%: ×(1+p/100) · ירידה ב-p%: ×(1−p/100)<br>
-  <b>ממוצע:</b> סכום ÷ מספר האיברים · סכום = ממוצע × מספר<br>
-  <b>דרך, מהירות, זמן:</b> דרך = מהירות × זמן · באותו כיוון: הפרש מהירויות · זה לקראת זה: סכום מהירויות<br>
-  <b>הספק:</b> עבודה = הספק × זמן · יחד: מחברים הספקים (1/a + 1/b)<br>
-  <b>חזקות:</b> <span class="ltr">aᵐ·aⁿ = aᵐ⁺ⁿ · aᵐ/aⁿ = aᵐ⁻ⁿ · (aᵐ)ⁿ = aᵐⁿ · a⁰ = 1 · a⁻ⁿ = 1/aⁿ · a^(1/n) = ⁿ√a</span><br>
-  <b>כפל מקוצר:</b> <span class="ltr">(a±b)² = a² ± 2ab + b² · a² − b² = (a+b)(a−b)</span><br>
-  <b>קומבינטוריקה:</b> סידור n עצמים: n! · בחירה עם חשיבות לסדר: n·(n−1)·…·(n−k+1) · בלי חשיבות לסדר: מחלקים ב-k!<br>
-  <b>הסתברות:</b> מקרים רצויים ÷ כל המקרים · שני מאורעות בלתי תלויים: מכפילים<br>
-  <b>משולש:</b> סכום זוויות 180° · שטח = בסיס × גובה ÷ 2 · פיתגורס <span class="ltr">a² + b² = c²</span> · 30-60-90: צלעות <span class="ltr">1 : √3 : 2</span> · 45-45-90: <span class="ltr">1 : 1 : √2</span> · צלע במשולש קטנה מסכום שתי האחרות<br>
-  <b>מצולע:</b> סכום זוויות פנימיות <span class="ltr">180°·(n−2)</span><br>
-  <b>מרובעים:</b> מלבן a·b · טרפז (a+b)·h÷2 · מקבילית בסיס × גובה · מעוין: מכפלת אלכסונים ÷ 2<br>
-  <b>מעגל:</b> היקף <span class="ltr">2πr</span> · שטח <span class="ltr">πr²</span> · גזרה בזווית α: חלק α/360 · זווית היקפית = חצי מהמרכזית על אותה קשת<br>
-  <b>גופים:</b> תיבה a·b·c · קובייה a³ (אלכסון a√3) · גליל <span class="ltr">πr²h</span> · חרוט ופירמידה: שליש מבסיס × גובה · כדור <span class="ltr">4πr³/3</span><br>
-  <b>ישר:</b> שיפוע <span class="ltr">m = (y₂−y₁)/(x₂−x₁)</span> · <span class="ltr">y = mx + b</span> · ישרים מקבילים: אותו שיפוע<br>
-  <button class="btn blue" style="margin-top:14px" onclick="this.closest('.modal').remove()">סגירה</button></div>`;
-  document.body.appendChild(m);
+function keyin() {
+  const x = chByKey[arg.key], { e, c } = x;
+  return `<main><h1>מפתח התשובות</h1><div class="card"><p style="margin-top:0">${esc(e.title)} · ${esc(c.label || DOM[c.domain])}</p>
+  <p>בסוף הקובץ של מאל״ו יש «מפתח תשובות נכונות»${e.keyPage ? `, <b>בעמוד ${e.keyPage}</b>` : ''}. מוצאים שם את הטבלה של <b>${esc(c.label || DOM[c.domain])}</b>, ומקלידים את ${c.questions} התשובות ברצף.</p>
+  ${link(pdf(e, e.keyPage), '📄 לפתוח את המפתח')}
+  <input class="txt key" id="ki" inputmode="numeric" maxlength="${c.questions}" value="${esc(keyOf(arg.key))}" placeholder="${'·'.repeat(c.questions)}" oninput="document.getElementById('kc').textContent=this.value.replace(/[^1-4]/g,'').length+'/${c.questions}'">
+  <div class="mut sm" id="kc">${keyOf(arg.key).length}/${c.questions}</div>
+  <button class="btn blue" style="margin-top:10px" onclick="saveKey('${arg.key}')">לבדוק</button></div>
+  <p class="mut sm">המפתח נשמר, ופעם הבאה שתעשה את הפרק הזה לא צריך להקליד שוב.</p></main>` + navBar();
 }
-
-// ===== תוצאה ומעבר על תשובות =====
+function saveKey(k) {
+  const n = chByKey[k].c.questions, v = (document.getElementById('ki').value || '').replace(/[^1-4]/g, '');
+  if (v.length !== n) return toast(`צריך בדיוק ${n} ספרות בין 1 ל-4 (הוקלדו ${v.length})`);
+  S.keys[k] = v; save(); go('result', { key: k });
+}
 function breakdown(items, keyf, label) {
-  const g = {}; items.forEach(x => { const k = keyf(x); if (!k) return; (g[k] = g[k] || { n: 0, ok: 0, t: 0 }); g[k].n++; g[k].ok += x.ok ? 1 : 0; g[k].t += x.t; });
+  const g = {}; items.forEach(x => { const k = keyf(x); if (!k) return; (g[k] = g[k] || { n: 0, ok: 0 }); g[k].n++; g[k].ok += x.ok ? 1 : 0; });
   return Object.entries(g).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).map(([k, v]) => {
-    const p = pct(v.ok, v.n); return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;font-size:14px;gap:8px"><span>${esc(label(k))}</span><span><b>${v.ok}/${v.n}</b> <span class="mut sm">· ${Math.round(v.t / v.n)} שנ׳ לשאלה</span></span></div><div class="bar ${p < 50 ? 'low' : p < 75 ? 'mid' : ''}"><i style="width:${p}%"></i></div></div>`;
+    const p = pct(v.ok, v.n); return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${esc(label(k))}</span><b>${v.ok}/${v.n} · ${p}%</b></div><div class="bar ${p < 50 ? 'low' : p < 75 ? 'mid' : ''}"><i style="width:${p}%"></i></div></div>`;
   }).join('');
 }
 function result() {
-  const c = byId[arg.id], a = S.res[arg.id][arg.k], n = c.questions.length, r = correctOf(c, a), empty = a.ans.filter(x => !x).length;
-  const items = c.questions.map((q, i) => ({ q, i, ok: a.ans[i] === q.answer, t: a.t[i] || 0 }));
-  const grid = items.map(x => `<button class="${x.ok ? 'ok' : a.ans[x.i] ? 'bad' : 'skip'}" onclick="go('review',{id:'${c.id}',k:${arg.k},i:${x.i},only:0})">${x.i + 1}</button>`).join('');
-  const slow = items.filter(x => x.t > 0).sort((a, b) => b.t - a.t).slice(0, 3);
-  const avg = Math.round(a.dur / n);
-  return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(c.title)}</b>${arg.k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
-    <div class="big-score">${r}/${n}</div><div style="text-align:center" class="mut">${pct(r, n)}% נכון · ${mmss(a.dur)} דקות · ${avg} שנ׳ לשאלה בממוצע${empty ? ` · ${empty} בלי תשובה` : ''}</div>
-    <div style="text-align:center;margin:8px 0 4px"><span class="tag">ציון משוער לפרק כזה: ${est(r / n)}*</span></div>
-    <div class="grid">${grid}</div>
-    <div class="row"><button class="btn" onclick="go('review',{id:'${c.id}',k:${arg.k},i:${items.findIndex(x => !x.ok) < 0 ? 0 : items.findIndex(x => !x.ok)},only:1})">🔍 לעבור על הטעויות (${n - r})</button></div>
-    <button class="btn ghost" onclick="go('review',{id:'${c.id}',k:${arg.k},i:0,only:0})">לעבור על כל השאלות עם הפתרונות</button>
-    <h2>לפי סוג שאלה</h2><div class="card">${breakdown(items, x => x.q.type, k => TYPE_HE[k])}</div>
-    <h2>לפי נושא</h2><div class="card">${breakdown(items, x => x.q.topic, k => TOPIC_HE[k] || k)}</div>
-    ${slow.length ? `<h2>איפה הלך הזמן</h2><div class="card">${slow.map(x => `<div class="it" style="display:flex;justify-content:space-between;padding:6px 0;cursor:pointer" onclick="go('review',{id:'${c.id}',k:${arg.k},i:${x.i},only:0})"><span>שאלה ${x.i + 1} · ${esc(x.q.skill || TYPE_HE[x.q.type])}</span><span>${mmss(x.t)} ${x.ok ? '✅' : '❌'}</span></div>`).join('')}<p class="mut sm">בבחינה יש כ-52 שניות לשאלה במילולי וכ-60 שניות בכמותי. שאלה שלקחה יותר מ-2 דקות כדאי לדלג עליה ולחזור בסוף.</p></div>` : ''}
-    <div class="row" style="margin-top:18px"><button class="btn ghost" onclick="startChap('${c.id}')">לעשות שוב</button><button class="btn blue" onclick="go('home')">לדף הבית</button></div>
-    <p class="mut sm">* הערכה גסה בלבד.</p></main>` + navBar();
-}
-function explainHtml(q, mine) {
-  let h = `<div class="exp"><h4>✍️ הפתרון</h4>${q.explain}</div>`;
-  if (q.fast) h += `<div class="exp"><h4>⚡ הדרך המהירה בבחינה</h4>${q.fast}</div>`;
-  if (mine && mine !== q.answer && q.traps && q.traps[mine - 1]) h += `<div class="exp"><h4>🪤 למה ${mine} לא נכונה</h4>${q.traps[mine - 1]}</div>`;
-  return h;
-}
-function optsReview(q, mine) {
-  return q.options.map((o, k) => {
-    const cls = k + 1 === q.answer ? 'ok' : k + 1 === mine ? 'bad' : '';
-    const why = k + 1 !== q.answer && q.traps && q.traps[k] && k + 1 !== mine ? `<span class="why">${q.traps[k]}</span>` : '';
-    return `<div class="opt ${cls}"><span class="num">${k + 1}</span><span>${ot(o)}${k + 1 === mine ? ' <b>← בחרת</b>' : ''}${why}</span></div>`;
-  }).join('');
-}
-function review() {
-  const c = byId[arg.id], a = S.res[arg.id][arg.k], qs = c.questions;
-  const idx = qs.map((_, i) => i).filter(i => !arg.only || a.ans[i] !== qs[i].answer);
-  if (!idx.length) return `<main><p>אין טעויות בפרק הזה 🎉</p><button class="btn" onclick="go('result',{id:'${c.id}',k:${arg.k}})">חזרה</button></main>`;
-  let p = idx.indexOf(arg.i); if (p < 0) p = 0; const i = idx[p], q = qs[i], mine = a.ans[i];
-  const grid = qs.map((x, j) => `<button class="${a.ans[j] === x.answer ? 'ok' : a.ans[j] ? 'bad' : 'skip'} ${j === i ? 'cur' : ''}" onclick="go('review',{id:'${c.id}',k:${arg.k},i:${j},only:0})">${j + 1}</button>`).join('');
-  const nav = d => idx[p + d] != null ? `go('review',{id:'${c.id}',k:${arg.k},i:${idx[p + d]},only:${arg.only}})` : '';
-  return `<div class="xtop"><button class="icb" onclick="go('result',{id:'${c.id}',k:${arg.k}})">→ לתוצאה</button><span class="ttl">${esc(c.title)} · ${arg.only ? `טעות ${p + 1} מתוך ${idx.length}` : 'מעבר על השאלות'}</span></div>
-  <main><div class="grid">${grid}</div>${stimHtml(c, q, false)}
-  <div class="qn">שאלה ${i + 1} · ${TYPE_HE[q.type]}${q.topic && TOPIC_HE[q.topic] !== TYPE_HE[q.type] ? ' · ' + esc(TOPIC_HE[q.topic] || q.topic) : ''}${q.skill ? ' · ' + esc(q.skill) : ''} · ${'●'.repeat(q.level || 1)}${'○'.repeat(3 - (q.level || 1))} · ${mmss(a.t[i] || 0)}</div>
-  ${qHtml(c, q)}<div class="opts">${optsReview(q, mine)}</div>${!mine ? '<p class="mut"><b>לא ענית על השאלה הזו.</b> בבחינה תמיד מנחשים — אין ניקוד שלילי.</p>' : ''}${explainHtml(q, mine)}
-  <div class="xnav"><button class="btn ghost" ${nav(-1) ? '' : 'disabled'} onclick="${nav(-1)}">→ הקודמת</button><button class="btn blue" ${nav(1) ? '' : 'disabled'} onclick="${nav(1)}">הבאה ←</button></div></main>`;
+  const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i], type: typeOf(c, i + 1), flag: a.flag && a.flag[i] }));
+  const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
+  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}"><b>${y.n}</b><span>${y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
+  return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
+  <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
+  <div class="card" style="margin-top:12px"><b>הציון המשוער לפי מאל״ו</b><p class="sm" style="margin:4px 0 8px">בסוף הקובץ יש טבלה רשמית שממירה את מספר התשובות הנכונות לציון משוער${e.scorePages ? `, <b>בעמודים ${e.scorePages[0]} עד ${e.scorePages[1]}</b>` : ''}. בשביל ציון בתחום צריך את שני הפרקים של אותו תחום מאותה בחינה.</p>${e.scorePages ? link(pdf(e, e.scorePages[0]), '📄 לטבלת הציונים של מאל״ו') : link(NITE_SCORES, 'ציונים באתר מאל״ו ↗')}</div>
+  <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו</p><div class="rgrid">${grid}</div>
+  ${c.sections && c.sections.length ? `<h2>לפי סוג שאלה</h2><div class="card">${breakdown(items, y => y.type, t => TYPE_HE[t] || t)}</div>` : ''}
+  <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח. הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
+  <div class="row">${link(pdf(e, c.page), '📄 לשאלות בקובץ')}<button class="btn blue" onclick="go('fix')">לתרגל את הטעויות</button></div></div>
+  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב</button><button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button></div></main>` + navBar();
 }
 
-// ===== חוזקות וחולשות =====
+// ===== חוזקות: רק מהתשובות שלך מול המפתח הרשמי =====
 function stats() {
-  const A = answered(), o = overall();
-  if (!A.length && !S.off.length) return `<main><h1>🎯 חיזוק</h1><div class="card"><p style="margin:0">אחרי הפרק הראשון יופיע כאן פילוח לפי סוג שאלה, נושא ומיומנות, וכמה זמן לוקחת לך כל שאלה. הנושאים למטה יסתדרו מהחלש לחזק.</p></div><h2>תרגול לפי נושא</h2>${drillList()}</main>` + navBar();
-  const hist = done().map(id => { const c = byId[id], a = first(id); return { p: correctOf(c, a) / c.questions.length, d: c.domain[0], l: c.title }; })
-    .concat(S.off.filter(x => x.key).map(x => ({ p: offCorrect(x) / x.n, d: 'o', l: x.label, at: x.at })));
-  const skills = {}; A.forEach(x => { const k = x.q.skill; if (!k) return; (skills[k] = skills[k] || { n: 0, ok: 0, d: x.c.domain }); skills[k].n++; skills[k].ok += x.ok; });
-  const weak = Object.entries(skills).filter(([, v]) => v.ok < v.n).sort((a, b) => (a[1].ok / a[1].n) - (b[1].ok / b[1].n) || b[1].n - a[1].n).slice(0, 8);
-  const need = o.p != null && o.p < 0.8 ? `כדי להגיע ל-700 צריך בערך 80% נכון. עכשיו: ${Math.round(o.p * 100)}%.` : o.p != null ? 'את/ה בטווח של 700+. ממשיכים לשמור על הקצב.' : '';
-  const dv = A.filter(x => x.c.domain === 'verbal'), dq = A.filter(x => x.c.domain === 'quant');
-  return `<main><h1>🎯 חוזקות וחולשות</h1>
-  <div class="kpis"><div class="kpi"><b>${o.pv != null ? Math.round(o.pv * 100) + '%' : '—'}</b><span>מילולי</span></div><div class="kpi"><b>${o.pq != null ? Math.round(o.pq * 100) + '%' : '—'}</b><span>כמותי</span></div><div class="kpi"><b>${o.p != null ? est(o.p) : '—'}</b><span>ציון משוער*</span></div></div>
-  <p class="mut sm">${need} מבוסס על הניסיון הראשון בכל פרק (${A.length} שאלות).</p>
-  <h2>🎯 תרגול לפי נושא · מהחלש לחזק</h2>${drillList()}
+  const A = answered();
+  if (!A.length) return `<main><h1>🎯 חוזקות וחולשות</h1><div class="card"><p style="margin:0">אחרי הפרק הראשון (עם מפתח תשובות), יופיע כאן פילוח לפי תחום ולפי סוג שאלה, מהתשובות שלך בבחינות של מאל״ו.</p></div></main>` + navBar();
+  const hist = done().filter(x => keyOf(x.key)).map(x => ({ p: scored(x.key) / x.c.questions, d: x.c.domain[0], l: chTitle(x) }));
+  const weakT = Object.entries(A.reduce((g, x) => { if (x.type) { (g[x.type] = g[x.type] || { n: 0, ok: 0 }); g[x.type].n++; g[x.type].ok += x.ok; } return g; }, {})).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n)[0];
+  const g = weakT ? GUIDES.find(z => z[3] === weakT[0]) : null;
+  return `<main><h1>🎯 חוזקות וחולשות</h1><p class="mut sm" style="margin-top:-6px">מהניסיון הראשון בכל פרק, מול מפתח התשובות של מאל״ו (${A.length} שאלות).</p>
+  <h2>לפי תחום</h2><div class="card">${breakdown(A, x => x.c.domain, d => DOM[d])}</div>
+  <h2>לפי סוג שאלה</h2><div class="card">${breakdown(A, x => x.type, t => TYPE_HE[t] || t)}</div>
+  ${g ? `<div class="card"><b>הכי חלש כרגע: ${TYPE_HE[weakT[0]]}</b><p class="sm" style="margin:4px 0 8px">לסוג הזה יש למאל״ו קובץ רשמי עם דוגמאות והסברים.</p>${link(g[2], '📘 ' + g[1])}</div>` : ''}
   <h2>ההתקדמות</h2><div class="card"><div class="hist">${hist.map(x => `<i class="${x.d}" style="height:${Math.max(4, x.p * 100)}%" title="${esc(x.l)}: ${Math.round(x.p * 100)}%"></i>`).join('')}</div>
-  <div class="legend"><span style="--c:var(--o)">מילולי</span><span style="--c:var(--b)">כמותי</span><span style="--c:#9b7bff">רשמי</span></div></div>
-  ${weak.length ? `<h2>🎯 המיומנויות שהכי כדאי לחזק</h2><div class="card">${weak.map(([k, v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span><span class="tag ${v.d[0]}">${DOM[v.d]}</span> ${esc(k)}</span><b>${v.ok}/${v.n}</b></div>`).join('')}<button class="btn blue" style="margin-top:12px" onclick="go('fix')">לתרגל את הטעויות</button></div>` : ''}
-  ${dv.length ? `<h2>מילולי לפי סוג שאלה</h2><div class="card">${breakdown(dv, x => x.q.type, k => TYPE_HE[k])}</div><h2>מילולי לפי נושא</h2><div class="card">${breakdown(dv, x => x.q.topic, k => TOPIC_HE[k] || k)}</div>` : ''}
-  ${dq.length ? `<h2>כמותי לפי סוג שאלה</h2><div class="card">${breakdown(dq, x => x.q.type, k => TYPE_HE[k])}</div><h2>כמותי לפי נושא</h2><div class="card">${breakdown(dq, x => x.q.topic, k => TOPIC_HE[k] || k)}</div>` : ''}
-  <h2>לפי רמת קושי</h2><div class="card">${breakdown(A, x => String(x.q.level || 1), k => ['', 'קלות', 'בינוניות', 'קשות'][k])}</div>
-  <p class="mut sm">* הערכה גסה בלבד.</p></main>` + navBar();
+  <div class="legend"><span style="--c:var(--o)">מילולי</span><span style="--c:var(--b)">כמותי</span></div></div>
+  <h2>לפי בחינה</h2><div class="card list">${done().map(chRow).join('')}</div></main>` + navBar();
 }
 
-// ===== תרגול טעויות (בלי זמן, משוב מיידי) =====
-function mistakes() {
-  const out = [];
-  for (const id of done()) { const c = byId[id], a = first(id); c.questions.forEach((q, i) => { if (a.ans[i] !== q.answer && !S.fix[`${id}:${i}`]) out.push({ id, i }); }); }
-  return out;
-}
+// ===== טעויות: פותרים שוב בקובץ ובודקים מול המפתח =====
+function mistakes() { return answered().filter(x => !x.ok && !S.fix[`${x.key}:${x.n}`]); }
 function fix() {
   const M = mistakes(), fixed = Object.keys(S.fix).length;
-  const byT = {}; M.forEach(m => { const q = byId[m.id].questions[m.i]; const k = `${byId[m.id].domain}|${q.type}`; byT[k] = (byT[k] || 0) + 1; });
-  return `<main><h1>🔁 תרגול טעויות</h1><p class="mut">כל שאלה שטעית בה (או לא ענית) בפרק נשמרת כאן. פותרים שוב בלי זמן, ומקבלים מיד את הפתרון. שאלה שנפתרה נכון יוצאת מהרשימה.</p>
-  <div class="kpis"><div class="kpi"><b>${M.length}</b><span>מחכות לתיקון</span></div><div class="kpi"><b>${fixed}</b><span>תוקנו</span></div><div class="kpi"><b>${done().length}</b><span>פרקים</span></div></div>
-  ${M.length ? `<button class="btn big" onclick="go('practice',{n:0})">להתחיל (${M.length})</button>
-  <div class="card">${Object.entries(byT).map(([k, n]) => { const [d, t] = k.split('|'); return `<div style="display:flex;justify-content:space-between;padding:6px 0"><span><span class="tag ${d[0]}">${DOM[d]}</span> ${TYPE_HE[t]}</span><b>${n}</b></div>`; }).join('')}</div>` : '<div class="card"><p>אין טעויות שמחכות 👏</p></div>'}
+  const by = {}; M.forEach(m => (by[m.key] = by[m.key] || []).push(m));
+  return `<main><h1>🔁 טעויות</h1><p class="mut sm" style="margin-top:-6px">כל שאלה שטעית בה או לא ענית עליה. פותחים אותה בקובץ, פותרים שוב בלי שעון, ומסמנים. תשובה נכונה מוציאה את השאלה מהרשימה.</p>
+  <div class="kpis"><div class="kpi"><b>${M.length}</b><span>מחכות</span></div><div class="kpi"><b>${fixed}</b><span>תוקנו</span></div><div class="kpi"><b>${done().length}</b><span>פרקים</span></div></div>
+  ${Object.entries(by).map(([k, ms]) => { const x = chByKey[k]; return `<h2>${esc(chTitle(x))}</h2><div class="card list">${ms.map(m => `<div class="it" onclick="go('retry',{key:'${k}',n:${m.n}})"><b>שאלה ${m.n}</b><div class="grow mut sm">${TYPE_HE[m.type] || ''}</div><span class="mut sm">${m.a ? 'טעות' : 'לא נענתה'}</span></div>`).join('')}</div>`; }).join('') || '<div class="card"><p>אין טעויות שמחכות 👏</p></div>'}
   </main>` + navBar();
 }
-let P = null; // מצב השאלה הנוכחית בתרגול טעויות
-function practice() {
-  const M = mistakes(); if (!M.length) return fix();
-  const m = M[Math.min(arg.n || 0, M.length - 1)], c = byId[m.id], q = c.questions[m.i];
-  if (!P || P.key !== `${m.id}:${m.i}`) P = { key: `${m.id}:${m.i}`, pick: 0 };
-  const ans = P.pick;
-  const opts = ans ? optsReview(q, ans) : q.options.map((o, k) => `<button class="opt" onclick="ppick(${k + 1})"><span class="num">${k + 1}</span><span>${ot(o)}</span></button>`).join('');
-  return `<div class="xtop"><button class="icb" onclick="P=null;go('fix')">→ יציאה</button><span class="ttl">תרגול טעויות · נשארו ${M.length}</span></div>
-  <main><div class="qn"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span> ${esc(c.title)} · שאלה ${m.i + 1} · ${TYPE_HE[q.type]}</div>${stimHtml(c, q, false)}${qHtml(c, q)}<div class="opts">${opts}</div>
-  ${ans ? `<p style="font-weight:800;font-size:18px;color:${ans === q.answer ? 'var(--gd)' : 'var(--rd)'}">${ans === q.answer ? '✅ נכון! השאלה יוצאת מהרשימה.' : '❌ עוד לא. השאלה נשארת לפעם הבאה.'}</p>${explainHtml(q, ans)}
-  <button class="btn blue big" style="margin-top:16px" onclick="P=null;go('practice',{n:${ans === q.answer ? 0 : (arg.n || 0) + 1}})">לשאלה הבאה</button>` : ''}</main>`;
+let RP = 0;
+function retry() {
+  const x = chByKey[arg.key], { e, c } = x, n = arg.n, right = +keyOf(arg.key)[n - 1];
+  const opts = [1, 2, 3, 4].map(k => `<button class="${RP ? (k === right ? 'ok' : k === RP ? 'bad' : '') : ''}" ${RP ? 'disabled' : `onclick="RP=${k};if(${k}===${right}){S.fix['${arg.key}:${n}']=true;save()}render()"`}>${k}</button>`).join('');
+  return `<div class="xtop"><button class="icb" onclick="RP=0;go('fix')">→ חזרה</button><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · שאלה ${n}</span></div>
+  <main><div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''}), עמודים ${c.page} עד ${c.endPage} בקובץ.</p>${link(pdf(e, c.page), '📄 לפתוח בקובץ')}</div>
+  <p>התשובה שלך עכשיו:</p><div class="bub big">${opts}</div>
+  ${RP ? `<p style="font-weight:800;font-size:18px;color:${RP === right ? 'var(--gd)' : 'var(--rd)'}">${RP === right ? '✅ נכון! השאלה יוצאת מהרשימה.' : `❌ התשובה הנכונה לפי המפתח: ${right}`}</p>
+  <button class="btn blue big" onclick="RP=0;${mistakes().length ? `go('retry',{key:'${mistakes()[0].key}',n:${mistakes()[0].n}})` : `go('fix')`}">לטעות הבאה</button>` : ''}</main>`;
 }
-function ppick(k) { const [id, i] = P.key.split(':'); P.pick = k; if (byId[id].questions[+i].answer === k) { S.fix[P.key] = true; save(); } render(); }
 
-// ===== מבחנים רשמיים: PDF מאתר מאל״ו + טיימר + דף תשובות =====
-const offCorrect = x => x.ans.reduce((k, a, i) => k + (x.key[i] && a === +x.key[i] ? 1 : 0), 0);
-function off() {
-  const rows = S.off.slice().reverse().map((x, j) => { const i = S.off.length - 1 - j; return `<div class="it" onclick="go('offres',{i:${i}})"><span class="tag ${x.dom[0]}">${DOM[x.dom]}</span><div class="grow"><b>${esc(x.label)}</b><div class="mut sm">${fmtDate(x.at)} · ${mmss(x.dur)}</div></div><div>${x.key ? `<b>${offCorrect(x)}/${x.n}</b>` : '<span class="mut sm">חסר מפתח</span>'}</div></div>`; }).join('');
-  return `<main><h1>📄 פרקים רשמיים</h1>
-  <div class="card"><p>מאל״ו מפרסמים באתר שלהם בחינות שהיו. פותחים את קובץ ה-PDF, בוחרים פרק מילולי או כמותי, ופותרים כאן עם טיימר ודף תשובות. בסוף מקלידים את מפתח התשובות שבסוף הקובץ, ומקבלים ציון.</p>
-  <p class="mut sm">בבחינות עד נובמבר 2026 יש גם פרקי אנגלית. מדלגים עליהם, הם לא בבחינה שלך. את השאלות עצמן לא מעתיקים לכאן (זכויות יוצרים), ולכן אין פתרון מפורט לפרק רשמי.</p>
-  <a class="btn ghost" style="text-decoration:none;margin-bottom:10px" href="${NITE_PAGE}" target="_blank" rel="noopener">כל הבחינות באתר מאל״ו ↗</a>
-  ${NITE_PDFS.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener" style="display:inline-block;margin:4px 0 4px 10px;color:var(--b);font-weight:700">${l} ↗</a>`).join('')}</div>
-  <h2>להתחיל פרק רשמי</h2><div class="card">
-  <select class="txt" id="ol">${NITE_PDFS.map(([l]) => `<option>${l}</option>`).join('')}<option>בחינה אחרת</option></select>
-  <input class="txt" id="oc" placeholder="איזה פרק? למשל: פרק 2" value="">
-  <div class="seg" id="od"><button class="on" data-d="verbal" onclick="segPick(this)">מילולי · 23 שאלות</button><button data-d="quant" onclick="segPick(this)">כמותי · 20 שאלות</button></div>
-  <button class="btn big" onclick="offStart()">▶️ להתחיל (20 דקות)</button></div>
-  ${rows ? `<h2>פרקים רשמיים שנעשו</h2><div class="card list">${rows}</div>` : ''}</main>` + navBar();
+// ===== הדרכה: רק קבצים רשמיים של מאל״ו =====
+function learn() {
+  const row = ([d, t, u]) => `<div class="it"><input type="checkbox" style="width:20px;height:20px" ${S.read[u] ? 'checked' : ''} onchange="S.read['${u}']=this.checked;save()"><div class="grow">${link(u, esc(t) + ' ↗', '')}</div>${d !== 'writing' ? `<span class="tag ${d[0]}">${DOM[d]}</span>` : ''}</div>`;
+  return `<main><h1>📘 הדרכה רשמית</h1><p class="mut sm" style="margin-top:-6px">הקבצים של מאל״ו עם דוגמאות לכל סוג שאלה ועם הסבר איך פותרים. מסמנים ✓ את מה שקראת.</p>
+  <div class="card list">${GUIDES.map(row).join('')}</div>
+  <h2>תרגול מקוון רשמי</h2><div class="card"><p style="margin-top:0"><b>פסיכורשת</b> היא בחינה ממוחשבת להתנסות של מאל״ו, עם שאלות אמיתיות.</p>${link(PSYCHORESHET, 'לפסיכורשת ↗')}</div>
+  <h2>על הבחינה</h2><div class="card list">${[['מבנה הבחינה ומרכיביה', NITE_FORMAT], ['הנחיות לנבחנים', NITE_TIPS], ['הכנה לבחינה ובחינות להתנסות', NITE_PREP], ['ציונים', NITE_SCORES]].map(([t, u]) => `<div class="it">${link(u, t + ' ↗', '')}</div>`).join('')}</div></main>` + navBar();
 }
-function segPick(b) { b.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }
-function offStart() {
-  const dom = document.querySelector('#od .on').dataset.d, n = dom === 'verbal' ? 23 : 20;
-  const label = `${document.getElementById('ol').value}${document.getElementById('oc').value.trim() ? ' · ' + document.getElementById('oc').value.trim() : ''}`;
-  if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו?')) return;
-  S.cur = { kind: 'off', label, dom, n, endAt: Date.now() + 20 * 60e3, start: Date.now(), ans: Array(n).fill(0), last: Date.now() };
-  save(); go('offx');
+
+// ===== מטלת כתיבה: נושאים רשמיים, טיימר 30 דקות, השוואה לחיבורים שמאל״ו העריכו =====
+const WPL = 10; // הערכה: בערך 10 מילים בשורה בדף התשובות
+const wWords = t => (String(t || '').trim().match(/\S+/g) || []).length;
+const wById = Object.fromEntries(WT_ALL.map(w => [w.id, w]));
+function write() {
+  const doneIds = new Set(S.wr.map(x => x.src)), next = WT_ALL.find(w => !doneIds.has(w.id));
+  const rows = S.wr.slice().reverse().map((x, j) => { const i = S.wr.length - 1 - j, w = wById[x.src]; return `<div class="it" onclick="go('wres',{i:${i}})"><div class="grow"><b>${esc(w ? w.title : x.src)}</b><div class="mut sm">${fmtDate(x.at)} · ${wWords(x.text)} מילים · ${mmss(x.dur)}</div></div><span class="sm">${x.gc ? `${x.gc}/${x.gl}` : ''}</span></div>`; }).join('');
+  return `<main><h1>✍️ מטלת כתיבה</h1>
+  <div class="card"><p style="margin-top:0">לפי מאל״ו: חיבור בנושא נתון, <b>לפחות 25 שורות</b>, בסגנון עיוני, ב-<b>30 דקות</b>. שני מעריכים נותנים ציון בשני ממדים: <b>תוכן</b> (עושר ואיכות הטיעונים, חשיבה ביקורתית) ו<b>לשון</b> (בהירות הניסוח, סגנון תקין ודיוק לשוני).</p>${link(GUIDES[7][2], '📘 ההסבר של מאל״ו')}</div>
+  ${next ? `<button class="btn big" onclick="wStart('${next.id}')">▶️ מטלה הבאה: ${esc(next.title)}</button>` : ''}
+  ${rows ? `<h2>מה שכתבת</h2><div class="card list">${rows}</div>` : ''}
+  <h2>כל המטלות הרשמיות (${WT_ALL.length})</h2><div class="card list">${WT_ALL.map(w => `<div class="it" onclick="wStart('${w.id}')"><div class="grow"><b>${esc(w.title)}</b></div><span class="mut sm">${doneIds.has(w.id) ? '✓' : ''}</span></div>`).join('')}</div></main>` + navBar();
 }
-function offx() {
-  const X = S.cur, left = (X.endAt - Date.now()) / 1000;
-  const rows = X.ans.map((a, i) => `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${a === k ? 'on' : ''}" onclick="obub(${i},${k})">${k}</button>`).join('')}</div>`).join('');
-  return `<div class="xtop"><span class="timer ${left < 120 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(X.label)} · ${DOM[X.dom]} · ${X.ans.filter(Boolean).length}/${X.n}</span>${X.dom === 'quant' ? `<button class="icb" onclick="formulas()">נוסחאות</button>` : ''}</div>
-  <main><p class="mut sm">פתח/י את ה-PDF בחלון אחר וסמן/י כאן את התשובות.</p>${rows}<button class="btn" style="margin-top:18px" onclick="offDone(1)">סיום והגשה</button></main>`;
+function wStart(id) {
+  if (S.cur && !confirm('יש משהו אחר באמצע. לוותר עליו?')) return;
+  S.cur = { kind: 'wr', src: id, endAt: Date.now() + 30 * 60e3, start: Date.now(), text: '' }; save(); go('wx');
 }
-function obub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; save(); const y = scrollY; render(); scrollTo(0, y); }
-function offDone(ask) {
-  const X = S.cur; if (!X) return;
-  if (ask && !confirm('להגיש את דף התשובות?')) return;
-  S.off.push({ at: Date.now(), label: X.label, dom: X.dom, n: X.n, ans: X.ans.slice(), key: '', dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
-  delete S.cur; save(); go('offres', { i: S.off.length - 1 });
+function wCount(t) { const n = wWords(t), l = Math.ceil(n / WPL); return `${n} מילים · כ-${l} שורות ${l >= 25 ? '✅' : `(מינימום 25)`}`; }
+function wx() {
+  const X = S.cur, w = wById[X.src], left = (X.endAt - Date.now()) / 1000;
+  return `<div class="xtop"><span class="timer ${left < 300 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(w.title)}</span>${link(w.url, '📄 הנושא', 'icb')}</div>
+  <main><p class="mut sm" style="margin-top:0">הנושא בקובץ של מאל״ו (הכפתור למעלה). כותבים כאן, והטקסט נשמר כל הזמן.</p>
+  <textarea id="wt" class="txt" style="min-height:58vh;line-height:1.8;font-size:16px;resize:vertical" oninput="S.cur.text=this.value;document.getElementById('wc').textContent=wCount(this.value);save()">${esc(X.text)}</textarea>
+  <div class="mut sm" id="wc">${wCount(X.text)}</div>
+  <button class="btn" style="margin-top:14px" onclick="wDone(1)">סיום והגשה</button>
+  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></main>`;
 }
-function offres() {
-  const x = S.off[arg.i];
-  const keyIn = `<div class="card"><b>מפתח התשובות</b><p class="mut sm">בסוף קובץ ה-PDF יש טבלת «תשובות נכונות». הקלד/י את ${x.n} התשובות של הפרק ברצף, בלי רווחים (למשל 3142…).</p>
-    <input class="txt key" id="ok" inputmode="numeric" maxlength="${x.n}" value="${esc(x.key)}" placeholder="${'·'.repeat(x.n)}"><button class="btn blue" onclick="okey(${arg.i})">לבדוק</button></div>`;
-  if (!x.key) return `<main><h1>${esc(x.label)}</h1><p class="mut">${DOM[x.dom]} · ${mmss(x.dur)} · ענית על ${x.ans.filter(Boolean).length}/${x.n}</p>${keyIn}</main>` + navBar();
-  const r = offCorrect(x);
-  const rows = x.ans.map((a, i) => `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${a === k ? (+x.key[i] === k ? 'ok' : 'bad') : ''} ${+x.key[i] === k && a !== k ? 'key' : ''}">${k}</button>`).join('')}</div>`).join('');
-  return `<main><h1>${esc(x.label)}</h1><div class="big-score">${r}/${x.n}</div><div style="text-align:center" class="mut">${pct(r, x.n)}% · ${mmss(x.dur)} · ציון משוער לפרק כזה: ${est(r / x.n)}*</div>
-  <p class="mut sm" style="margin-top:14px">ירוק = נכון · אדום = הטעות שלך · מסגרת ירוקה = התשובה הנכונה. את ההסברים לפרק רשמי מחפשים בספר הפתרונות באתר מאל״ו.</p>${rows}
-  <details style="margin-top:14px"><summary class="mut">לתקן את המפתח</summary>${keyIn}</details>
-  <button class="btn ghost" style="margin-top:14px" onclick="if(confirm('למחוק את הפרק הזה?')){S.off.splice(${arg.i},1);save();go('off')}">מחיקה</button></main>` + navBar();
+function wDone(ask) {
+  const X = S.cur; if (!X) return; const el = document.getElementById('wt'); if (el) X.text = el.value;
+  if (ask && !confirm(Math.ceil(wWords(X.text) / WPL) < 25 ? 'פחות מ-25 שורות. להגיש בכל זאת?' : 'להגיש?')) return;
+  S.wr.push({ src: X.src, at: Date.now(), text: X.text, dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  delete S.cur; save(); go('wres', { i: S.wr.length - 1 });
 }
-function okey(i) {
-  const v = (document.getElementById('ok').value || '').replace(/[^1-4]/g, '');
-  if (v.length !== S.off[i].n) return toast(`צריך בדיוק ${S.off[i].n} ספרות בין 1 ל-4 (הוקלדו ${v.length})`);
-  S.off[i].key = v; save(); render();
+function wres() {
+  const x = S.wr[arg.i], w = wById[x.src]; if (!w) return write();
+  const sel = (k, v) => `<select class="txt" style="width:auto;display:inline-block;margin:0 6px" onchange="S.wr[${arg.i}].${k}=+this.value||0;save()"><option value="0">—</option>${[1, 2, 3, 4, 5, 6].map(n => `<option ${v === n ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+  const lines = Math.ceil(wWords(x.text) / WPL);
+  return `<main><h1>✍️ ${esc(w.title)}</h1><p class="mut">${wWords(x.text)} מילים · כ-${lines} שורות ${lines >= 25 ? '✅' : '⚠️ פחות מ-25'} · ${mmss(x.dur)}</p>
+  <div class="card"><b>להשוות לחיבורים שמאל״ו העריכו</b><p class="sm" style="margin:4px 0 8px">בקובץ יש חיבורים לדוגמה ברמה גבוהה, בינונית ונמוכה, עם ההערכה של מאל״ו${w.exLabel ? ` (${w.exLabel})` : ''}. קוראים אותם ובודקים לאיזה מהם החיבור שלך הכי דומה, בתוכן ובלשון.</p>${link(w.ex || w.url, '📄 לחיבורים לדוגמה')}
+  <p class="sm" style="margin:10px 0 0">ההערכה שלך: תוכן ${sel('gc', x.gc)} לשון ${sel('gl', x.gl)}</p></div>
+  <div class="card"><details open><summary class="mut" style="cursor:pointer">מה שכתבת</summary><p style="white-space:pre-wrap">${esc(x.text)}</p></details></div>
+  <button class="btn ghost" onclick="go('write')">חזרה למטלות</button></main>` + navBar();
 }
 
 // ===== הגדרות וגיבוי =====
@@ -373,182 +298,19 @@ function settings() {
   return `<main><h1>⚙️ הגדרות</h1><div class="card"><b>תאריך הבחינה</b>
   <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';save();render()">${l}</button>`).join('')}</div>
   <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;save();render()"></div>
-  <div class="card"><b>גיבוי והעברה למכשיר אחר</b><p class="mut sm">ההתקדמות נשמרת בדפדפן של המכשיר הזה. כדי להעביר לטלפון אחר או למחשב: מעתיקים את הקוד ומדביקים אותו שם.</p>
-  <button class="btn blue" onclick="exp()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="imp()">טעינת גיבוי</button></div>
-  <div class="card"><b>על האפליקציה</b><p class="mut sm">${CH.length} פרקים מקוריים במבנה הבחינה הדו-תחומית של מאל״ו מדצמבר 2026: מילולי 23 שאלות (אנלוגיות, הבנה והסקה, הבנת הנקרא) וכמותי 20 שאלות (שאלות ובעיות, הסקה מתרשים), 20 דקות לפרק. השאלות נכתבו במיוחד, לא מבחינות של מאל״ו. מוצר אישי, לא קשור למאל״ו.</p></div>
+  <div class="card"><b>גיבוי והעברה למכשיר אחר</b><p class="mut sm">ההתקדמות נשמרת בדפדפן של המכשיר הזה. כדי להעביר: מעתיקים את הקוד ומדביקים אותו במכשיר השני.</p>
+  <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
+  <div class="card"><b>על האפליקציה</b><p class="mut sm">כל השאלות, נושאי החיבור, ההסברים, המפתחות וטבלאות הציון הם של מאל״ו, ונפתחים מהאתר שלהם. האפליקציה רק מוסיפה טיימר, דף תשובות, בדיקה מול המפתח שאתה מקליד ומעקב. מוצר אישי, לא קשור למאל״ו.</p></div>
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
 }
-function exp() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, off: S.off, fix: S.fix, wr: S.wr, dr: S.dr, examDate: S.examDate }))));
-  (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד מופיע בתיבה — להעתיק ידנית'); });
+function expo() {
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, examDate: S.examDate }))));
+  (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
-function imp() {
-  try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('imp').value.trim())))); if (!d.res) throw 0; if (!confirm('לטעון את הגיבוי? זה מחליף את ההתקדמות במכשיר הזה.')) return; Object.assign(S, d); save(); toast('נטען ✓'); go('home'); }
+function impo() {
+  try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('imp').value.trim())))); if (!d.res) throw 0; if (!confirm('לטעון? זה מחליף את מה שיש במכשיר.')) return; Object.assign(S, d); save(); toast('נטען ✓'); go('home'); }
   catch (e) { toast('הקוד לא תקין'); }
 }
 
-// ===== תרגול לפי נושא: דף «מה חשוב לדעת» ושאלות עם משוב מיידי =====
-const DR = (window.DRILLS || []);
-const drById = Object.fromEntries(DR.map(d => [d.id, d]));
-// לאיזה נושא תרגול שייכת שאלה מפרק (לסידור מהחלש לחזק)
-const drillOf = q => ({ analogy: 'analogy', reading: 'reading', chart: 'chart' })[q.type] || ({ coordinates: 'solids', sequences: 'defined_ops', functions: 'algebra', sentence: 'meaning' })[q.topic] || q.topic;
-function drillRank() {
-  const g = {}; answered().forEach(x => { const k = drillOf(x.q); if (!drById[k]) return; (g[k] = g[k] || { n: 0, ok: 0 }); g[k].n++; g[k].ok += x.ok ? 1 : 0; });
-  const prog = d => { const r = S.dr[d.id] || {}; return d.questions.filter((_, i) => r[i] && r[i][1]).length; };
-  return DR.map(d => ({ d, s: g[d.id], p: g[d.id] ? g[d.id].ok / g[d.id].n : null, solved: prog(d) }))
-    .sort((a, b) => (a.p == null) - (b.p == null) || (a.p ?? 0) - (b.p ?? 0) || a.solved / a.d.questions.length - b.solved / b.d.questions.length);
-}
-function drillList() {
-  if (!DR.length) return '<div class="card"><p class="mut">התרגול לפי נושא עוד לא נטען.</p></div>';
-  return `<div class="card list">${drillRank().map(({ d, s, p, solved }) => `<div class="it" onclick="go('drill',{id:'${d.id}',s:'g'})"><span class="tag ${d.domain[0]}">${DOM[d.domain]}</span><div class="grow"><b>${esc(d.title)}</b>
-    <div class="mut sm">${s ? `בפרקים: ${s.ok}/${s.n} (${Math.round(p * 100)}%)` : 'עוד אין נתונים מהפרקים'} · בתרגול: ${solved}/${d.questions.length}</div>
-    ${s ? `<div class="bar ${p < .5 ? 'low' : p < .75 ? 'mid' : ''}" style="margin-top:5px"><i style="width:${Math.round(p * 100)}%"></i></div>` : ''}</div></div>`).join('')}</div>`;
-}
-function drillCard() {
-  const r = drillRank().filter(x => x.s && x.s.n >= 3 && x.solved < x.d.questions.length);
-  if (!r.length) return '';
-  const w = r[0];
-  return `<h2>🎯 לחזק את הנקודה החלשה</h2><div class="card"><b>${esc(w.d.title)}</b><p class="mut sm" style="margin:4px 0 10px">בפרקים: ${w.s.ok}/${w.s.n} נכון. 10-15 דקות של תרגול ממוקד עם דף כללים.</p>
-    <button class="btn blue" onclick="go('drill',{id:'${w.d.id}',s:'g'})">לתרגל את הנושא</button></div>`;
-}
-let DP = null; // השאלה הנוכחית בתרגול נושא: {key, pick, t0, t}
-function drillNext(d) { const r = S.dr[d.id] || {}; let i = d.questions.findIndex((_, k) => !r[k]); if (i < 0) i = d.questions.findIndex((_, k) => !r[k][1]); return i; }
-function drill() {
-  const d = drById[arg.id]; if (!d) return stats();
-  const r = S.dr[d.id] || {}, n = d.questions.length, solved = d.questions.filter((_, i) => r[i] && r[i][1]).length;
-  const top = `<div class="xtop"><button class="icb" onclick="DP=null;go('stats')">→ חזרה</button><span class="ttl">${esc(d.title)} · ${solved}/${n}</span>${arg.s === 'q' ? `<button class="icb" onclick="DP=null;go('drill',{id:'${d.id}',s:'g'})">📘 כללים</button>` : ''}</div>`;
-  if (arg.s === 'g') {
-    const nx = drillNext(d);
-    return top + `<main><h1 style="font-size:20px">📘 מה חשוב לדעת</h1><div class="card fml">${d.guide.map(g => `<p style="margin:8px 0">• ${g}</p>`).join('')}</div>
-      ${nx >= 0 ? `<button class="btn big" onclick="go('drill',{id:'${d.id}',s:'q'})">${solved || Object.keys(r).length ? 'להמשיך לתרגל' : 'להתחיל לתרגל'} (${n - solved} שאלות)</button>`
-        : `<div class="card"><b>פתרת נכון את כל ${n} השאלות בנושא 🎉</b></div><button class="btn ghost" onclick="if(confirm('להתחיל את הנושא מחדש?')){delete S.dr['${d.id}'];save();render()}">להתחיל מחדש</button>`}
-      <p class="mut sm">בלי שעון. אחרי כל שאלה מקבלים מיד את הפתרון ואת הדרך המהירה. שאלה שטעית בה חוזרת בסוף הסבב.</p></main>`;
-  }
-  // אחרי תשובה נשארים על אותה שאלה (עם הפתרון) עד «לשאלה הבאה»
-  const i = DP && DP.pick && DP.key.startsWith(d.id + ':') ? +DP.key.split(':')[1] : drillNext(d);
-  if (i < 0) { arg.s = 'g'; return drill(); }
-  const q = d.questions[i], key = `${d.id}:${i}`;
-  if (!DP || DP.key !== key) DP = { key, pick: 0, t0: Date.now() };
-  const opts = DP.pick ? optsReview(q, DP.pick) : q.options.map((o, k) => `<button class="opt" onclick="dpick(${k + 1})"><span class="num">${k + 1}</span><span>${ot(o)}</span></button>`).join('');
-  const goal = d.domain === 'quant' ? 60 : 50;
-  return top + `<main><div class="qn">שאלה ${i + 1} מתוך ${n} · ${'●'.repeat(q.level || 1)}${'○'.repeat(3 - (q.level || 1))}${q.skill ? ' · ' + esc(q.skill) : ''}${r[i] && r[i][0] > (DP.pick ? 1 : 0) ? ' · ניסיון חוזר' : ''}</div>
-    ${stimHtml(d, q, false)}${qHtml(d, q)}<div class="opts">${opts}</div>
-    ${DP.pick ? `<p style="font-weight:800;font-size:18px;margin-bottom:0;color:${DP.pick === q.answer ? 'var(--gd)' : 'var(--rd)'}">${DP.pick === q.answer ? '✅ נכון!' : '❌ לא נכון. השאלה תחזור בסוף הסבב.'}</p>
-    <p class="mut sm" style="margin-top:4px">${Math.round(DP.t)} שנ׳ ${DP.t > goal * 1.5 ? `· בבחינה יש בערך ${goal} שנ׳ לשאלה. כדאי לקרוא את הדרך המהירה` : ''}</p>${explainHtml(q, DP.pick)}
-    <button class="btn blue big" style="margin-top:16px" onclick="DP=null;render();scrollTo(0,0)">${drillNext(d) >= 0 ? 'לשאלה הבאה' : 'סיום הנושא 🎉'}</button>` : ''}</main>`;
-}
-function dpick(k) {
-  const [id, i] = DP.key.split(':'), q = drById[id].questions[+i];
-  DP.pick = k; DP.t = (Date.now() - DP.t0) / 1000;
-  const r = S.dr[id] = S.dr[id] || {}; r[i] = [((r[i] || [0])[0] || 0) + 1, q.answer === k ? 1 : 0];
-  save(); render();
-}
-
-// ===== מטלת כתיבה: 30 דקות, לפחות 25 שורות, נשפטת בתוכן ובלשון =====
-const WR = (window.WRITING || []);
-const wById = Object.fromEntries(WR.map(w => [w.id, w]));
-const WORDS_PER_LINE = 10; // בדף התשובות של הבחינה בערך 10 מילים בשורה
-const wWords = t => (String(t || '').trim().match(/\S+/g) || []).length;
-const WCHK = [
-  ['c', 'פתחתי בעמדה ברורה שעונה בדיוק על מה שנשאל'],
-  ['c', 'הבאתי לפחות שני טיעונים שונים, כל אחד בפסקה משלו'],
-  ['c', 'כל טיעון מוסבר ומגובה בדוגמה או בראיה'],
-  ['c', 'הצגתי את העמדה הנגדית והתמודדתי איתה'],
-  ['c', 'הסיום מסכם ומחזק את העמדה, ולא רק חוזר עליה'],
-  ['l', 'משלב עיוני אחיד, בלי סלנג ובלי פנייה אישית לקורא'],
-  ['l', 'מילות קישור מגוונות שמראות את הקשר בין הרעיונות (אולם, לפיכך, יתרה מזאת)'],
-  ['l', 'חלוקה ברורה לפסקאות, ומשפטים שלמים שלא ארוכים מדי'],
-  ['l', 'קראתי שוב בסוף ותיקנתי כתיב, התאמה ופיסוק'],
-];
-function nextWrite() { const done = new Set(S.wr.map(x => x.id)); return WR.find(w => !done.has(w.id)) || WR[0]; }
-function writeCard() {
-  if (!WR.length) return '';
-  const last = S.wr[S.wr.length - 1], ago = last ? Math.floor((Date.now() - last.at) / 864e5) : null;
-  const due = ago == null || ago >= 3;
-  return `<h2>✍️ מטלת כתיבה</h2><div class="card"><p class="mut sm" style="margin-top:0">חלק מהציון המילולי. מומלץ פעמיים בשבוע. ${last ? `האחרונה: ${ago === 0 ? 'היום' : ago === 1 ? 'אתמול' : `לפני ${ago} ימים`}.` : 'עוד לא כתבת אף מטלה.'}</p>
-    <button class="btn ${due ? '' : 'ghost'}" onclick="go('write')">${due ? 'לכתוב מטלה (30 דקות)' : 'למטלות הכתיבה'}</button></div>`;
-}
-function write() {
-  const rows = S.wr.slice().reverse().map((x, j) => { const i = S.wr.length - 1 - j, w = wById[x.id]; return `<div class="it" onclick="go('wres',{i:${i}})"><div class="grow"><b>${esc(w ? w.title : x.id)}</b><div class="mut sm">${fmtDate(x.at)} · ${wWords(x.text)} מילים · ${mmss(x.dur)}</div></div><div class="sm">${x.gc ? `תוכן ${x.gc} · לשון ${x.gl}` : x.chk ? `בדיקה עצמית ${x.chk.filter(Boolean).length}/${WCHK.length}` : ''}</div></div>`; }).join('');
-  const n = nextWrite();
-  return `<main><h1>✍️ מטלת כתיבה</h1>
-  <div class="card"><p style="margin-top:0">בבחינה: <b>30 דקות</b>, חיבור של <b>לפחות 25 שורות</b> בסגנון עיוני. שני מעריכים נותנים ציון בשני ממדים: <b>תוכן</b> (איכות הטיעונים וחשיבה ביקורתית) ו<b>לשון</b> (בהירות, משלב אחיד ודיוק). זה לא משנה איזו עמדה בוחרים, רק כמה טוב מנמקים אותה.</p>
-  <p class="mut sm">המבנה שעובד: פתיחה עם עמדה → 2-3 טיעונים, כל אחד בפסקה עם דוגמה → העמדה הנגדית ותשובה לה → סיכום. 3-4 דקות לתכנון, 22 לכתיבה, 4 לקריאה חוזרת.</p></div>
-  ${n ? `<button class="btn big" onclick="wStart('${n.id}')">▶️ מטלה הבאה: ${esc(n.title)}</button>` : ''}
-  <h2>כל הנושאים</h2><div class="card list">${WR.map(w => { const d = S.wr.filter(x => x.id === w.id).length; return `<div class="it" onclick="wStart('${w.id}')"><div class="grow"><b>${esc(w.title)}</b></div><span class="mut sm">${d ? `✓ נכתבה${d > 1 ? ` ${d} פעמים` : ''}` : ''}</span></div>`; }).join('')}</div>
-  ${rows ? `<h2>מה שכתבת</h2><div class="card list">${rows}</div>` : ''}</main>` + navBar();
-}
-function wStart(id) {
-  if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו?')) return;
-  S.cur = { kind: 'wr', id, endAt: Date.now() + 30 * 60e3, start: Date.now(), text: '', last: Date.now() };
-  save(); go('wx');
-}
-function wPrompt(w) {
-  return `<div class="stim open"><div class="st"><span>📝 ${esc(w.title)}</span></div><div class="body">${w.background.map(p => `<p>${esc(p)}</p>`).join('')}<p><b>${esc(w.task)}</b></p></div></div>`;
-}
-function wCount(t) { const n = wWords(t), l = Math.ceil(n / WORDS_PER_LINE); return `${n} מילים · כ-${l} שורות ${l >= 25 ? '✅' : `(עוד כ-${25 - l} שורות למינימום)`}`; }
-function wx() {
-  const X = S.cur, w = wById[X.id], left = (X.endAt - Date.now()) / 1000;
-  return `<div class="xtop"><span class="timer ${left < 300 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">מטלת כתיבה</span><button class="icb" onclick="wDone(1)">הגשה</button></div>
-  <main>${wPrompt(w)}
-  <textarea id="wt" class="txt" style="min-height:52vh;line-height:1.8;font-size:16px;resize:vertical" placeholder="כותבים כאן. הטקסט נשמר כל הזמן, גם אם סוגרים את הדף." oninput="S.cur.text=this.value;document.getElementById('wc').textContent=wCount(this.value);save()">${esc(X.text)}</textarea>
-  <div class="mut sm" id="wc">${wCount(X.text)}</div>
-  <button class="btn" style="margin-top:14px" onclick="wDone(1)">סיום והגשה</button>
-  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></main>`;
-}
-function wDone(ask) {
-  const X = S.cur; if (!X) return;
-  const el = document.getElementById('wt'); if (el) X.text = el.value;
-  if (ask && !confirm(Math.ceil(wWords(X.text) / WORDS_PER_LINE) < 25 ? 'החיבור קצר מ-25 שורות, ובבחינה זה פוגע בציון. להגיש בכל זאת?' : 'להגיש את החיבור?')) return;
-  S.wr.push({ id: X.id, at: Date.now(), text: X.text, dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000), chk: WCHK.map(() => 0) });
-  delete S.cur; save(); go('wres', { i: S.wr.length - 1 });
-}
-function wScore(chk, d) { const idx = WCHK.map((c, i) => c[0] === d ? i : -1).filter(i => i >= 0); const k = idx.filter(i => chk[i]).length; return Math.max(1, Math.round(1 + 5 * k / idx.length)); }
-function feedbackPrompt(x, w) {
-  return `אתה מעריך מנוסה של מטלת הכתיבה בבחינה הפסיכומטרית של מאל״ו. הערך את החיבור שלמטה לפי שני הממדים הרשמיים, כל אחד בסולם 1-6:
-- תוכן: עושר ואיכות הטיעונים, עמדה ברורה, דוגמאות, התמודדות עם עמדה נגדית, חשיבה ביקורתית וארגון.
-- לשון: בהירות הניסוח, משלב עיוני אחיד, מילות קישור, תקינות לשונית (כתיב, התאמה, תחביר, פיסוק).
-החיבור נכתב ב-30 דקות בבחינה, ולכן לא מצופה ממנו להיות מאמר מושלם. הדרישה: לפחות 25 שורות.
-
-תחזיר בעברית:
-1. ציון תוכן וציון לשון, עם נימוק קצר לכל אחד.
-2. שלושה דברים טובים בחיבור.
-3. שלושת השיפורים הכי חשובים, ולכל אחד דוגמה מתוך החיבור וניסוח מתוקן.
-4. רשימת שגיאות הלשון עם התיקון.
-5. מה לעשות אחרת במטלה הבאה, במשפט אחד.
-
-הנושא: ${w.title}
-${w.background.join(' ')}
-${w.task}
-
-החיבור (${wWords(x.text)} מילים, נכתב ב-${mmss(x.dur)} דקות):
-${x.text}`;
-}
-function wres() {
-  const x = S.wr[arg.i], w = wById[x.id]; if (!w) return write();
-  const sc = wScore(x.chk, 'c'), sl = wScore(x.chk, 'l');
-  const chk = WCHK.map(([d, t], i) => `<label style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)"><input type="checkbox" style="width:20px;height:20px;flex:none;margin-top:2px" ${x.chk[i] ? 'checked' : ''} onchange="S.wr[${arg.i}].chk[${i}]=this.checked?1:0;save();render()"><span><span class="tag">${d === 'c' ? 'תוכן' : 'לשון'}</span> ${t}</span></label>`).join('');
-  const sel = (k, v) => `<select class="txt" style="width:auto;display:inline-block;margin:0 6px" onchange="S.wr[${arg.i}].${k}=+this.value||0;save()"><option value="0">—</option>${[1, 2, 3, 4, 5, 6].map(n => `<option ${v === n ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
-  const lines = Math.ceil(wWords(x.text) / WORDS_PER_LINE);
-  return `<main><h1>✍️ ${esc(w.title)}</h1><p class="mut">${wWords(x.text)} מילים · כ-${lines} שורות ${lines >= 25 ? '✅' : '⚠️ פחות מ-25'} · ${mmss(x.dur)}</p>
-  <h2>1. לקבל משוב וציון</h2><div class="card"><p style="margin-top:0">מעתיקים, מדביקים ב-ChatGPT או ב-Claude, ומקבלים ציון תוכן ולשון לפי הקריטריונים של מאל״ו, יחד עם תיקונים.</p>
-  <button class="btn blue" onclick="wCopy(${arg.i})">📋 העתקת החיבור עם הנחיות המשוב</button>
-  <p class="sm" style="margin-bottom:0">הציון שקיבלת: תוכן ${sel('gc', x.gc)} לשון ${sel('gl', x.gl)}</p></div>
-  <h2>2. בדיקה עצמית</h2><div class="card">${chk}<p style="margin-bottom:0"><b>הערכה עצמית: תוכן ${sc}/6 · לשון ${sl}/6</b></p></div>
-  <h2>3. חיבור לדוגמה</h2><div class="card"><details><summary style="font-weight:700;color:var(--b);cursor:pointer">להציג את החיבור לדוגמה</summary>${w.model.map(p => `<p>${esc(p)}</p>`).join('')}
-  <div class="exp"><h4>למה הוא חזק</h4>${w.notes.map(n => `• ${esc(n)}`).join('<br>')}</div></details></div>
-  <div class="card"><details><summary class="mut" style="cursor:pointer">רעיונות לטיעונים בנושא</summary><p><b>בעד:</b> ${w.ideas.for.map(esc).join(' · ')}</p><p><b>נגד:</b> ${w.ideas.against.map(esc).join(' · ')}</p></details></div>
-  <div class="card"><details><summary class="mut" style="cursor:pointer">מה שכתבת</summary><p style="white-space:pre-wrap">${esc(x.text)}</p></details></div>
-  <button class="btn ghost" onclick="go('write')">חזרה למטלות</button></main>` + navBar();
-}
-function wCopy(i) {
-  const x = S.wr[i], t = feedbackPrompt(x, wById[x.id]);
-  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('הועתק ✓ עכשיו להדביק ב-ChatGPT או ב-Claude'), () => {
-    const m = document.createElement('div'); m.className = 'modal'; m.onclick = e => { if (e.target === m) m.remove(); };
-    m.innerHTML = `<div class="sheet"><h3>להעתיק ידנית</h3><textarea class="txt" rows="12">${esc(t)}</textarea><button class="btn blue" onclick="this.closest('.modal').remove()">סגירה</button></div>`;
-    document.body.appendChild(m); m.querySelector('textarea').select();
-  });
-}
-
-document.addEventListener('visibilitychange', () => { if (S.cur) { S.cur.last = Date.now(); save(); } });
+try { localStorage.removeItem('pd1'); } catch (e) { } // הגרסה הקודמת עם שאלות שלא ממאל״ו
 render();
