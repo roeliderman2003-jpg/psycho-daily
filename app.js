@@ -89,6 +89,47 @@ const expHtml = t => esc(t).replace(/\n/g, '<br>');
 const EXP_NOTE = 'ההסברים נכתבו לפי המפתח הרשמי של מאל״ו. מאל״ו לא מפרסמים הסברים לבחינות, רק את המפתח.';
 const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + ((x && x === +key[i]) || isVoid(k, i + 1) ? 1 : 0), 0) : null; };
 const done = () => CH.filter(x => first(x.key));
+
+// ===== אומדן הציון: הטבלאות הרשמיות שבסוף כל בחינה של מאל״ו (מוצפנות ב-sol.js) =====
+// כמו אצל מאל״ו: תשובות נכונות בשני הפרקים של תחום → ציון תחום (50 עד 150) לפי הטבלה של אותה בחינה,
+// ממוצע מילולי וכמותי (דו-תחומי) → טווח הציון הכללי. מטלת הכתיבה לא נכללת באומדן, גם אצל מאל״ו.
+const scaleOf = id => SOL[`${id}:scale`] || null;
+function domScore(e, d) {
+  const t = scaleOf(e.id); if (!t) return null;
+  const cs = CH.filter(x => x.e === e && x.c.domain === d), got = cs.filter(x => first(x.key) && keyOf(x.key));
+  if (!got.length) return null;
+  const raw = got.reduce((n, x) => n + scored(x.key), 0), n = got.reduce((s, x) => s + x.c.questions, 0), max = cs.reduce((s, x) => s + x.c.questions, 0);
+  const full = got.length === cs.length, tab = d === 'verbal' ? t.v : t.q;
+  // פרק אחד מתוך שניים: מכפילים את אחוז הנכונות לכל התחום (הערכה זמנית, מסומנת *) עד שהפרק השני נעשה
+  return { s: tab[Math.min(tab.length - 1, full ? raw : Math.round(raw * max / n))], raw, n, full };
+}
+function genScore(t, w) { // ציון משוקלל → שורת הטבלה של מאל״ו (טווח) + המקום בתוך הטווח לפי המשוקלל
+  const g = t.g.find(r => w <= r[1]) || t.g[t.g.length - 1];
+  const est = g[1] === g[0] ? g[2] : Math.round(g[2] + (Math.max(w, g[0]) - g[0]) / (g[1] - g[0]) * (g[3] - g[2]));
+  const p = t.p.find(r => est <= r[1]) || t.p[t.p.length - 1];
+  return { lo: g[2], hi: g[3], est, below: p[2] };
+}
+function examScore(e) {
+  const t = scaleOf(e.id); if (!t) return null;
+  const V = domScore(e, 'verbal'), Q = domScore(e, 'quant');
+  const G = V && Q ? genScore(t, (V.s + Q.s) / 2) : null;
+  return { V, Q, G, full: !!(V && Q && V.full && Q.full), VE: G && genScore(t, (3 * V.s + Q.s) / 4), QE: G && genScore(t, (3 * Q.s + V.s) / 4) };
+}
+const lastAt = e => Math.max(0, ...CH.filter(x => x.e === e && first(x.key)).map(x => first(x.key).at));
+const scoredExams = () => EX.map(e => ({ e, sc: examScore(e), at: lastAt(e) })).filter(x => x.sc && x.sc.G).sort((a, b) => a.at - b.at);
+function scoreCard(e) {
+  const sc = examScore(e);
+  if (!sc) return `<div class="card" style="margin-top:12px"><b>הציון המשוער לפי מאל״ו</b><p class="sm" style="margin:4px 0 8px">${locked() ? 'האומדן מחושב באפליקציה אחרי שפותחים את המפתחות עם קוד הגישה.' : 'לבחינה הזו עוד אין באפליקציה את טבלת ההמרה של מאל״ו.'} בסוף הקובץ יש את הטבלה הרשמית${e.scorePages ? `, <b>בעמודים ${e.scorePages[0]} עד ${e.scorePages[1]}</b>` : ''}. בשביל ציון בתחום צריך את שני הפרקים של אותו תחום מאותה בחינה.</p>${e.scorePages ? link(pdf(e, e.scorePages[0]), '📄 לטבלת הציונים של מאל״ו') : link(NITE_SCORES, 'ציונים באתר מאל״ו ↗')}</div>`;
+  const { V, Q, G } = sc;
+  const dk = (d, x) => `<div class="kpi"><b>${x ? x.s + (x.full ? '' : '*') : '—'}</b><span>${DOM[d]}${x ? ` · ${x.raw}/${x.n} נכון` : ''}</span></div>`;
+  const left = CH.filter(x => x.e === e && !first(x.key));
+  return `<div class="card" style="margin-top:12px"><b>הציון המשוער ב${esc(e.title)}, לפי הטבלאות של מאל״ו</b>
+  ${G ? `<div class="big-score" style="font-size:40px">${G.est}${sc.full ? '' : '*'}</div><div style="text-align:center" class="sm">טווח האומדן של מאל״ו: <b>${G.lo} עד ${G.hi}</b> · כ-${G.below}% מהנבחנים קיבלו פחות</div>` : ''}
+  <div class="kpis">${dk('verbal', V)}${dk('quant', Q)}<div class="kpi"><b>${G ? G.est + (sc.full ? '' : '*') : '—'}</b><span>כללי</span></div></div>
+  ${G ? `<p class="mut sm" style="margin:0 0 6px">בדגש מילולי: ${sc.VE.est} · בדגש כמותי: ${sc.QE.est}</p>` : ''}
+  <p class="sm" style="margin:4px 0 8px">${sc.full ? 'זה האומדן הרשמי של מאל״ו לבחינה הזו: נכונות בשני הפרקים של כל תחום, ציון תחום מהטבלה של הבחינה, והטווח הכללי מהממוצע של שני התחומים. המספר הגדול הוא המקום בתוך הטווח.' : `* זמני: ${left.length} ${left.length === 1 ? 'פרק' : 'פרקים'} מהבחינה הזו עוד לא נעשו. בתחום שנעשה בו רק פרק אחד, אחוז הנכונות הוכפל לשני הפרקים והומר בטבלה של מאל״ו. ${G ? '' : 'ציון כללי מופיע אחרי פרק מכל תחום. '}האומדן נהיה רשמי כשכל ארבעת הפרקים נעשו.`} נספר הניסיון הראשון בכל פרק, כמו בבחינה. מאל״ו לא כוללים את מטלת הכתיבה באומדן.</p>
+  ${left.length ? `<div class="row">${left.slice(0, 1).map(x => `<button class="btn blue" onclick="go('home',{pick:'${x.key}'})">לפרק הבא בבחינה הזו</button>`).join('')}</div>` : ''}</div>`;
+}
 const todayCh = () => CH.find(x => !first(x.key)) || null;
 function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
 function streak() {
@@ -136,6 +177,11 @@ function home() {
     <div style="font-size:30px;font-weight:800;margin:4px 0">${dl > 0 ? `עוד ${dl} ימים` : dl === 0 ? 'הבחינה היום 💪' : 'הבחינה עברה'}</div>
     <div class="mut sm">${CH.length} פרקים אמיתיים מ-${EX.length} בחינות של מאל״ו</div></div>
     <div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${p(pv)}</b><span>נכון במילולי</span></div><div class="kpi"><b>${p(pq)}</b><span>נכון בכמותי</span></div></div>`;
+  const se = scoredExams(), ls = se[se.length - 1];
+  if (ls) h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>הציון המשוער האחרון</b><span class="mut sm">${esc(ls.e.title)}${ls.sc.full ? '' : ' · זמני*'}</span></div>
+    <div class="big-score" style="font-size:40px">${ls.sc.G.est}</div><div style="text-align:center" class="sm">טווח מאל״ו ${ls.sc.G.lo} עד ${ls.sc.G.hi} · מילולי ${ls.sc.V.s} · כמותי ${ls.sc.Q.s}</div>
+    ${se.length > 1 ? `<p class="mut sm" style="margin:8px 0 0">לפני: ${se.slice(-4, -1).map(y => `${esc(y.e.title)} ${y.sc.G.est}${y.sc.full ? '' : '*'}`).join(' · ')}</p>` : ''}
+    <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו לאותה בחינה. נקודת הפתיחה: 620.</p></div>`;
   if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
   else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
   if (locked()) h += codeCard();
@@ -225,7 +271,7 @@ function result() {
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
-  <div class="card" style="margin-top:12px"><b>הציון המשוער לפי מאל״ו</b><p class="sm" style="margin:4px 0 8px">בסוף הקובץ יש טבלה רשמית שממירה את מספר התשובות הנכונות לציון משוער${e.scorePages ? `, <b>בעמודים ${e.scorePages[0]} עד ${e.scorePages[1]}</b>` : ''}. בשביל ציון בתחום צריך את שני הפרקים של אותו תחום מאותה בחינה.</p>${e.scorePages ? link(pdf(e, e.scorePages[0]), '📄 לטבלת הציונים של מאל״ו') : link(NITE_SCORES, 'ציונים באתר מאל״ו ↗')}</div>
+  ${scoreCard(e)}
   <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו${hasExp ? '. לוחצים על שאלה כדי לראות את ההסבר.' : ''}</p><div class="rgrid">${grid}</div>
   ${c.sections && c.sections.length ? `<h2>לפי סוג שאלה</h2><div class="card">${breakdown(items, y => y.type, t => TYPE_HE[t] || t)}</div>` : ''}
   ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
@@ -242,6 +288,7 @@ function stats() {
   const weakT = Object.entries(A.reduce((g, x) => { if (x.type) { (g[x.type] = g[x.type] || { n: 0, ok: 0 }); g[x.type].n++; g[x.type].ok += x.ok; } return g; }, {})).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n)[0];
   const g = weakT ? GUIDES.find(z => z[3] === weakT[0]) : null;
   return `<main><h1>🎯 חוזקות וחולשות</h1><p class="mut sm" style="margin-top:-6px">מהניסיון הראשון בכל פרק, מול מפתח התשובות של מאל״ו (${A.length} שאלות).</p>
+  ${(se => se.length ? `<h2>ציון משוער לפי בחינה</h2><div class="card list">${se.slice().reverse().map(y => `<div class="it" onclick="go('result',{key:'${CH.find(z => z.e === y.e && first(z.key)).key}'})"><div class="grow"><b>${esc(y.e.title)}</b><div class="mut sm">מילולי ${y.sc.V.s} · כמותי ${y.sc.Q.s} · טווח ${y.sc.G.lo} עד ${y.sc.G.hi}</div></div><b style="font-size:20px">${y.sc.G.est}${y.sc.full ? '' : '*'}</b></div>`).join('')}</div><p class="mut sm" style="margin-top:-4px">* זמני: לא כל ארבעת הפרקים של הבחינה נעשו.</p>` : '')(scoredExams())}
   <h2>לפי תחום</h2><div class="card">${breakdown(A, x => x.c.domain, d => DOM[d])}</div>
   <h2>לפי סוג שאלה</h2><div class="card">${breakdown(A, x => x.type, t => TYPE_HE[t] || t)}</div>
   ${g ? `<div class="card"><b>הכי חלש כרגע: ${TYPE_HE[weakT[0]]}</b><p class="sm" style="margin:4px 0 8px">לסוג הזה יש למאל״ו קובץ רשמי עם דוגמאות והסברים.</p>${link(g[2], '📘 ' + g[1])}</div>` : ''}
@@ -330,7 +377,7 @@ function settings() {
   return `<main><h1>⚙️ הגדרות</h1><div class="card"><b>תאריך הבחינה</b>
   <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';save();render()">${l}</button>`).join('')}</div>
   <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;save();render()"></div>
-  ${window.SOLX ? `<div class="card"><b>מפתחות והסברים</b><p class="mut sm" style="margin:4px 0 8px">${locked() ? 'נעולים. צריך את קוד הגישה פעם אחת במכשיר.' : `פתוחים ✓ (${Object.keys(SOL).length} פרקים)`}</p>${locked() ? codeInput() : ''}</div>` : ''}
+  ${window.SOLX ? `<div class="card"><b>מפתחות והסברים</b><p class="mut sm" style="margin:4px 0 8px">${locked() ? 'נעולים. צריך את קוד הגישה פעם אחת במכשיר.' : `פתוחים ✓ (${Object.keys(SOL).filter(k => !k.endsWith(':scale')).length} פרקים, טבלאות ציון ל-${Object.keys(SOL).filter(k => k.endsWith(':scale')).length} בחינות)`}</p>${locked() ? codeInput() : ''}</div>` : ''}
   <div class="card"><b>גיבוי והעברה למכשיר אחר</b><p class="mut sm">ההתקדמות נשמרת בדפדפן של המכשיר הזה. כדי להעביר: מעתיקים את הקוד ומדביקים אותו במכשיר השני.</p>
   <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
   <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו. השאלות נפתחות מהאתר שלהם, והמפתחות שמורים כאן מוצפנים. ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
