@@ -27,10 +27,49 @@ async function unseal(pass) {
 }
 async function setCode(v) {
   v = String(v || '').trim(); if (!v) return;
-  if (await unseal(v)) { try { localStorage.setItem(PK, v); } catch (e) { } toast('המפתחות וההסברים נפתחו ✓'); render(); }
+  if (await unseal(v)) { try { localStorage.setItem(PK, v); } catch (e) { } toast('המפתחות וההסברים נפתחו ✓'); render(); cloudInit(v); }
   else toast('הקוד לא נכון');
 }
-function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } }
+function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } cloudSoon(); }
+
+// ===== שמירה בענן: כל ההתקדמות נשמרת גם בשרת, ומתמזגת בין מכשירים. המזהה נגזר מקוד הגישה =====
+const CLOUD = { url: 'https://jezxhibenekurxymwxrb.supabase.co', key: 'sb_publishable_xGZcm2vZSZFN-mesHdnArg_vxRKIh3S' };
+let cloudId = null, cloudAt = null, cloudErr = false, cloudT = null;
+async function cloudRpc(fn, body) {
+  const r = await fetch(`${CLOUD.url}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: CLOUD.key, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(fn + ' ' + r.status);
+  const j = await r.json(); if (j && j.error) throw new Error(fn + ' ' + j.error); return j;
+}
+async function cloudInit(pass) {
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('psycho-daily:' + pass));
+  cloudId = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
+  await cloudSync();
+}
+// איחוד: ניסיונות לפי זמן (הראשון בכל פרק נשאר הראשון), מפתחות/תיקונים/קבצים שנקראו לפי מפתח, כתיבה לפי זמן
+function mergeS(a, b) {
+  if (!b || typeof b !== 'object') return false;
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate]);
+  for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
+  a.keys = { ...(b.keys || {}), ...a.keys }; a.fix = { ...(b.fix || {}), ...a.fix }; a.read = { ...(b.read || {}), ...a.read };
+  const wa = new Set(a.wr.map(x => x.at)); a.wr = a.wr.concat((b.wr || []).filter(x => !wa.has(x.at))).sort((x, y) => x.at - y.at);
+  if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate]);
+}
+async function cloudSync() { // מושכים, ממזגים, ושומרים את האיחוד. ככה מכשיר שנשאר פתוח לא מוחק את מה שנעשה במכשיר אחר
+  if (!cloudId) return;
+  try {
+    const got = await cloudRpc('psycho_load', { p_id: cloudId });
+    const changed = mergeS(S, got.data);
+    try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { }
+    const { cur, ...data } = S;
+    const r = await cloudRpc('psycho_save', { p_id: cloudId, p_data: data });
+    cloudAt = r.at || new Date().toISOString(); cloudErr = false;
+    if (changed && !['exam', 'wx'].includes(view)) reRender(); else if (['home', 'settings'].includes(view)) reRender();
+  } catch (e) { cloudErr = true; if (['home', 'settings'].includes(view)) reRender(); }
+}
+const reRender = () => { const y = scrollY; render(); scrollTo(0, y); };
+function cloudSoon() { if (!cloudId) return; clearTimeout(cloudT); cloudT = setTimeout(cloudSync, 1500); }
+const cloudLine = () => cloudId ? (cloudErr ? '⚠️ השמירה בענן נכשלה, ננסה שוב. בינתיים נשמר במכשיר.' : cloudAt ? `☁️ נשמר בענן · ${new Date(cloudAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : '☁️ מתחבר לענן…') : '';
 
 const EX = (window.EXAMS || []);
 const DOM = { verbal: 'מילולי', quant: 'כמותי' };
@@ -192,7 +231,7 @@ function home() {
   const last = done().slice(-3).reverse();
   if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chRow).join('')}</div>`;
   h += `<div class="card"><b>מאל״ו:</b> <span class="sm">הציון מחושב רק לפי התשובות הנכונות, ואין הפחתת נקודות על תשובה שגויה. השאירו כדקה בסוף הפרק כדי לסמן תשובה בכל שאלה שלא הגעתם אליה.</span> ${link(NITE_TIPS, 'כל ההנחיות לנבחנים ↗', 'sm')}</div>
-    <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button></main>` + navBar();
+    <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button>${cloudId ? `<p class="mut sm" style="text-align:center">${cloudLine()}</p>` : ''}</main>` + navBar();
   return h;
 }
 function all() {
@@ -377,10 +416,11 @@ function wres() {
 // ===== הגדרות וגיבוי =====
 function settings() {
   return `<main><h1>⚙️ הגדרות</h1><div class="card"><b>תאריך הבחינה</b>
-  <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';save();render()">${l}</button>`).join('')}</div>
-  <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;save();render()"></div>
+  <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';S.examDateAt=Date.now();save();render()">${l}</button>`).join('')}</div>
+  <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;S.examDateAt=Date.now();save();render()"></div>
   ${window.SOLX ? `<div class="card"><b>מפתחות והסברים</b><p class="mut sm" style="margin:4px 0 8px">${locked() ? 'נעולים. צריך את קוד הגישה פעם אחת במכשיר.' : `פתוחים ✓ (${Object.keys(SOL).filter(k => !k.endsWith(':scale')).length} פרקים, טבלאות ציון ל-${Object.keys(SOL).filter(k => k.endsWith(':scale')).length} בחינות)`}</p>${locked() ? codeInput() : ''}</div>` : ''}
-  <div class="card"><b>גיבוי והעברה למכשיר אחר</b><p class="mut sm">ההתקדמות נשמרת בדפדפן של המכשיר הזה. כדי להעביר: מעתיקים את הקוד ומדביקים אותו במכשיר השני.</p>
+  <div class="card"><b>שמירה בענן</b><p class="sm" style="margin:4px 0 8px">${cloudId ? `כל פרק, מפתח וטעות שתוקנה נשמרים בענן ומתמזגים בין מכשירים. כל מכשיר שנפתח עם קוד הגישה רואה את אותה התקדמות.<br>${cloudLine()}` : 'נדלקת אחרי שפותחים את המפתחות עם קוד הגישה. עד אז ההתקדמות נשמרת רק במכשיר הזה.'}</p>${cloudId ? '<button class="btn ghost" onclick="cloudSync().then(render)">לסנכרן עכשיו</button>' : ''}</div>
+  <div class="card"><b>גיבוי ידני</b><p class="mut sm">קוד גיבוי של כל ההתקדמות, למקרה הצורך. מעתיקים, ומדביקים במכשיר אחר כדי לטעון.</p>
   <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
   <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו. השאלות נפתחות מהאתר שלהם, והמפתחות שמורים כאן מוצפנים. ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
@@ -403,6 +443,7 @@ render();
   let p = null; const m = location.hash.match(/k=([\w-]+)/);
   if (m) { p = m[1]; history.replaceState(null, '', location.pathname + location.search); }
   if (!p) try { p = localStorage.getItem(PK); } catch (e) { }
-  if (p && await unseal(p)) { try { localStorage.setItem(PK, p); } catch (e) { } render(); }
+  if (p && await unseal(p)) { try { localStorage.setItem(PK, p); } catch (e) { } render(); cloudInit(p); }
   else if (m) toast('הקוד בקישור לא נכון');
 })();
+addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(); else if (cloudT) { clearTimeout(cloudT); cloudSync(); } });
