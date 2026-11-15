@@ -98,7 +98,9 @@ function domScore(e, d) {
   const t = scaleOf(e.id); if (!t) return null;
   const cs = CH.filter(x => x.e === e && x.c.domain === d), got = cs.filter(x => first(x.key) && keyOf(x.key));
   if (!got.length) return null;
-  const raw = got.reduce((n, x) => n + scored(x.key), 0), n = got.reduce((s, x) => s + x.c.questions, 0), max = cs.reduce((s, x) => s + x.c.questions, 0);
+  // שאלה שמאל״ו ביטלו לא נספרת בכלל (גם הטבלה שלהם קצרה בשורה), בניגוד ל«נכון» שמוצג בפרק
+  const nv = x => (SOL[x.key] && SOL[x.key].v || []).length;
+  const raw = got.reduce((n, x) => n + scored(x.key) - nv(x), 0), n = got.reduce((s, x) => s + x.c.questions - nv(x), 0), max = cs.reduce((s, x) => s + x.c.questions - nv(x), 0);
   const full = got.length === cs.length, tab = d === 'verbal' ? t.v : t.q;
   // פרק אחד מתוך שניים: מכפילים את אחוז הנכונות לכל התחום (הערכה זמנית, מסומנת *) עד שהפרק השני נעשה
   return { s: tab[Math.min(tab.length - 1, full ? raw : Math.round(raw * max / n))], raw, n, full };
@@ -288,7 +290,7 @@ function stats() {
   const weakT = Object.entries(A.reduce((g, x) => { if (x.type) { (g[x.type] = g[x.type] || { n: 0, ok: 0 }); g[x.type].n++; g[x.type].ok += x.ok; } return g; }, {})).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n)[0];
   const g = weakT ? GUIDES.find(z => z[3] === weakT[0]) : null;
   return `<main><h1>🎯 חוזקות וחולשות</h1><p class="mut sm" style="margin-top:-6px">מהניסיון הראשון בכל פרק, מול מפתח התשובות של מאל״ו (${A.length} שאלות).</p>
-  ${(se => se.length ? `<h2>ציון משוער לפי בחינה</h2><div class="card list">${se.slice().reverse().map(y => `<div class="it" onclick="go('result',{key:'${CH.find(z => z.e === y.e && first(z.key)).key}'})"><div class="grow"><b>${esc(y.e.title)}</b><div class="mut sm">מילולי ${y.sc.V.s} · כמותי ${y.sc.Q.s} · טווח ${y.sc.G.lo} עד ${y.sc.G.hi}</div></div><b style="font-size:20px">${y.sc.G.est}${y.sc.full ? '' : '*'}</b></div>`).join('')}</div><p class="mut sm" style="margin-top:-4px">* זמני: לא כל ארבעת הפרקים של הבחינה נעשו.</p>` : '')(scoredExams())}
+  ${(se => se.length ? `<h2>ציון משוער לפי בחינה</h2><div class="card list">${se.slice().reverse().map(y => `<div class="it" onclick="go('result',{key:'${CH.find(z => z.e === y.e && first(z.key)).key}'})"><div class="grow"><b>${esc(y.e.title)}</b><div class="mut sm">מילולי ${y.sc.V.s} · כמותי ${y.sc.Q.s} · טווח ${y.sc.G.lo} עד ${y.sc.G.hi}</div></div><b style="font-size:20px">${y.sc.G.est}${y.sc.full ? '' : '*'}</b></div>`).join('')}</div>${se.some(y => !y.sc.full) ? '<p class="mut sm" style="margin-top:-4px">* זמני: לא כל ארבעת הפרקים של הבחינה נעשו.</p>' : ''}` : '')(scoredExams())}
   <h2>לפי תחום</h2><div class="card">${breakdown(A, x => x.c.domain, d => DOM[d])}</div>
   <h2>לפי סוג שאלה</h2><div class="card">${breakdown(A, x => x.type, t => TYPE_HE[t] || t)}</div>
   ${g ? `<div class="card"><b>הכי חלש כרגע: ${TYPE_HE[weakT[0]]}</b><p class="sm" style="margin:4px 0 8px">לסוג הזה יש למאל״ו קובץ רשמי עם דוגמאות והסברים.</p>${link(g[2], '📘 ' + g[1])}</div>` : ''}

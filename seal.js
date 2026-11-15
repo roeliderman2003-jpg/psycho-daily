@@ -20,7 +20,9 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith(
   });
   // טבלאות אומדן הציון של מאל״ו לבחינה (מסוף הקובץ): גלם → ציון תחום, משוקלל → ציון כללי, ציון → אחוזון
   if (s.scale) {
-    const t = s.scale, nv = e.chapters.filter(c => c.domain === 'verbal').reduce((a, c) => a + c.questions, 0), nqn = e.chapters.filter(c => c.domain === 'quant').reduce((a, c) => a + c.questions, 0);
+    // שאלה שמאל״ו ביטלו יוצאת מהספירה, ולכן הטבלה של התחום קצרה בשורה
+    const cnt = d => e.chapters.reduce((a, c, i) => a + (c.domain === d ? c.questions - ((s.chapters[i] || {}).void || []).length : 0), 0);
+    const t = s.scale, nv = cnt('verbal'), nqn = cnt('quant');
     const mono = a => a.every((x, i) => !i || x >= a[i - 1]);
     if (!Array.isArray(t.v) || t.v.length !== nv + 1 || !mono(t.v) || t.v[0] !== 50 || t.v[nv] !== 150) errs.push(`${f}: טבלת מילולי לא תקינה (צריך ${nv + 1} ערכים מ-50 עד 150)`);
     if (!Array.isArray(t.q) || t.q.length !== nqn + 1 || !mono(t.q) || t.q[0] !== 50 || t.q[nqn] !== 150) errs.push(`${f}: טבלת כמותי לא תקינה (צריך ${nqn + 1} ערכים מ-50 עד 150)`);
