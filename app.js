@@ -11,6 +11,7 @@ S.keys = S.keys || {};  // מפתח פרק -> מחרוזת התשובות הנכ
 S.fix = S.fix || {};    // "מפתח:מספר שאלה" -> true כשטעות נפתרה נכון בניסיון חוזר
 S.wr = S.wr || [];      // מטלות כתיבה: {src, at, text, dur, gc, gl}
 S.read = S.read || {};  // קובצי הדרכה של מאל״ו שסומנו כנקראו
+S.prac = S.prac || {};  // תרגול חופשי בלי שעון: מפתח פרק -> {at, ans[]}. לא נכנס לציון ולא ל«טעויות»
 S.examDate = S.examDate || '2026-12-04';
 // מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
 let SOL = {};
@@ -48,12 +49,14 @@ async function cloudInit(pass) {
 // איחוד: ניסיונות לפי זמן (הראשון בכל פרק נשאר הראשון), מפתחות/תיקונים/קבצים שנקראו לפי מפתח, כתיבה לפי זמן
 function mergeS(a, b) {
   if (!b || typeof b !== 'object') return false;
-  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate]);
+  a.prac = a.prac || {};
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac]);
   for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
   a.keys = { ...(b.keys || {}), ...a.keys }; a.fix = { ...(b.fix || {}), ...a.fix }; a.read = { ...(b.read || {}), ...a.read };
   const wa = new Set(a.wr.map(x => x.at)); a.wr = a.wr.concat((b.wr || []).filter(x => !wa.has(x.at))).sort((x, y) => x.at - y.at);
+  for (const [k, v] of Object.entries(b.prac || {})) if (v && (!a.prac[k] || (v.at || 0) > (a.prac[k].at || 0))) a.prac[k] = v; // בתרגול חופשי: הגרסה האחרונה של הפרק
   if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
-  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate]);
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac]);
 }
 async function cloudSync() { // מושכים, ממזגים, ושומרים את האיחוד. ככה מכשיר שנשאר פתוח לא מוחק את מה שנעשה במכשיר אחר
   if (!cloudId) return;
@@ -171,7 +174,7 @@ function scoreCard(e) {
   <p class="sm" style="margin:4px 0 8px">${sc.full ? 'זה האומדן הרשמי של מאל״ו לבחינה הזו: נכונות בשני הפרקים של כל תחום, ציון תחום מהטבלה של הבחינה, והטווח הכללי מהממוצע של שני התחומים. המספר הגדול הוא המקום בתוך הטווח.' : `* זמני: ${left.length} ${left.length === 1 ? 'פרק' : 'פרקים'} מהבחינה הזו עוד לא נעשו. בתחום שנעשה בו רק פרק אחד, אחוז הנכונות הוכפל לשני הפרקים והומר בטבלה של מאל״ו. ${G ? '' : 'ציון כללי מופיע אחרי פרק מכל תחום. '}האומדן נהיה רשמי כשכל ארבעת הפרקים נעשו.`} נספר הניסיון הראשון בכל פרק, כמו בבחינה. מאל״ו לא כוללים את מטלת הכתיבה באומדן.</p>
   ${left.length ? `<div class="row">${left.slice(0, 1).map(x => `<button class="btn blue" onclick="go('home',{pick:'${x.key}'})">לפרק הבא בבחינה הזו</button>`).join('')}</div>` : ''}</div>`;
 }
-const todayCh = () => CH.find(x => !first(x.key)) || null;
+const todayCh = () => CH.find(x => !first(x.key) && !S.prac[x.key]) || CH.find(x => !first(x.key)) || null; // פרק שתורגל חופשי כבר לא טרי לפרק בזמן
 function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
 function streak() {
   const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.wr.forEach(x => days.add(dayKey(x.at)));
@@ -192,14 +195,14 @@ function navBar() {
 function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
-  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry }[view] || home;
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free }[view] || home;
   $app.innerHTML = f();
   if (view === 'exam' || view === 'wx') startTick();
 }
 const chTitle = x => `${x.e.title} · ${x.c.label || DOM[x.c.domain]}`;
 function chRow(x) {
   const a = first(x.key), sc = scored(x.key);
-  const right = a ? (sc != null ? `<b>${sc}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>') + ` <span class="mut sm">${fmtDate(a.at)}</span>` : '<span class="mut sm">עוד לא נעשה</span>';
+  const right = a ? (sc != null ? `<b>${sc}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>') + ` <span class="mut sm">${fmtDate(a.at)}</span>` : S.prac[x.key] ? '<span class="mut sm">🧘 תורגל חופשי</span>' : '<span class="mut sm">עוד לא נעשה</span>';
   return `<div class="it" onclick="${a ? `go('${keyOf(x.key) ? 'result' : 'keyin'}',{key:'${x.key}'})` : `go('home',{pick:'${x.key}'})`}"><span class="tag ${x.c.domain[0]}">${DOM[x.c.domain]}</span><div class="grow"><b>${esc(x.e.title)}</b><div class="mut sm">${esc(x.c.label || '')} · ${x.c.questions} שאלות · ${x.c.minutes} דק׳</div></div><div>${right}</div></div>`;
 }
 function chCard(x) {
@@ -207,7 +210,8 @@ function chCard(x) {
   return `<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:17px">${esc(e.title)}</b></div>
     <p class="mut sm" style="margin:2px 0 10px">${esc(c.label || '')} · ${c.questions} שאלות · ${c.minutes} דקות · <b>עמודים ${c.page} עד ${c.endPage} בקובץ</b>${c.printed ? ` (בדף: ${c.printed})` : ''}</p>
     <div class="row">${link(pdf(e, c.page), '📄 לפתוח את הפרק')}<button class="btn" onclick="startChap('${x.key}')">▶️ טיימר ודף תשובות</button></div>
-    <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
+    <button class="btn ghost" style="margin-top:8px" onclick="go('free',{key:'${x.key}'})">🧘 תרגול חופשי, בלי שעון</button>
+    <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה. בתרגול חופשי אין שעון, ורואים מיד אחרי כל שאלה אם צדקת.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
 }
 function home() {
   const dl = daysLeft(), st = streak(), A = answered();
@@ -235,7 +239,7 @@ function home() {
   return h;
 }
 function all() {
-  return `<main><h1>📚 הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית.</p>
+  return `<main><h1>📚 הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית. לוחצים על פרק ובוחרים: בזמן, או 🧘 תרגול חופשי בלי שעון.</p>
   ${EX.map(e => `<h2 style="display:flex;justify-content:space-between;align-items:center">${esc(e.title)} ${link(e.url, 'הקובץ ↗', 'sm')}</h2><div class="card list">${CH.filter(x => x.e === e).map(chRow).join('')}</div>`).join('')}
   <p class="mut sm">המקור: ${link(NITE_PREP, 'דף ההכנה של מאל״ו', 'sm')}</p></main>` + navBar();
 }
@@ -318,7 +322,7 @@ function result() {
   ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
   <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">${hasExp ? 'קוראים את ההסבר, ואחרי יום או יומיים פותרים את השאלה שוב בלי שעון בלשונית «טעויות».' : 'פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח.'} הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
   <div class="row">${link(pdf(e, c.page), '📄 לשאלות בקובץ')}<button class="btn blue" onclick="go('fix')">לתרגל את הטעויות</button></div></div>
-  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
+  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב בזמן</button><button class="btn ghost" onclick="go('free',{key:'${arg.key}'})">🧘 תרגול חופשי</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
 }
 
 // ===== חוזקות: רק מהתשובות שלך מול המפתח הרשמי =====
@@ -359,6 +363,31 @@ function retry() {
   ${expOf(arg.key, n) ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(expOf(arg.key, n))}</p></div>` : ''}
   <button class="btn blue big" onclick="RP=0;${mistakes().length ? `go('retry',{key:'${mistakes()[0].key}',n:${mistakes()[0].n}})` : `go('fix')`}">לטעות הבאה</button>` : ''}</main>`;
 }
+
+// ===== תרגול חופשי: בלי שעון, כל שאלה נבדקת מיד עם ההסבר. לא נכנס לציון המשוער ולא ל«טעויות» =====
+function free() {
+  const x = chByKey[arg.key], { e, c } = x, key = keyOf(arg.key), P = S.prac[arg.key] || { ans: [] };
+  let lastT = null, ok = 0, n = 0;
+  const rows = Array.from({ length: c.questions }, (_, i) => {
+    const q = i + 1, a = P.ans[i] || 0, right = +key[i] || 0, vd = isVoid(arg.key, q), t = typeOf(c, q), shown = !!(a && right), good = a === right || vd;
+    const hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
+    if (shown) { n++; if (good) ok++; }
+    const btns = [1, 2, 3, 4].map(k => `<button class="${shown ? (k === right ? 'ok' : k === a ? 'bad' : '') : a === k ? 'on' : ''}" ${shown ? 'disabled' : `onclick="fp(${i},${k})"`}>${k}</button>`).join('');
+    const ex = expOf(arg.key, q);
+    const res = shown ? `<details class="qx ${good ? 'ok' : 'bad'}" ${good ? '' : 'open'} style="margin:0 0 12px"><summary><span class="sm">${vd ? 'מאל״ו ביטלו את השאלה' : good ? `✅ נכון, ${right}` : `❌ ענית ${a} · הנכונה <b>${right}</b>`}</span><span class="grow"></span><span class="mut sm">${ex ? 'הסבר' : ''}</span></summary>${ex ? `<p class="xp">${expHtml(ex)}</p>` : ''}</details>` : '';
+    return hd + `<div class="bub"><b>${q}</b>${btns}<span></span></div>` + res;
+  }).join('');
+  return `<div class="xtop"><button class="icb" onclick="go('home')">→ חזרה</button><span class="ttl">🧘 ${esc(e.title)} · ${DOM[c.domain]} · ${n ? `${ok}/${n} נכון` : 'בלי שעון'}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
+  <main><p class="mut sm" style="margin-top:0">${esc(c.label || '')}: עמודים ${c.page} עד ${c.endPage} בקובץ.${c.domain === 'quant' && e.formulasPage ? ` נוסחאות: עמוד ${e.formulasPage}.` : ''} בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. התרגול הזה לא נכנס לציון המשוער ולא ל«טעויות».</p>
+  ${!first(arg.key) ? `<div class="card" style="border-color:var(--o)"><span class="sm">⚠️ את הפרק הזה עוד לא עשית בזמן. אחרי שתראה כאן את התשובות, ציון של פרק בזמן עליו כבר לא ישקף את הרמה שלך. לתרגול חופשי עדיף לבחור בחינה ישנה מ«בחינות», ולהשאיר את החדשות לפרק בזמן.</span></div>` : ''}
+  ${key ? '' : codeCard()}${rows}
+  ${P.ans.some(Boolean) ? `<p style="text-align:center"><button class="icb" onclick="fpReset()">לנקות את התשובות ולהתחיל מחדש</button></p>` : ''}</main>` + navBar();
+}
+function fp(i, k) {
+  const c = chByKey[arg.key].c, P = S.prac[arg.key] = S.prac[arg.key] || { ans: Array(c.questions).fill(0) };
+  P.ans[i] = keyOf(arg.key) || P.ans[i] !== k ? k : 0; P.at = Date.now(); save(); reRender();
+}
+function fpReset() { if (!confirm('לנקות את כל התשובות של התרגול בפרק הזה?')) return; S.prac[arg.key] = { at: Date.now(), ans: [] }; save(); reRender(); }
 
 // ===== הדרכה: רק קבצים רשמיים של מאל״ו =====
 function learn() {
@@ -429,7 +458,7 @@ function openQ(n) { const d = document.getElementById('q' + n); if (d) { d.open 
 function codeInput() { return `<div class="row"><input class="txt" id="cd" placeholder="קוד גישה" autocomplete="off" style="margin:0"><button class="btn blue" style="width:auto;padding:12px 18px" onclick="setCode(document.getElementById('cd').value)">לפתוח</button></div>`; }
 function codeCard() { return `<div class="card"><b>🔒 המפתחות וההסברים נעולים במכשיר הזה</b><p class="sm" style="margin:4px 0 8px">פותחים פעם אחת עם הקישור המלא שקיבלת, או מקלידים כאן את קוד הגישה.</p>${codeInput()}</div>`; }
 function expo() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, examDate: S.examDate }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
 function impo() {
