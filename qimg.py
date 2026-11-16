@@ -52,17 +52,29 @@ def content_top(pg):
     return min(ys) if ys else TOP
 
 
-def shot(d, segs):
-    """segs: [(page, y0, y1)] → תמונה אחת אפורה."""
+def shot(d, segs, rule=False):
+    """segs: [(page, y0, y1)] → תמונה אחת אפורה, חתוכה לגבולות התוכן (בלי שוליים ריקים),
+    כדי שבאפליקציה הטקסט יוצג גדול ככל האפשר. rule: למחוק את קו ההפרדה שמתחת לשאלה."""
     ims = []
     for p, y0, y1 in segs:
         if y1 - y0 < 8: continue
         pix = d[p - 1].get_pixmap(matrix=fitz.Matrix(ZOOM, ZOOM), clip=fitz.Rect(X0, max(0, y0 - 6), X1, y1 + 6), colorspace=fitz.csGRAY)
-        ims.append(Image.open(io.BytesIO(pix.tobytes('png'))))
+        im = Image.open(io.BytesIO(pix.tobytes('png'))).convert('L')
+        if rule:  # קו אופקי ארוך בתחתית = קו ההפרדה בין שאלות
+            px = im.load(); W, H = im.size
+            for y in range(max(0, H - int(40 * ZOOM)), H):
+                if sum(1 for x in range(0, W, 3) if px[x, y] < 140) > W / 3 * 0.55:
+                    for x in range(W): px[x, y] = 255
+        ims.append(im)
     if not ims: return None
     w = max(i.width for i in ims); h = sum(i.height for i in ims) + 16 * (len(ims) - 1)
     out = Image.new('L', (w, h), 255); y = 0
     for i in ims: out.paste(i, (0, y)); y += i.height + 16
+    # גבולות התוכן: פיקסלים כהים בלבד (סימן המים של מאל״ו אפור בהיר ולא נספר)
+    bb = out.point(lambda v: 255 if v < 170 else 0).getbbox()
+    if bb:
+        pad = int(6 * ZOOM)
+        out = out.crop((max(0, bb[0] - pad), max(0, bb[1] - pad), min(w, bb[2] + pad), min(h, bb[3] + pad)))
     out = out.quantize(colors=16, dither=Image.Dither.NONE)
     b = io.BytesIO(); out.save(b, 'PNG', optimize=True); return b.getvalue()
 
@@ -91,7 +103,7 @@ def run(eid):
                         if nx[1] - t > 20: segs.append((p + 1, t, nx[1] - 2))
             else:  # המספר לא זוהה: כל העמוד
                 p = qp[n - 1]; segs = [(p, content_top(d[p - 1]), content_bottom(d[p - 1], TOP))]
-            open(f'{OUT}/{eid}/{ci}-{n}.png', 'wb').write(shot(d, segs))
+            open(f'{OUT}/{eid}/{ci}-{n}.png', 'wb').write(shot(d, segs, rule=True))
         # קטע קריאה / תרשים: מהעמוד שבו הוא מתחיל עד לפני השאלה הראשונה שלו
         for s in secs:
             if s['type'] not in UNIT: continue

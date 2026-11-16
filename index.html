@@ -112,8 +112,8 @@ table.dt th{background:var(--bg)}
 .bub{display:grid;grid-template-columns:34px repeat(4,1fr) 40px;gap:6px;align-items:center;margin:5px 0}
 .bub.big{grid-template-columns:repeat(4,1fr);max-width:320px;margin:10px auto}
 .bub.big button{max-width:60px}
-.qi{background:#fff;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin:10px 0 6px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:4px;cursor:zoom-in}
-.qi img{width:100%;display:block}
+.qi{background:#fff;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin:10px 0 6px;min-height:44px;display:flex;align-items:center;justify-content:flex-start;padding:6px 4px;cursor:zoom-in}
+.qi img{display:block;max-width:100%;height:auto}
 .qx .qi{margin:0 12px 10px}
 .psg{margin:10px 0 0}.psg summary{cursor:pointer;font-weight:800;color:var(--b);padding:6px 2px;font-size:15px}
 .zoom{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
@@ -121,6 +121,20 @@ table.dt th{background:var(--bg)}
 .zin{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}.zin img{width:200%;max-width:none;display:block;background:#fff}
 @media (min-width:700px){.zin img{width:150%}}
 @media (prefers-color-scheme:dark){.qi{background:#1b1b1b}.qi img,.zin img{filter:invert(.9)}}
+@media (min-width:900px){
+#app.wide{max-width:1500px}
+.wide main{width:100%;max-width:980px;margin:0 auto;box-sizing:border-box}
+.wide main.full{max-width:none;padding-left:28px;padding-right:28px}
+.wide main.full .one,.wide main.full .two{max-width:940px;margin-left:auto;margin-right:auto}
+/* הקטע / התרשים נשאר למעלה עם גלילה משלו, והשאלות שלו גוללות מתחתיו */
+.wide .two>.side{position:sticky;top:58px;z-index:3;max-height:44vh;overflow:auto;background:var(--bg);border-bottom:3px solid var(--line);padding-bottom:6px}
+.wide .two>.side .psg{margin:0}.wide .two>.side .psg summary{position:sticky;top:0;background:var(--bg);z-index:1}
+}
+/* מסך רחב מאוד: הקטע בצד והשאלות לידו */
+@media (min-width:1600px){
+.wide main.full .two{max-width:1480px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start;margin:8px auto 18px}
+.wide .two>.side{max-height:calc(100vh - 150px);border-bottom:0}
+}
 .bub button.fl{border-radius:10px;aspect-ratio:auto;padding:6px 0;opacity:.35;font-size:14px}
 .bub button.fl.on{opacity:1;background:#fff4d6;border-color:var(--o)}
 .bub button.ok{background:var(--okbg);border-color:var(--g)}.bub button.bad{background:var(--badbg);border-color:var(--r)}.bub button:disabled{cursor:default}

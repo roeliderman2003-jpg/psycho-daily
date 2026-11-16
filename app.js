@@ -99,17 +99,40 @@ const pdf = (e, page) => e.url + (page ? `#page=${page}` : '');
 const qid = (key, n) => key.replace(':', '/') + '-' + n;          // התמונה של שאלה
 const sid = (key, from) => key.replace(':', '/') + '-s' + from;   // התמונה של קטע קריאה / תרשים
 const qBox = (id, url) => `<div class="qi" data-q="${id}" data-u="${url}" onclick="zoomQ(this)">${IMG[id] ? `<img src="${IMG[id]}" alt="">` : '<span class="mut sm">טוען…</span>'}</div>`;
+// גודל אחיד לכל השאלות: עמוד של מאל״ו (כ-480 נקודות רוחב תוכן) ממלא את העמודה, עד פי 1.75 (כ-18 פיקסלים לאות).
+// תמונה צרה יותר לא נמתחת, כדי שגודל האותיות יהיה זהה בכל השאלות.
+const IMG_ZOOM = 2.5; // הרזולוציה שבה qimg.py מרנדר
+function sizeQ(img) {
+  const cw = img.parentNode.clientWidth - 10; if (cw <= 0 || !img.naturalWidth) return;
+  const sc = Math.min(1.75, cw / 480); img.style.width = Math.min(cw, img.naturalWidth / IMG_ZOOM * sc) + 'px';
+}
 function hydrate() { // ממלא את התמונות אחרי הציור. אם לא נטענה: קישור לעמוד בקובץ של מאל״ו
   document.querySelectorAll('.qi[data-q]').forEach(el => {
-    if (el.querySelector('img')) return;
-    qImg(el.dataset.q).then(u => { el.innerHTML = `<img src="${u}" alt="">`; },
+    const has = el.querySelector('img');
+    if (has) { if (has.complete) sizeQ(has); else has.onload = () => sizeQ(has); return; }
+    qImg(el.dataset.q).then(u => { el.innerHTML = `<img src="${u}" alt="">`; const im = el.firstChild; if (im.complete) sizeQ(im); else im.onload = () => sizeQ(im); },
       () => { el.innerHTML = `<span class="sm">${IK ? 'התמונה לא נטענה. ' : '🔒 צריך את קוד הגישה כדי לראות את השאלה. '}<a href="${el.dataset.u}" target="_blank" rel="noopener" onclick="event.stopPropagation()">לפתוח בקובץ של מאל״ו ↗</a></span>`; });
   });
 }
+document.addEventListener('toggle', ev => { if (ev.target.querySelectorAll) ev.target.querySelectorAll('.qi img').forEach(sizeQ); }, true); // תמונה בתוך חלון שנפתח
+let rsT = null; addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => document.querySelectorAll('.qi img').forEach(sizeQ), 150); });
 function zoomQ(el) { // לחיצה על תמונה: מסך מלא, פי 2, עם גלילה לכל הכיוונים
   const im = el.querySelector('img'); if (!im) return;
   const z = document.createElement('div'); z.className = 'zoom'; z.innerHTML = `<button class="icb" onclick="this.parentNode.remove()">✕ סגירה</button><div class="zin"><img src="${im.src}" alt=""></div>`;
   document.body.appendChild(z); const zi = z.querySelector('.zin'); zi.scrollLeft = zi.scrollWidth;
+}
+const isUnit = sec => !!sec && ['reading', 'chart'].includes(sec.type);
+const wideNow = () => matchMedia('(min-width: 900px)').matches;
+const psgBox = (key, sec, open) => { const { e, c } = chByKey[key]; return `<details class="psg" ${open || wideNow() ? 'open' : ''}><summary>📖 ${sec.type === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${sec.from} עד ${sec.to})</summary>${qBox(sid(key, sec.from), pdf(e, secPage(c, sec)))}</details>`; };
+const fmBox = key => { const { e, c } = chByKey[key]; return c.domain === 'quant' && e.formulasPage ? `<details class="psg"><summary>📐 דף הנוסחאות</summary>${qBox(e.id + '/f', pdf(e, e.formulasPage))}</details>` : ''; };
+const layout = (side, body) => side ? `<div class="two"><div class="side">${side}</div><div>${body}</div></div>` : `<div class="one">${body}</div>`;
+function chapterRows(key, rowFn) { // כל השאלות של פרק לפי סוג. קטע קריאה / תרשים עומד בצד של השאלות שלו
+  const { e, c } = chByKey[key], secs = c.sections && c.sections.length ? c.sections : [{ type: null, from: 1, to: c.questions }];
+  return secs.map(sec => {
+    let inner = sec.type ? `<div class="sech">${TYPE_HE[sec.type]}</div>` : '';
+    for (let n = sec.from; n <= sec.to; n++) inner += qBox(qid(key, n), pdf(e, qPage(c, n))) + rowFn(n - 1);
+    return layout(isUnit(sec) ? psgBox(key, sec, true) : '', inner);
+  }).join('');
 }
 function qView(key, n, passage) { // השאלה, ולפניה הקטע / התרשים שלה. passage: 'open' | 'closed' | ''
   const { e, c } = chByKey[key], t = typeOf(c, n), s = secOf(c, n);
@@ -232,6 +255,7 @@ function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
   const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill }[view] || home;
+  $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result'].includes(view));
   $app.innerHTML = f(); hydrate();
   if (view === 'exam' || view === 'wx') startTick();
 }
@@ -298,16 +322,11 @@ function startTick() {
 }
 function exam() {
   const X = S.cur, x = chByKey[X.key], { e, c } = x, left = (X.endAt - Date.now()) / 1000;
-  let lastType = null;
-  const rows = X.ans.map((a, i) => {
-    const t = typeOf(c, i + 1), head = t && t !== lastType ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastType = t;
-    const s1 = secOf(c, i + 1), img = (s1 && s1.from === i + 1 && ['reading', 'chart'].includes(t) ? `<details class="psg" open><summary>📖 ${t === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${s1.from} עד ${s1.to})</summary>${qBox(sid(X.key, s1.from), pdf(e, secPage(c, s1)))}</details>` : '') + qBox(qid(X.key, i + 1), pdf(e, qPage(c, i + 1)));
-    return head + img + `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${a === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`;
-  }).join('');
-  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · ${X.ans.filter(Boolean).length}/${c.questions}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
-  <main><p class="mut sm" style="margin-top:0">${esc(c.label || '')}. לוחצים על שאלה כדי להגדיל.</p>${c.domain === 'quant' && e.formulasPage ? `<details class="psg"><summary>📐 דף הנוסחאות</summary>${qBox(e.id + '/f', pdf(e, e.formulasPage))}</details>` : ''}${locked() ? codeCard() : ''}${rows}
-  <button class="btn" style="margin-top:18px" onclick="submit()">סיום והגשה</button>
-  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></main>`;
+  const rows = chapterRows(X.key, i => `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${X.ans[i] === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`);
+  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · ${X.ans.filter(Boolean).length}/${c.questions}</span></div>
+  <main class="full"><div class="one"><p class="mut sm" style="margin-top:0">${esc(c.label || '')}. לוחצים על שאלה כדי להגדיל.</p>${fmBox(X.key)}${locked() ? codeCard() : ''}</div>${rows}
+  <div class="one"><button class="btn" style="margin-top:18px" onclick="submit()">סיום והגשה</button>
+  <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></div></main>`;
 }
 function bub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; save(); const y = scrollY; render(); scrollTo(0, y); }
 function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); const y = scrollY; render(); scrollTo(0, y); }
@@ -393,32 +412,30 @@ function retry() {
   const x = chByKey[arg.key], { e, c } = x, n = arg.n, right = +keyOf(arg.key)[n - 1];
   const opts = [1, 2, 3, 4].map(k => `<button class="${RP ? (k === right ? 'ok' : k === RP ? 'bad' : '') : ''}" ${RP ? 'disabled' : `onclick="RP=${k};if(${k}===${right}){S.fix['${arg.key}:${n}']=true;save()}render()"`}>${k}</button>`).join('');
   return `<div class="xtop"><button class="icb" onclick="RP=0;go('fix')">→ חזרה</button><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · שאלה ${n}</span></div>
-  <main><div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''})</p></div>${qView(arg.key, n, 'closed')}
+  <main class="${isUnit(secOf(c, n)) ? 'full' : ''}">${isUnit(secOf(c, n)) ? `<div class="two"><div class="side">${psgBox(arg.key, secOf(c, n), true)}</div><div>` : ''}<div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''})</p></div>${qBox(qid(arg.key, n), pdf(e, qPage(c, n)))}${fmBox(arg.key)}
   <p>התשובה שלך עכשיו:</p><div class="bub big">${opts}</div>
   ${RP ? `<p style="font-weight:800;font-size:18px;color:${RP === right ? 'var(--gd)' : 'var(--rd)'}">${RP === right ? '✅ נכון! השאלה יוצאת מהרשימה.' : `❌ התשובה הנכונה לפי המפתח: ${right}`}</p>
   ${expOf(arg.key, n) ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(expOf(arg.key, n))}</p></div>` : ''}
-  <button class="btn blue big" onclick="RP=0;${mistakes().length ? `go('retry',{key:'${mistakes()[0].key}',n:${mistakes()[0].n}})` : `go('fix')`}">לטעות הבאה</button>` : ''}</main>`;
+  <button class="btn blue big" onclick="RP=0;${mistakes().length ? `go('retry',{key:'${mistakes()[0].key}',n:${mistakes()[0].n}})` : `go('fix')`}">לטעות הבאה</button>` : ''}${isUnit(secOf(c, n)) ? '</div></div>' : ''}</main>`;
 }
 
 // ===== תרגול חופשי: בלי שעון, כל שאלה נבדקת מיד עם ההסבר. לא נכנס לציון המשוער ולא ל«טעויות» =====
 function free() {
   const x = chByKey[arg.key], { e, c } = x, key = keyOf(arg.key), P = S.prac[arg.key] || { ans: [] };
-  let lastT = null, ok = 0, n = 0;
-  const rows = Array.from({ length: c.questions }, (_, i) => {
-    const q = i + 1, a = P.ans[i] || 0, right = +key[i] || 0, vd = isVoid(arg.key, q), t = typeOf(c, q), shown = !!(a && right), good = a === right || vd;
-    const hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
+  let ok = 0, n = 0;
+  const rows = chapterRows(arg.key, i => {
+    const q = i + 1, a = P.ans[i] || 0, right = +key[i] || 0, vd = isVoid(arg.key, q), shown = !!(a && right), good = a === right || vd;
     if (shown) { n++; if (good) ok++; }
     const btns = [1, 2, 3, 4].map(k => `<button class="${shown ? (k === right ? 'ok' : k === a ? 'bad' : '') : a === k ? 'on' : ''}" ${shown ? 'disabled' : `onclick="fp(${i},${k})"`}>${k}</button>`).join('');
     const ex = expOf(arg.key, q);
     const res = shown ? `<details class="qx ${good ? 'ok' : 'bad'}" ${good ? '' : 'open'} style="margin:0 0 12px"><summary><span class="sm">${vd ? 'מאל״ו ביטלו את השאלה' : good ? `✅ נכון, ${right}` : `❌ ענית ${a} · הנכונה <b>${right}</b>`}</span><span class="grow"></span><span class="mut sm">${ex ? 'הסבר' : ''}</span></summary>${ex ? `<p class="xp">${expHtml(ex)}</p>` : ''}</details>` : '';
-    const s1 = secOf(c, q), img = (s1 && s1.from === q && ['reading', 'chart'].includes(t) ? `<details class="psg" open><summary>📖 ${t === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${s1.from} עד ${s1.to})</summary>${qBox(sid(arg.key, s1.from), pdf(e, secPage(c, s1)))}</details>` : '') + qBox(qid(arg.key, q), pdf(e, qPage(c, q)));
-    return hd + img + `<div class="bub"><b>${q}</b>${btns}<span></span></div>` + res;
-  }).join('');
-  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(e.title)} · ${DOM[c.domain]} · ${n ? `${ok}/${n} נכון` : 'בלי שעון'}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
-  <main><p class="mut sm" style="margin-top:0">${esc(c.label || '')}: עמודים ${c.page} עד ${c.endPage} בקובץ.${c.domain === 'quant' && e.formulasPage ? ` נוסחאות: עמוד ${e.formulasPage}.` : ''} בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. התרגול הזה לא נכנס לציון המשוער ולא ל«טעויות».</p>
-  ${!first(arg.key) ? `<div class="card" style="border-color:var(--o)"><span class="sm">⚠️ את הפרק הזה עוד לא עשית בזמן. אחרי שתראה כאן את התשובות, ציון של פרק בזמן עליו כבר לא ישקף את הרמה שלך. לתרגול חופשי עדיף לבחור בחינה ישנה מ«בחינות», ולהשאיר את החדשות לפרק בזמן.</span></div>` : ''}
-  ${key ? '' : codeCard()}${rows}
-  ${P.ans.some(Boolean) ? `<p style="text-align:center"><button class="icb" onclick="fpReset()">לנקות את התשובות ולהתחיל מחדש</button></p>` : ''}</main>` + navBar();
+    return `<div class="bub"><b>${q}</b>${btns}<span></span></div>` + res;
+  });
+  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(e.title)} · ${DOM[c.domain]} · ${n ? `${ok}/${n} נכון` : 'בלי שעון'}</span></div>
+  <main class="full"><div class="one"><p class="mut sm" style="margin-top:0">${esc(c.label || '')}. בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. לא נכנס לציון המשוער ולא ל«טעויות». לוחצים על שאלה כדי להגדיל.</p>
+  ${!first(arg.key) ? `<div class="card" style="border-color:var(--o)"><span class="sm">⚠️ את הפרק הזה עוד לא עשית בזמן. אחרי שתראה כאן את התשובות, ציון של פרק בזמן עליו כבר לא ישקף את הרמה שלך. לתרגול חופשי עדיף לבחור בחינה ישנה, ולהשאיר את החדשות לפרק בזמן.</span></div>` : ''}
+  ${fmBox(arg.key)}${key ? '' : codeCard()}</div>${rows}
+  <div class="one">${P.ans.some(Boolean) ? `<p style="text-align:center"><button class="icb" onclick="fpReset()">לנקות את התשובות ולהתחיל מחדש</button></p>` : ''}</div></main>` + navBar();
 }
 function fp(i, k) {
   const c = chByKey[arg.key].c, P = S.prac[arg.key] = S.prac[arg.key] || { ans: Array(c.questions).fill(0) };
@@ -488,13 +505,13 @@ function drill() {
   const btns = [1, 2, 3, 4].map(k => `<button class="${a ? (k === right ? 'ok' : k === a ? 'bad' : '') : ''}" ${a ? 'disabled' : `onclick="dAns(${k})"`}>${k}</button>`).join('');
   const ex = expOf(q.k, q.n), u = q.unit, what = t === 'chart' ? 'תרשים' : 'קטע', sp = u ? secPage(c, secOf(c, q.n)) : 0;
   return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(D.title)} · ${D.i + 1}/${D.list.length} · ✓ ${D.a}</span></div>
-  <main><div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${TYPE_HE[t] || ''}</b></div>
+  <main class="${u ? 'full' : ''}">${u ? `<div class="two"><div class="side">${psgBox(q.k, secOf(c, q.n), u.first)}</div><div>` : ''}<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${TYPE_HE[t] || ''}</b></div>
   <p class="sm" style="margin:0 0 8px">${esc(e.title)} · ${esc(c.label || DOM[c.domain])} · <b>שאלה ${q.n}</b>${u ? `. שאלות ${u.from} עד ${u.to} הן על אותו ${what}.` : ''}</p></div>
-  ${qView(q.k, q.n, u ? (u.first ? 'open' : 'closed') : 'closed')}
+  ${qBox(qid(q.k, q.n), pdf(e, qPage(c, q.n)))}${fmBox(q.k)}
   <p style="margin:14px 0 0">התשובה שלך:</p><div class="bub big">${btns}</div>
   ${a ? `<p style="font-weight:800;font-size:18px;color:${good ? 'var(--gd)' : 'var(--rd)'}">${isVoid(q.k, q.n) ? 'מאל״ו ביטלו את השאלה' : good ? '✅ נכון!' : `❌ התשובה הנכונה: ${right}`}</p>
   ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}
-  <button class="btn blue big" onclick="S.drill.i++;save();go('drill')">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}</main>` + navBar();
+  <button class="btn blue big" onclick="S.drill.i++;save();go('drill')">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}${u ? '</div></div>' : ''}</main>` + navBar();
 }
 function dAns(k) {
   const D = S.drill, q = D.list[D.i], c = chByKey[q.k].c, right = +keyOf(q.k)[q.n - 1];

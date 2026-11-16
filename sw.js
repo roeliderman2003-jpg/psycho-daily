@@ -1,5 +1,5 @@
 // רשת קודם, ובלי רשת מהמטמון: עדכונים מגיעים מיד, והאפליקציה עובדת גם בלי אינטרנט.
-const C = 'pd-v7';
+const C = 'pd-v8';
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
