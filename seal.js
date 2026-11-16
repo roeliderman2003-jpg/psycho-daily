@@ -33,10 +33,30 @@ for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith(
   }
 }
 if (errs.length) { console.error(errs.join('\n')); process.exit(1); }
+// תמונות השאלות (content/qimg, חתוכות מקובצי מאל״ו, מחוץ ל-git) → q/<בחינה>/<פרק>-<שאלה>.bin מוצפן.
+// המפתח של התמונות (.imgkey) נכנס לתוך sol.js המוצפן, ולכן רק מי שיש לו קוד הגישה רואה אותן.
+// ה-iv נגזר מהתוכן, כדי שהרצה חוזרת לא תשנה קבצים שלא השתנו.
+const ikFile = path.join(__dirname, '.imgkey');
+if (!fs.existsSync(ikFile)) fs.writeFileSync(ikFile, crypto.randomBytes(32).toString('base64'));
+const ik = Buffer.from(fs.readFileSync(ikFile, 'utf8').trim(), 'base64');
+const qsrc = path.join(__dirname, 'content', 'qimg'); let ni = 0, nw = 0;
+if (fs.existsSync(qsrc)) for (const ex of fs.readdirSync(qsrc)) {
+  const od = path.join(__dirname, 'q', ex); fs.mkdirSync(od, { recursive: true });
+  for (const f of fs.readdirSync(path.join(qsrc, ex)).filter(f => f.endsWith('.png'))) {
+    const pt = fs.readFileSync(path.join(qsrc, ex, f)), name = f.replace('.png', '');
+    const iv = crypto.createHmac('sha256', ik).update(ex + '/' + name).update(pt).digest().subarray(0, 12);
+    const c = crypto.createCipheriv('aes-256-gcm', ik, iv);
+    const blob = Buffer.concat([iv, c.update(pt), c.final(), c.getAuthTag()]), of = path.join(od, name + '.bin');
+    if (!fs.existsSync(of) || !fs.readFileSync(of).equals(blob)) { fs.writeFileSync(of, blob); nw++; }
+    ni++;
+  }
+}
+out._ik = ik.toString('base64');
 const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
 const key = crypto.pbkdf2Sync(pass, salt, 150000, 32, 'sha256');
 const ci = crypto.createCipheriv('aes-256-gcm', key, iv);
 const data = Buffer.concat([ci.update(JSON.stringify(out), 'utf8'), ci.final(), ci.getAuthTag()]);
 const b = x => x.toString('base64');
 fs.writeFileSync(path.join(__dirname, 'sol.js'), `// נוצר ע"י seal.js. מוצפן.\nwindow.SOLX = ${JSON.stringify({ salt: b(salt), iv: b(iv), data: b(data) })};\n`);
-console.log(`sol.js: ${Object.keys(out).length - ns} פרקים, ${nq} שאלות, ${nx} הסברים, ${ns} טבלאות ציון`);
+console.log(`תמונות שאלות: ${ni} (${nw} השתנו)`);
+console.log(`sol.js: ${Object.keys(out).length - ns - 1} פרקים, ${nq} שאלות, ${nx} הסברים, ${ns} טבלאות ציון`);

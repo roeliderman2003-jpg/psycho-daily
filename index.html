@@ -112,6 +112,15 @@ table.dt th{background:var(--bg)}
 .bub{display:grid;grid-template-columns:34px repeat(4,1fr) 40px;gap:6px;align-items:center;margin:5px 0}
 .bub.big{grid-template-columns:repeat(4,1fr);max-width:320px;margin:10px auto}
 .bub.big button{max-width:60px}
+.qi{background:#fff;border:2px solid var(--line);border-radius:14px;overflow:hidden;margin:10px 0 6px;min-height:44px;display:flex;align-items:center;justify-content:center;padding:4px;cursor:zoom-in}
+.qi img{width:100%;display:block}
+.qx .qi{margin:0 12px 10px}
+.psg{margin:10px 0 0}.psg summary{cursor:pointer;font-weight:800;color:var(--b);padding:6px 2px;font-size:15px}
+.zoom{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+.zoom .icb{align-self:flex-start;margin:10px}
+.zin{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}.zin img{width:200%;max-width:none;display:block;background:#fff}
+@media (min-width:700px){.zin img{width:150%}}
+@media (prefers-color-scheme:dark){.qi{background:#1b1b1b}.qi img,.zin img{filter:invert(.9)}}
 .bub button.fl{border-radius:10px;aspect-ratio:auto;padding:6px 0;opacity:.35;font-size:14px}
 .bub button.fl.on{opacity:1;background:#fff4d6;border-color:var(--o)}
 .bub button.ok{background:var(--okbg);border-color:var(--g)}.bub button.bad{background:var(--badbg);border-color:var(--r)}.bub button:disabled{cursor:default}
