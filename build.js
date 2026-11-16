@@ -21,6 +21,8 @@ for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) {
     const cov = Array(c.questions + 1).fill(0);
     (c.sections || []).forEach(s => { for (let n = s.from; n <= s.to; n++) cov[n]++; });
     if ((c.sections || []).length && cov.slice(1).some(v => v !== 1)) w('טווחי הסוגים לא מכסים בדיוק את כל השאלות');
+    // qpages: העמוד בקובץ של כל שאלה (חולץ מהמספרים ב-PDF), לקישור ישר לשאלה בתרגול
+    if (c.qpages && (c.qpages.length !== c.questions || c.qpages.some((v, j) => v < c.page || v > c.endPage || (j && v < c.qpages[j - 1])))) w('qpages לא תקין');
   });
   out.push(e);
 }

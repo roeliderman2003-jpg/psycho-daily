@@ -85,6 +85,9 @@ EX.forEach(e => {
 });
 const chByKey = Object.fromEntries(CH.map(x => [x.key, x]));
 const pdf = (e, page) => e.url + (page ? `#page=${page}` : '');
+const qPage = (c, n) => (c.qpages && c.qpages[n - 1]) || c.page; // העמוד של השאלה בקובץ
+const secOf = (c, n) => (c.sections || []).find(s => n >= s.from && n <= s.to);
+const secPage = (c, s) => Math.min(qPage(c, s.from), s.from > 1 ? qPage(c, s.from - 1) + 1 : c.page); // קטע קריאה או תרשים מתחיל לפני השאלה הראשונה שלו
 const typeOf = (c, n) => { const s = (c.sections || []).find(s => n >= s.from && n <= s.to); return s ? s.type : null; };
 
 // חומרים רשמיים נוספים של מאל״ו
@@ -188,14 +191,15 @@ function answered() { // כל שאלה שנענתה בניסיון הראשון,
 }
 
 // ===== מסכים =====
+const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', keyin: 'all', result: 'all' };
 function navBar() {
-  const it = [['home', '🏠', 'היום'], ['all', '📚', 'בחינות'], ['stats', '🎯', 'חוזקות'], ['fix', '🔁', 'טעויות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
-  return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${view === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
+  const it = [['home', '🏠', 'היום'], ['all', '⏱️', 'בחינות'], ['prac', '🧘', 'תרגול'], ['stats', '🎯', 'חוזקות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
+  return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${(NAV_OF[view] || view) === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
 }
 function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
-  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free }[view] || home;
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill }[view] || home;
   $app.innerHTML = f();
   if (view === 'exam' || view === 'wx') startTick();
 }
@@ -210,8 +214,7 @@ function chCard(x) {
   return `<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:17px">${esc(e.title)}</b></div>
     <p class="mut sm" style="margin:2px 0 10px">${esc(c.label || '')} · ${c.questions} שאלות · ${c.minutes} דקות · <b>עמודים ${c.page} עד ${c.endPage} בקובץ</b>${c.printed ? ` (בדף: ${c.printed})` : ''}</p>
     <div class="row">${link(pdf(e, c.page), '📄 לפתוח את הפרק')}<button class="btn" onclick="startChap('${x.key}')">▶️ טיימר ודף תשובות</button></div>
-    <button class="btn ghost" style="margin-top:8px" onclick="go('free',{key:'${x.key}'})">🧘 תרגול חופשי, בלי שעון</button>
-    <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה. בתרגול חופשי אין שעון, ורואים מיד אחרי כל שאלה אם צדקת.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
+    <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
 }
 function home() {
   const dl = daysLeft(), st = streak(), A = answered();
@@ -239,7 +242,7 @@ function home() {
   return h;
 }
 function all() {
-  return `<main><h1>📚 הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית. לוחצים על פרק ובוחרים: בזמן, או 🧘 תרגול חופשי בלי שעון.</p>
+  return `<main><h1>⏱️ הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית. כאן הכל בזמן, כמו בבחינה. בלי שעון: לשונית «🧘 תרגול».</p>
   ${EX.map(e => `<h2 style="display:flex;justify-content:space-between;align-items:center">${esc(e.title)} ${link(e.url, 'הקובץ ↗', 'sm')}</h2><div class="card list">${CH.filter(x => x.e === e).map(chRow).join('')}</div>`).join('')}
   <p class="mut sm">המקור: ${link(NITE_PREP, 'דף ההכנה של מאל״ו', 'sm')}</p></main>` + navBar();
 }
@@ -322,7 +325,7 @@ function result() {
   ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
   <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">${hasExp ? 'קוראים את ההסבר, ואחרי יום או יומיים פותרים את השאלה שוב בלי שעון בלשונית «טעויות».' : 'פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח.'} הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
   <div class="row">${link(pdf(e, c.page), '📄 לשאלות בקובץ')}<button class="btn blue" onclick="go('fix')">לתרגל את הטעויות</button></div></div>
-  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב בזמן</button><button class="btn ghost" onclick="go('free',{key:'${arg.key}'})">🧘 תרגול חופשי</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
+  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב בזמן</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
 }
 
 // ===== חוזקות: רק מהתשובות שלך מול המפתח הרשמי =====
@@ -357,7 +360,7 @@ function retry() {
   const x = chByKey[arg.key], { e, c } = x, n = arg.n, right = +keyOf(arg.key)[n - 1];
   const opts = [1, 2, 3, 4].map(k => `<button class="${RP ? (k === right ? 'ok' : k === RP ? 'bad' : '') : ''}" ${RP ? 'disabled' : `onclick="RP=${k};if(${k}===${right}){S.fix['${arg.key}:${n}']=true;save()}render()"`}>${k}</button>`).join('');
   return `<div class="xtop"><button class="icb" onclick="RP=0;go('fix')">→ חזרה</button><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · שאלה ${n}</span></div>
-  <main><div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''}), עמודים ${c.page} עד ${c.endPage} בקובץ.</p>${link(pdf(e, c.page), '📄 לפתוח בקובץ')}</div>
+  <main><div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''}), עמוד ${qPage(c, n)} בקובץ.</p>${link(pdf(e, ['reading', 'chart'].includes(typeOf(c, n)) ? secPage(c, secOf(c, n)) : qPage(c, n)), '📄 לפתוח את השאלה בקובץ')}</div>
   <p>התשובה שלך עכשיו:</p><div class="bub big">${opts}</div>
   ${RP ? `<p style="font-weight:800;font-size:18px;color:${RP === right ? 'var(--gd)' : 'var(--rd)'}">${RP === right ? '✅ נכון! השאלה יוצאת מהרשימה.' : `❌ התשובה הנכונה לפי המפתח: ${right}`}</p>
   ${expOf(arg.key, n) ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(expOf(arg.key, n))}</p></div>` : ''}
@@ -377,7 +380,7 @@ function free() {
     const res = shown ? `<details class="qx ${good ? 'ok' : 'bad'}" ${good ? '' : 'open'} style="margin:0 0 12px"><summary><span class="sm">${vd ? 'מאל״ו ביטלו את השאלה' : good ? `✅ נכון, ${right}` : `❌ ענית ${a} · הנכונה <b>${right}</b>`}</span><span class="grow"></span><span class="mut sm">${ex ? 'הסבר' : ''}</span></summary>${ex ? `<p class="xp">${expHtml(ex)}</p>` : ''}</details>` : '';
     return hd + `<div class="bub"><b>${q}</b>${btns}<span></span></div>` + res;
   }).join('');
-  return `<div class="xtop"><button class="icb" onclick="go('home')">→ חזרה</button><span class="ttl">🧘 ${esc(e.title)} · ${DOM[c.domain]} · ${n ? `${ok}/${n} נכון` : 'בלי שעון'}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
+  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(e.title)} · ${DOM[c.domain]} · ${n ? `${ok}/${n} נכון` : 'בלי שעון'}</span>${link(pdf(e, c.page), '📄 PDF', 'icb')}</div>
   <main><p class="mut sm" style="margin-top:0">${esc(c.label || '')}: עמודים ${c.page} עד ${c.endPage} בקובץ.${c.domain === 'quant' && e.formulasPage ? ` נוסחאות: עמוד ${e.formulasPage}.` : ''} בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. התרגול הזה לא נכנס לציון המשוער ולא ל«טעויות».</p>
   ${!first(arg.key) ? `<div class="card" style="border-color:var(--o)"><span class="sm">⚠️ את הפרק הזה עוד לא עשית בזמן. אחרי שתראה כאן את התשובות, ציון של פרק בזמן עליו כבר לא ישקף את הרמה שלך. לתרגול חופשי עדיף לבחור בחינה ישנה מ«בחינות», ולהשאיר את החדשות לפרק בזמן.</span></div>` : ''}
   ${key ? '' : codeCard()}${rows}
@@ -388,6 +391,83 @@ function fp(i, k) {
   P.ans[i] = keyOf(arg.key) || P.ans[i] !== k ? k : 0; P.at = Date.now(); save(); reRender();
 }
 function fpReset() { if (!confirm('לנקות את כל התשובות של התרגול בפרק הזה?')) return; S.prac[arg.key] = { at: Date.now(), ans: [] }; save(); reRender(); }
+
+// ===== לשונית «תרגול»: בלי שעון. מעורב, לפי סוג, פרק שלם, וטעויות. לא נכנס לציון המשוער =====
+const RESERVE = 8; // הבחינות החדשות נשמרות לפרקים בזמן, כדי שהציון המשוער שלהן יהיה אמיתי
+const UNIT_TYPES = ['reading', 'chart']; // קטע קריאה ותרשים: כל השאלות על אותו קטע באות יחד
+const pracAns = (k, n) => ((S.prac[k] || {}).ans || [])[n - 1] || 0;
+function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל השאלות של קטע קריאה / תרשים
+  const out = [], resv = new Set(EX.slice(0, S.pracAll ? 0 : RESERVE).map(e => e.id));
+  CH.forEach(x => {
+    const { e, c, key } = x; if (resv.has(e.id) && !first(key)) return; if (dom && c.domain !== dom) return;
+    (c.sections || []).forEach(sec => {
+      if (type && sec.type !== type) return;
+      const qs = []; for (let n = sec.from; n <= sec.to; n++) if (!isVoid(key, n)) qs.push(n);
+      const groups = UNIT_TYPES.includes(sec.type) ? [qs] : qs.map(n => [n]);
+      groups.forEach(g => g.length && out.push({ key, type: sec.type, qs: g, seen: g.some(n => pracAns(key, n)) || !!first(key) }));
+    });
+  });
+  return out;
+}
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function startDrill(dom, type, title) {
+  if (!Object.keys(SOL).length) return toast('צריך קודם לפתוח את המפתחות עם קוד הגישה');
+  const U = pracUnits(dom, type), pool = shuffle(U.filter(u => !u.seen)).concat(shuffle(U.filter(u => u.seen))), byType = {};
+  pool.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
+  const types = shuffle(Object.keys(byType)), list = [];
+  let more = true;
+  while (list.length < 10 && more) { // מעורב: כל פעם סוג אחר. בסבב מעורב לכל היותר קטע אחד
+    more = false;
+    for (const t of types) {
+      if (list.length >= 10) break;
+      const u = byType[t].shift(); if (!u) continue; more = true;
+      const isUnit = UNIT_TYPES.includes(t);
+      if (isUnit && !type && list.some(y => y.unit)) continue;
+      u.qs.forEach((n, j) => list.push({ k: u.key, n, unit: isUnit ? { first: j === 0, from: u.qs[0], to: u.qs[u.qs.length - 1] } : null }));
+    }
+  }
+  if (!list.length) return toast('אין שאלות לתרגול כאן');
+  S.drill = { title, dom, type, list, i: 0, a: 0 }; save(); go('drill');
+}
+function prac() {
+  const locked0 = !Object.keys(SOL).length;
+  const st = t => { let n = 0, ok = 0; CH.forEach(({ c, key }) => { const k = keyOf(key); if (!k) return; for (let q = 1; q <= c.questions; q++) if (typeOf(c, q) === t && pracAns(key, q)) { n++; if (pracAns(key, q) === +k[q - 1] || isVoid(key, q)) ok++; } }); return n ? `${ok}/${n} נכון בתרגול` : 'עוד לא תורגל'; };
+  const types = [['verbal', ['analogy', 'inference', 'reading']], ['quant', ['problem', 'chart']]];
+  const D = S.drill && S.drill.i < S.drill.list.length ? S.drill : null;
+  const M = mistakes().length, opts = CH.filter(x => EX.indexOf(x.e) >= (S.pracAll ? 0 : RESERVE) || first(x.key)).map(x => `<option value="${x.key}">${esc(chTitle(x))}</option>`).join('');
+  return `<main><h1>🧘 תרגול</h1><p class="mut sm" style="margin-top:-6px">בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. לא נכנס לציון המשוער.</p>
+  ${locked0 ? codeCard() : ''}
+  ${D ? `<div class="card"><b>באמצע: ${esc(D.title)}</b><p class="mut sm" style="margin:4px 0 8px">שאלה ${D.i + 1} מתוך ${D.list.length}</p><button class="btn blue" onclick="go('drill')">להמשיך</button></div>` : ''}
+  <h2>מעורב</h2><div class="card"><p class="sm" style="margin-top:0">כ-10 שאלות, כל פעם מסוג אחר ומבחינה אחרת.</p>
+  <div class="row"><button class="btn blue" onclick="startDrill(null,null,'מעורב')">הכל</button><button class="btn ghost" onclick="startDrill('verbal',null,'מעורב מילולי')">מילולי</button><button class="btn ghost" onclick="startDrill('quant',null,'מעורב כמותי')">כמותי</button></div></div>
+  <h2>לפי נושא</h2><div class="card list">${types.map(([d, ts]) => ts.map(t => `<div class="it" onclick="startDrill('${d}','${t}','${TYPE_HE[t]}')"><span class="tag ${d[0]}">${DOM[d]}</span><div class="grow"><b>${TYPE_HE[t]}</b><div class="mut sm">${st(t)}</div></div><b style="color:var(--b)">◀</b></div>`).join('')).join('')}</div>
+  <p class="mut sm" style="margin-top:-4px">בהבנת הנקרא ובהסקה מתרשים, כל השאלות על אותו קטע באות ברצף.</p>
+  <h2>🔁 טעויות מפרקים בזמן</h2><div class="card"><p class="sm" style="margin-top:0">${M ? `${M} שאלות מחכות לפתרון חוזר.` : 'אין טעויות שמחכות.'}</p><button class="btn ghost" onclick="go('fix')">לטעויות</button></div>
+  <h2>פרק שלם בלי שעון</h2><div class="card"><select class="txt" id="fch" style="margin:0 0 8px">${opts}</select><button class="btn ghost" onclick="go('free',{key:document.getElementById('fch').value})">לפתוח</button></div>
+  <div class="card"><label class="sm" style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${S.pracAll ? 'checked' : ''} onchange="S.pracAll=this.checked;save();render()">לכלול גם את ${RESERVE} הבחינות החדשות</label><p class="mut sm" style="margin:6px 0 0">בלי הסימון, התרגול לוקח שאלות רק מהבחינות הישנות ומפרקים שכבר עשית בזמן. הבחינות החדשות נשמרות לפרק בזמן, כדי שהציון המשוער יהיה אמיתי.</p></div></main>` + navBar();
+}
+function drill() {
+  const D = S.drill; if (!D) return prac();
+  if (D.i >= D.list.length) return `<main><h1>🧘 ${esc(D.title)}</h1><div class="big-score">${D.a}/${D.list.length}</div><div style="text-align:center" class="mut">נכון בסבב הזה</div>
+    <div class="row" style="margin-top:14px"><button class="btn blue" onclick="startDrill(S.drill.dom,S.drill.type,S.drill.title)">עוד סבב</button><button class="btn ghost" onclick="go('prac')">לתרגול</button></div></main>` + navBar();
+  const q = D.list[D.i], x = chByKey[q.k], { e, c } = x, t = typeOf(c, q.n), right = +keyOf(q.k)[q.n - 1], a = q.ans || 0, good = a === right || isVoid(q.k, q.n);
+  const btns = [1, 2, 3, 4].map(k => `<button class="${a ? (k === right ? 'ok' : k === a ? 'bad' : '') : ''}" ${a ? 'disabled' : `onclick="dAns(${k})"`}>${k}</button>`).join('');
+  const ex = expOf(q.k, q.n), u = q.unit, what = t === 'chart' ? 'תרשים' : 'קטע', sp = u ? secPage(c, secOf(c, q.n)) : 0;
+  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(D.title)} · ${D.i + 1}/${D.list.length} · ✓ ${D.a}</span></div>
+  <main><div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${TYPE_HE[t] || ''}</b></div>
+  <p class="sm" style="margin:0 0 8px">${esc(e.title)} · ${esc(c.label || DOM[c.domain])} · <b>שאלה ${q.n}</b>, עמוד ${qPage(c, q.n)} בקובץ.${u ? ` שאלות ${u.from} עד ${u.to} הן על אותו ${what}, שמתחיל בעמוד ${sp}.` : ''}${c.domain === 'quant' && e.formulasPage ? ` נוסחאות: עמוד ${e.formulasPage}.` : ''}</p>
+  <div class="row">${u && u.first ? link(pdf(e, sp), `📄 ל${what} בקובץ`) : link(pdf(e, qPage(c, q.n)), '📄 לשאלה בקובץ')}</div></div>
+  <p style="margin:14px 0 0">התשובה שלך:</p><div class="bub big">${btns}</div>
+  ${a ? `<p style="font-weight:800;font-size:18px;color:${good ? 'var(--gd)' : 'var(--rd)'}">${isVoid(q.k, q.n) ? 'מאל״ו ביטלו את השאלה' : good ? '✅ נכון!' : `❌ התשובה הנכונה: ${right}`}</p>
+  ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}
+  <button class="btn blue big" onclick="S.drill.i++;save();go('drill')">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}</main>` + navBar();
+}
+function dAns(k) {
+  const D = S.drill, q = D.list[D.i], c = chByKey[q.k].c, right = +keyOf(q.k)[q.n - 1];
+  q.ans = k; if (k === right || isVoid(q.k, q.n)) D.a++;
+  const P = S.prac[q.k] = S.prac[q.k] && S.prac[q.k].ans && S.prac[q.k].ans.length ? S.prac[q.k] : { ans: Array(c.questions).fill(0) };
+  P.ans[q.n - 1] = k; P.at = Date.now(); save(); reRender();
+}
 
 // ===== הדרכה: רק קבצים רשמיים של מאל״ו =====
 function learn() {

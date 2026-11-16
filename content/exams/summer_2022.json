@@ -4,22 +4,219 @@
   "url": "https://www.nite.org.il/wp-content/uploads/2022/08/psychometric_summer_2022_acc.pdf",
   "pages": 47,
   "english": false,
-  "writing": { "page": 3, "printed": 2 },
+  "writing": {
+    "page": 3,
+    "printed": 2
+  },
   "chapters": [
-    { "domain": "verbal", "label": "חשיבה מילולית – פרק ראשון", "page": 5, "printed": 4, "endPage": 12, "questions": 23, "minutes": 20,
-      "sections": [ { "type": "analogy", "from": 1, "to": 6 }, { "type": "inference", "from": 7, "to": 17 }, { "type": "reading", "from": 18, "to": 23 } ] },
-    { "domain": "verbal", "label": "חשיבה מילולית – פרק שני", "page": 13, "printed": 12, "endPage": 20, "questions": 23, "minutes": 20,
-      "sections": [ { "type": "analogy", "from": 1, "to": 6 }, { "type": "inference", "from": 7, "to": 17 }, { "type": "reading", "from": 18, "to": 23 } ] },
-    { "domain": "quant", "label": "חשיבה כמותית – פרק ראשון", "page": 21, "printed": 20, "endPage": 28, "questions": 20, "minutes": 20,
-      "sections": [ { "type": "chart", "from": 1, "to": 5 }, { "type": "problem", "from": 6, "to": 20 } ] },
-    { "domain": "quant", "label": "חשיבה כמותית – פרק שני", "page": 29, "printed": 28, "endPage": 36, "questions": 20, "minutes": 20,
-      "sections": [ { "type": "problem", "from": 1, "to": 9 }, { "type": "chart", "from": 10, "to": 13 }, { "type": "problem", "from": 14, "to": 20 } ] }
+    {
+      "domain": "verbal",
+      "label": "חשיבה מילולית – פרק ראשון",
+      "page": 5,
+      "printed": 4,
+      "endPage": 12,
+      "questions": 23,
+      "minutes": 20,
+      "sections": [
+        {
+          "type": "analogy",
+          "from": 1,
+          "to": 6
+        },
+        {
+          "type": "inference",
+          "from": 7,
+          "to": 17
+        },
+        {
+          "type": "reading",
+          "from": 18,
+          "to": 23
+        }
+      ],
+      "qpages": [
+        5,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        8,
+        8,
+        8,
+        9,
+        9,
+        9,
+        10,
+        11,
+        11,
+        11,
+        11,
+        11
+      ]
+    },
+    {
+      "domain": "verbal",
+      "label": "חשיבה מילולית – פרק שני",
+      "page": 13,
+      "printed": 12,
+      "endPage": 20,
+      "questions": 23,
+      "minutes": 20,
+      "sections": [
+        {
+          "type": "analogy",
+          "from": 1,
+          "to": 6
+        },
+        {
+          "type": "inference",
+          "from": 7,
+          "to": 17
+        },
+        {
+          "type": "reading",
+          "from": 18,
+          "to": 23
+        }
+      ],
+      "qpages": [
+        13,
+        13,
+        13,
+        13,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        16,
+        16,
+        16,
+        17,
+        17,
+        17,
+        17,
+        18,
+        19,
+        19,
+        19,
+        19,
+        19
+      ]
+    },
+    {
+      "domain": "quant",
+      "label": "חשיבה כמותית – פרק ראשון",
+      "page": 21,
+      "printed": 20,
+      "endPage": 28,
+      "questions": 20,
+      "minutes": 20,
+      "sections": [
+        {
+          "type": "chart",
+          "from": 1,
+          "to": 5
+        },
+        {
+          "type": "problem",
+          "from": 6,
+          "to": 20
+        }
+      ],
+      "qpages": [
+        23,
+        23,
+        23,
+        23,
+        23,
+        24,
+        24,
+        24,
+        24,
+        25,
+        25,
+        25,
+        25,
+        26,
+        26,
+        26,
+        26,
+        27,
+        27,
+        27
+      ]
+    },
+    {
+      "domain": "quant",
+      "label": "חשיבה כמותית – פרק שני",
+      "page": 29,
+      "printed": 28,
+      "endPage": 36,
+      "questions": 20,
+      "minutes": 20,
+      "sections": [
+        {
+          "type": "problem",
+          "from": 1,
+          "to": 9
+        },
+        {
+          "type": "chart",
+          "from": 10,
+          "to": 13
+        },
+        {
+          "type": "problem",
+          "from": 14,
+          "to": 20
+        }
+      ],
+      "qpages": [
+        30,
+        30,
+        30,
+        30,
+        31,
+        31,
+        31,
+        31,
+        31,
+        33,
+        33,
+        33,
+        33,
+        34,
+        34,
+        34,
+        34,
+        35,
+        35,
+        35
+      ]
+    }
   ],
   "formulasPage": 21,
-  "answerSheetPages": [37, 39],
-  "examplesPages": [40, 43],
+  "answerSheetPages": [
+    37,
+    39
+  ],
+  "examplesPages": [
+    40,
+    43
+  ],
   "keyPage": 44,
-  "scorePages": [45, 47],
+  "scorePages": [
+    45,
+    47
+  ],
   "skipped": [],
   "notes": "אין פרק אנגלית. טווחי ההסקה במילולי (7-17) הוסקו מכך שהאנלוגיות 1-6 וקטע הקריאה 18-23 מסומנים בכותרות. בכמותי ראשון ההסקה מתרשים פותחת (1-5). עמוד 38 הוא צד אנגלית של דף התשובות. מבנה עמודי הסיום (דוגמאות 40-43, מפתח 44, אומדן 45-47) כמו בשאר בחינות 2022 לפי תצוגה מקדימה."
 }
