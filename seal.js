@@ -51,6 +51,14 @@ if (fs.existsSync(qsrc)) for (const ex of fs.readdirSync(qsrc)) {
     ni++;
   }
 }
+// מאגר המילים מהאנלוגיות (vocab.py → content/words/words.json, מחוץ ל-git), גם הוא בתוך העותק המוצפן
+const vf = path.join(__dirname, 'content', 'words', 'words.json');
+if (fs.existsSync(vf)) {
+  const V = JSON.parse(fs.readFileSync(vf, 'utf8'));
+  const bad = V.filter(v => !v.w || !v.m || ![1, 2].includes(v.l) || !v.n);
+  if (bad.length) { console.error(`words.json: ${bad.length} מילים לא תקינות, למשל ${JSON.stringify(bad[0])}`); process.exit(1); }
+  out._voc = V; console.log(`מילים: ${V.length}`);
+}
 out._ik = ik.toString('base64');
 const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
 const key = crypto.pbkdf2Sync(pass, salt, 150000, 32, 'sha256');
@@ -59,4 +67,4 @@ const data = Buffer.concat([ci.update(JSON.stringify(out), 'utf8'), ci.final(), 
 const b = x => x.toString('base64');
 fs.writeFileSync(path.join(__dirname, 'sol.js'), `// נוצר ע"י seal.js. מוצפן.\nwindow.SOLX = ${JSON.stringify({ salt: b(salt), iv: b(iv), data: b(data) })};\n`);
 console.log(`תמונות שאלות: ${ni} (${nw} השתנו)`);
-console.log(`sol.js: ${Object.keys(out).length - ns - 1} פרקים, ${nq} שאלות, ${nx} הסברים, ${ns} טבלאות ציון`);
+console.log(`sol.js: ${Object.keys(out).filter(k => !k.startsWith("_") && !k.endsWith(":scale")).length} פרקים, ${nq} שאלות, ${nx} הסברים, ${ns} טבלאות ציון`);

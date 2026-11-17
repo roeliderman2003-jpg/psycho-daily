@@ -12,6 +12,7 @@ S.fix = S.fix || {};    // "מפתח:מספר שאלה" -> true כשטעות נ�
 S.wr = S.wr || [];      // מטלות כתיבה: {src, at, text, dur, gc, gl}
 S.read = S.read || {};  // קובצי הדרכה של מאל״ו שסומנו כנקראו
 S.prac = S.prac || {};  // תרגול חופשי בלי שעון: מפתח פרק -> {at, ans[]}. לא נכנס לציון ולא ל«טעויות»
+S.voc = S.voc || {};    // מילים: מילה -> {b תיבה 0-6, due, ok, bad, at, day, k מכיר כבר, r דירוג בכרטיסיות 1-3}
 S.examDate = S.examDate || '2026-12-04';
 // מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
 let SOL = {};
@@ -34,7 +35,7 @@ async function unseal(pass) {
     const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
     const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: u(SOLX.salt), iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
     const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u(SOLX.iv) }, key, u(SOLX.data));
-    SOL = JSON.parse(new TextDecoder().decode(pt)); IK = SOL._ik || null; delete SOL._ik; return true;
+    SOL = JSON.parse(new TextDecoder().decode(pt)); IK = SOL._ik || null; delete SOL._ik; vocLoad(SOL._voc); delete SOL._voc; return true;
   } catch (e) { return false; }
 }
 async function setCode(v) {
@@ -61,13 +62,15 @@ async function cloudInit(pass) {
 function mergeS(a, b) {
   if (!b || typeof b !== 'object') return false;
   a.prac = a.prac || {};
-  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac]);
+  a.voc = a.voc || {};
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc]);
   for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
   a.keys = { ...(b.keys || {}), ...a.keys }; a.fix = { ...(b.fix || {}), ...a.fix }; a.read = { ...(b.read || {}), ...a.read };
   const wa = new Set(a.wr.map(x => x.at)); a.wr = a.wr.concat((b.wr || []).filter(x => !wa.has(x.at))).sort((x, y) => x.at - y.at);
+  for (const [w, v] of Object.entries(b.voc || {})) if (v && (!a.voc[w] || (v.at || 0) > (a.voc[w].at || 0))) a.voc[w] = v; // מילים: המצב האחרון של כל מילה
   for (const [k, v] of Object.entries(b.prac || {})) if (v && (!a.prac[k] || (v.at || 0) > (a.prac[k].at || 0))) a.prac[k] = v; // בתרגול חופשי: הגרסה האחרונה של הפרק
   if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
-  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac]);
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc]);
 }
 async function cloudSync() { // מושכים, ממזגים, ושומרים את האיחוד. ככה מכשיר שנשאר פתוח לא מוחק את מה שנעשה במכשיר אחר
   if (!cloudId) return;
@@ -75,7 +78,7 @@ async function cloudSync() { // מושכים, ממזגים, ושומרים את 
     const got = await cloudRpc('psycho_load', { p_id: cloudId });
     const changed = mergeS(S, got.data);
     try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { }
-    const { cur, ...data } = S;
+    const { cur, vl, vc, vs, ...data } = S; // שיעור מילים וכרטיסיות באמצע נשארים במכשיר
     const r = await cloudRpc('psycho_save', { p_id: cloudId, p_data: data });
     cloudAt = r.at || new Date().toISOString(); cloudErr = false;
     if (changed && !['exam', 'wx'].includes(view)) reRender(); else if (['home', 'settings'].includes(view)) reRender();
@@ -246,15 +249,15 @@ function answered() { // כל שאלה שנענתה בניסיון הראשון,
 }
 
 // ===== מסכים =====
-const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', keyin: 'all', result: 'all' };
+const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', keyin: 'all', result: 'all', vles: 'voc', vcards: 'voc', vlist: 'voc', vsort: 'voc' };
 function navBar() {
-  const it = [['home', '🏠', 'היום'], ['all', '⏱️', 'בחינות'], ['prac', '🧘', 'תרגול'], ['stats', '🎯', 'חוזקות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
+  const it = [['home', '🏠', 'היום'], ['all', '⏱️', 'בחינות'], ['prac', '🧘', 'תרגול'], ['voc', '🔤', 'מילים'], ['stats', '🎯', 'חוזקות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${(NAV_OF[view] || view) === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
 }
 function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
-  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill }[view] || home;
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill, voc, vles, vcards, vlist, vsort }[view] || home;
   $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result'].includes(view));
   $app.innerHTML = f(); hydrate();
   if (view === 'exam' || view === 'wx') startTick();
@@ -288,6 +291,7 @@ function home() {
     <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו לאותה בחינה. נקודת הפתיחה: 620.</p></div>`;
   if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
   else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
+  if (VOC.length) { const d = vDue().length, l = VOC.filter(vLearned).length; h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>🔤 מילים</b><div class="mut sm">${l} מתוך ${VOC.length} נלמדו${d ? ` · ${d} מחכות לחזרה` : ''}</div></div><button class="btn blue" style="width:auto;padding:10px 16px" onclick="${d || vNew().length ? "vStart('learn')" : "go('voc')"}">${d ? 'לחזרה' : 'שיעור'}</button></div></div>`; }
   if (locked()) h += codeCard();
   const miss = done().filter(y => !keyOf(y.key));
   if (miss.length) h += `<div class="card"><b>⚠️ ${miss.length} פרקים בלי מפתח תשובות</b><p class="mut sm" style="margin:4px 0 8px">בלי המפתח אין ציון ולא רואים איפה טעית.</p><button class="btn blue" onclick="go('keyin',{key:'${miss[0].key}'})">להקליד מפתח</button></div>`;
@@ -520,6 +524,171 @@ function dAns(k) {
   P.ans[q.n - 1] = k; P.at = Date.now(); save(); reRender();
 }
 
+// ===== מילים: כל המילים והביטויים מהאנלוגיות של 20 הבחינות, ולימוד בחזרה מרווחת (כמו באמירנט) =====
+// המאגר מגיע מוצפן בתוך sol.js (vocab.py → content/words/words.json → seal.js). לכל מילה: w המילה, m פירוש, x דוגמה, alt מובן נוסף,
+// l רמה (2 קשה, 1 כדאי לוודא), n בכמה בחינות הופיעה, o איפה: {t בחינה, s הזוג של השאלה, a התשובה הנכונה, p 0 בזוג של השאלה / 1-4 בתשובה}.
+// הסדר במאגר: קודם מה שחזר בכמה בחינות, אחר כך הקשות, ואז מהבחינות החדשות. המילים והזוגות של מאל״ו, הפירושים שלנו.
+let VOC = [];
+const VI = {};
+function vocLoad(list) { VOC = Array.isArray(list) ? list : []; VOC.forEach((v, i) => { VI[v.w] = i; }); }
+const DAY = 864e5, VINT = [0, 1, 2, 4, 8, 16, 32]; // ימים עד החזרה הבאה, לפי התיבה
+const NEW_PER = 10, REV_MAX = 20;
+const vst = v => S.voc[v.w];
+const vLearned = v => { const s = vst(v); return !!s && (s.k || s.b >= 3); };
+const vDue = () => VOC.filter(v => { const s = vst(v); return s && !s.k && (s.due || 0) <= Date.now(); });
+const vWeak = () => VOC.filter(v => { const s = vst(v); return s && !s.k && s.bad > 0 && s.b < 3; });
+const vNew = () => VOC.filter(v => !vst(v));
+const vTags = v => `${v.l === 2 ? '<span class="tag r">קשה</span>' : ''}${v.n > 1 ? `<span class="tag v">${v.n} בחינות</span>` : ''}`;
+const vMark = (txt, w) => esc(txt).split(esc(w)).join(`<mark>${esc(w)}</mark>`);
+const vOcc = v => (v.o || []).map(o => `<div class="occ"><span class="mut sm">${esc(o.t)}${o.p ? ` · בתשובה ${o.p}` : ' · בשאלה'}</span><div>${vMark(o.s, v.w)} <span class="mut">→</span> ${vMark(o.a, v.w)}</div></div>`).join('');
+const VOC_NOTE = 'המילים והזוגות מהאנלוגיות בבחינות של מאל״ו. הפירושים והדוגמאות נכתבו אצלנו, כי מאל״ו לא מפרסמים מילון.';
+function vCard(v, big) {
+  return `<div class="vw ${big ? 'big' : ''}">${esc(v.w)}</div><div style="text-align:center;margin:2px 0 10px">${vTags(v)}</div>
+  <p class="vm">${esc(v.m)}</p>${v.alt ? `<p class="sm mut" style="text-align:center;margin:-4px 0 8px">גם: ${esc(v.alt)}</p>` : ''}
+  ${v.x ? `<p class="vx">«${esc(v.x)}»</p>` : ''}${(v.o || []).length ? `<div class="sm" style="font-weight:700;margin:12px 0 4px">איפה הופיעה (השאלה → התשובה הנכונה):</div>${vOcc(v)}` : ''}`;
+}
+function vGrade(v, ok) {
+  const now = Date.now(), d = dayKey(now), s = S.voc[v.w] = S.voc[v.w] || { b: 0, ok: 0, bad: 0 };
+  if (!s.f) s.f = d; // היום שבו התחילה ללמוד אותה
+  // נכון: עולה תיבה פעם אחת ביום. גם אחרי טעות ותיקון באותו יום, החזרה הבאה מחר ולא עכשיו
+  if (ok) { s.ok = (s.ok || 0) + 1; if (s.day !== d) s.b = Math.min((s.b || 0) + 1, VINT.length - 1); s.due = now + Math.max(1, VINT[s.b || 0]) * DAY; }
+  else { s.bad = (s.bad || 0) + 1; s.b = 0; s.due = now; }
+  s.day = d; s.at = now;
+}
+function vStart(mode) {
+  if (!VOC.length) return toast('המילים נעולות. צריך את קוד הגישה');
+  const T = { learn: 'שיעור', review: 'חזרה', weak: 'מילים שטעיתי בהן', rep: 'החוזרות' };
+  let q = [];
+  const ask = v => ({ i: VI[v.w], t: Math.random() < 0.5 ? 'mean' : 'rev' });
+  if (mode === 'learn' || mode === 'rep') {
+    const pool = mode === 'rep' ? vNew().filter(v => v.n > 1) : vNew(), nw = pool.slice(0, NEW_PER);
+    for (let g = 0; g < nw.length; g += 3) { const gr = nw.slice(g, g + 3); gr.forEach(v => q.push({ i: VI[v.w], t: 'intro' })); shuffle(gr.slice()).forEach(v => q.push({ i: VI[v.w], t: 'mean' })); }
+    q = q.concat(shuffle(nw.map(v => ({ i: VI[v.w], t: 'rev' }))).concat(shuffle(vDue()).slice(0, mode === 'learn' ? REV_MAX : 0).map(ask)));
+  } else if (mode === 'review') q = shuffle(vDue()).slice(0, REV_MAX * 2).map(ask);
+  else if (mode === 'weak') q = shuffle(vWeak()).slice(0, REV_MAX).map(ask);
+  if (!q.length) return toast(mode === 'review' ? 'אין מילים לחזרה עכשיו ✓' : mode === 'weak' ? 'אין מילים שטעית בהן ✓' : 'אין מילים חדשות');
+  S.vl = { title: T[mode], q, i: 0, a: 0, n: 0, wrong: {} }; save(); go('vles');
+}
+function vOpts(v, t) { // התשובה הנכונה ועוד 3 מאותה רמה, בלי פירוש זהה
+  const key = t === 'mean' ? 'm' : 'w', pool = shuffle(VOC.filter(x => x !== v && x[key] !== v[key] && x.l === v.l)).slice(0, 3);
+  return shuffle([v, ...pool]).map(x => VI[x.w]);
+}
+function vles() {
+  const L = S.vl; if (!L) return voc();
+  if (L.i >= L.q.length) return `<main><h1>🔤 ${esc(L.title)}</h1><div class="big-score">${L.a}/${L.n}</div><div style="text-align:center" class="mut">נכון בשיעור הזה</div>
+    <p class="sm" style="text-align:center">${vDue().length ? `${vDue().length} מילים מחכות לחזרה.` : 'אין מילים שמחכות לחזרה עכשיו.'}</p>
+    <div class="row" style="margin-top:14px"><button class="btn blue" onclick="vStart('learn')">עוד ${NEW_PER} מילים</button><button class="btn ghost" onclick="delete S.vl;save();go('voc')">למילים</button></div></main>` + navBar();
+  const it = L.q[L.i], v = VOC[it.i]; if (!v) { L.i++; return vles(); }
+  const top = `<div class="xtop"><button class="icb" onclick="go('voc')">→ חזרה</button><span class="ttl">🔤 ${esc(L.title)} · ${L.i + 1}/${L.q.length}${L.n ? ` · ✓ ${L.a}` : ''}</span></div>`;
+  if (it.t === 'intro') return top + `<main><div class="sm mut" style="text-align:center">מילה חדשה</div><div class="card">${vCard(v, true)}</div>
+    <button class="btn blue big" onclick="S.vl.i++;save();go('vles')">הבנתי, הלאה</button><button class="btn ghost" onclick="vKnow()">אני כבר מכיר אותה</button></main>` + navBar();
+  it.o = it.o || vOpts(v, it.t);
+  const pick = it.a, done = pick !== undefined;
+  const opts = it.o.map((k, j) => { const x = VOC[k], cls = done ? (k === it.i ? 'ok' : j === pick ? 'bad' : '') : ''; return `<button class="opt ${cls}" ${done ? 'disabled' : `onclick="vAns(${j})"`}><span class="num">${j + 1}</span><span>${esc(it.t === 'mean' ? x.m : x.w)}</span></button>`; }).join('');
+  return top + `<main><div class="sm mut" style="text-align:center">${it.t === 'mean' ? 'מה הפירוש?' : 'איזו מילה מתאימה לפירוש?'}</div>
+    <div class="card" style="text-align:center">${it.t === 'mean' ? `<div class="vw big">${esc(v.w)}</div>` : `<p class="vm" style="margin:6px 0">${esc(v.m)}</p>`}</div>
+    <div class="opts">${opts}</div>
+    ${done ? `<p style="font-weight:800;font-size:18px;color:${it.o[pick] === it.i ? 'var(--gd)' : 'var(--rd)'}">${it.o[pick] === it.i ? '✅ נכון!' : '❌ לא בדיוק. המילה תחזור בסוף השיעור.'}</p>
+    <div class="card">${vCard(v)}</div><button class="btn blue big" onclick="S.vl.i++;save();go('vles')">${L.i + 1 < L.q.length ? 'הלאה' : 'לסיכום'}</button>` : ''}</main>` + navBar();
+}
+function vAns(j) {
+  const L = S.vl, it = L.q[L.i], v = VOC[it.i], ok = it.o[j] === it.i;
+  it.a = j; L.n++; if (ok) L.a++;
+  vGrade(v, ok);
+  if (!ok && !L.wrong[it.i]) { L.wrong[it.i] = 1; L.q.push({ i: it.i, t: it.t === 'mean' ? 'rev' : 'mean' }); }
+  save(); reRender();
+}
+function vKnow() {
+  const L = S.vl, it = L.q[L.i], v = VOC[it.i];
+  S.voc[v.w] = Object.assign(S.voc[v.w] || { b: 0, ok: 0, bad: 0 }, { k: 1, at: Date.now() });
+  L.q = L.q.filter((x, j) => j <= L.i || x.i !== it.i); L.i++;
+  // במקום המילה שהוא מכיר נכנסת החדשה הבאה
+  const nx = vNew().find(x => !L.q.some(y => y.i === VI[x.w]));
+  if (nx) L.q.splice(L.i, 0, { i: VI[nx.w], t: 'intro' }, { i: VI[nx.w], t: 'mean' });
+  toast('✓ סומנה כמוכרת'); save(); go('vles');
+}
+// ===== כרטיסיות: מילה מקדימה, הפירוש מאחורה, ושלושה דירוגים =====
+const VC_F = [['seen', 'כל מה שלמדתי'], ['r1', 'לא יודע'], ['r2', 'קצת מכיר'], ['r3', 'יודע'], ['all', 'כל המאגר']];
+function vcStart(f) {
+  const pool = VOC.filter(v => { const s = vst(v); return f === 'all' ? true : f === 'seen' ? !!s : !!s && s.r === +f[1]; });
+  if (!pool.length) return toast('אין מילים ברשימה הזו');
+  S.vc = { f, list: shuffle(pool.map(v => VI[v.w])).slice(0, 40), i: 0, flip: 0 }; save(); go('vcards');
+}
+function vcards() {
+  const C = S.vc; if (!C) return voc();
+  const top = `<div class="xtop"><button class="icb" onclick="go('voc')">→ חזרה</button><span class="ttl">🃏 כרטיסיות · ${VC_F.find(x => x[0] === C.f)[1]} · ${Math.min(C.i + 1, C.list.length)}/${C.list.length}</span></div>`;
+  if (C.i >= C.list.length) return top + `<main><div class="card" style="text-align:center"><b>סיימת את החבילה 🎉</b></div><button class="btn blue" onclick="vcStart(S.vc.f)">עוד חבילה</button><button class="btn ghost" style="margin-top:10px" onclick="delete S.vc;save();go('voc')">למילים</button></main>` + navBar();
+  const v = VOC[C.list[C.i]];
+  return top + `<main><div class="card flip" onclick="S.vc.flip=1;save();reRender()">${C.flip ? vCard(v, true) : `<div class="vw big" style="margin:40px 0">${esc(v.w)}</div><p class="mut sm" style="text-align:center">לחיצה כדי לראות את הפירוש</p>`}</div>
+  ${C.flip ? `<div class="row"><button class="btn red" onclick="vcRate(1)">לא יודע</button><button class="btn ghost" onclick="vcRate(2)">קצת מכיר</button><button class="btn" onclick="vcRate(3)">יודע</button></div>` : ''}</main>` + navBar();
+}
+function vcRate(r) {
+  const C = S.vc, v = VOC[C.list[C.i]], s = S.voc[v.w] = S.voc[v.w] || { b: 0, ok: 0, bad: 0, due: Date.now() };
+  s.r = r; s.at = Date.now();
+  if (r === 1) { s.bad = (s.bad || 0) + 1; s.b = 0; s.due = Date.now(); } // לא יודע: חוזרת לחזרה הקרובה
+  C.i++; C.flip = 0; save(); reRender();
+}
+// ===== המילון: כל המאגר, עם חיפוש וסינון =====
+const VL_F = [['all', 'הכל'], ['rep', 'חוזרות'], ['hard', 'קשות'], ['weak', 'טעיתי'], ['new', 'לא נלמדו']];
+let vlF = 'all', vlQ = '';
+function vlRows() {
+  const q = vlQ.trim(), W = new Set(vWeak());
+  const L = VOC.filter(v => (vlF === 'rep' ? v.n > 1 : vlF === 'hard' ? v.l === 2 : vlF === 'weak' ? W.has(v) : vlF === 'new' ? !vst(v) : true) && (!q || v.w.includes(q) || v.m.includes(q)));
+  const dot = v => { const s = vst(v); return !s ? '' : s.k ? '✓' : W.has(v) ? '⚠️' : vLearned(v) ? '✓' : '·'; };
+  return `<p class="mut sm">${L.length} מילים</p>` + L.map(v => `<details class="qx"><summary><b>${esc(v.w)}</b><span class="grow mut sm" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.m)}</span>${vTags(v)}<span>${dot(v)}</span></summary>
+    <div style="padding:0 12px 12px">${vCard(v)}<button class="btn ghost" style="margin-top:10px" onclick="vToggleKnown(${VI[v.w]})">${vst(v) && vst(v).k ? 'להחזיר ללימוד' : 'אני כבר מכיר אותה'}</button></div></details>`).join('');
+}
+function vToggleKnown(i) { const v = VOC[i], s = S.voc[v.w] = S.voc[v.w] || { b: 0, ok: 0, bad: 0 }; s.k = s.k ? 0 : 1; s.at = Date.now(); if (!s.k) s.due = Date.now(); save(); document.getElementById('vl').innerHTML = vlRows(); }
+function vlist() {
+  return `<div class="xtop"><button class="icb" onclick="go('voc')">→ חזרה</button><span class="ttl">📖 המילון</span></div><main>
+  <input class="txt" placeholder="חיפוש מילה או פירוש" value="${esc(vlQ)}" oninput="vlQ=this.value;document.getElementById('vl').innerHTML=vlRows()">
+  <div class="seg">${VL_F.map(([k, l]) => `<button class="${vlF === k ? 'on' : ''}" onclick="vlF='${k}';reRender()">${l}</button>`).join('')}</div>
+  <div id="vl">${vlRows()}</div><p class="mut sm">${VOC_NOTE}</p></main>` + navBar();
+}
+// ===== מיון מהיר: מילים שעוד לא ראית. «מכיר» יוצאת מהלימוד, «לא מכיר» נכנסת לשיעורים =====
+function vsStart() { const L = vNew().map(v => VI[v.w]); if (!L.length) return toast('מיינת את כל המילים ✓'); S.vs = { list: L, i: 0, show: 0, k: 0, u: 0 }; go('vsort'); }
+function vsort() {
+  const Z = S.vs; if (!Z) return voc();
+  while (Z.i < Z.list.length && S.voc[VOC[Z.list[Z.i]].w] && !Z.show) Z.i++;
+  const top = `<div class="xtop"><button class="icb" onclick="go('voc')">→ חזרה</button><span class="ttl">⚡ מיון מהיר · ✓ ${Z.k} מכיר · ✗ ${Z.u} ללמוד</span></div>`;
+  if (Z.i >= Z.list.length) return top + `<main><div class="card" style="text-align:center"><b>מיינת את כל המילים 🎉</b></div><button class="btn blue" onclick="vStart('learn')">לשיעור</button></main>` + navBar();
+  const v = VOC[Z.list[Z.i]];
+  return top + `<main><p class="mut sm" style="text-align:center">מכיר את המילה ויודע להסביר אותה? אם כן, היא יוצאת מהלימוד. בספק — «לא בטוח».</p>
+  <div class="card">${Z.show ? vCard(v, true) : `<div class="vw big" style="margin:36px 0 8px">${esc(v.w)}</div><div style="text-align:center">${vTags(v)}</div><p class="mut sm" style="text-align:center">${Z.i + 1} מתוך ${Z.list.length}</p>`}</div>
+  ${Z.show ? `<button class="btn blue big" onclick="S.vs.show=0;S.vs.i++;save();reRender()">הלאה</button>` : `<div class="row"><button class="btn" onclick="vsAns(1)">מכיר ✓</button><button class="btn red" onclick="vsAns(0)">לא בטוח</button></div>
+  <button class="btn ghost" onclick="S.vs.show=1;save();reRender()">להציץ בפירוש</button>`}</main>` + navBar();
+}
+function vsAns(k) {
+  const Z = S.vs, v = VOC[Z.list[Z.i]], now = Date.now();
+  if (k) { S.voc[v.w] = { b: 0, ok: 0, bad: 0, k: 1, at: now }; Z.k++; Z.i++; }
+  else { S.voc[v.w] = { b: 0, ok: 0, bad: 0, due: now, at: now, f: dayKey(now) }; Z.u++; Z.show = 1; } // נכנסת לחזרה הקרובה
+  save(); reRender();
+}
+// ===== מסך המילים =====
+function voc() {
+  if (!VOC.length) return `<main><h1>🔤 מילים</h1>${window.SOLX ? codeCard() : '<div class="card">המאגר עוד לא נטען.</div>'}</main>` + navBar();
+  const seen = VOC.filter(vst), learned = VOC.filter(vLearned), due = vDue().length, weak = vWeak().length, nw = vNew();
+  const rep = VOC.filter(v => v.n > 1), repL = rep.filter(vLearned).length, hard = VOC.filter(v => v.l === 2).length;
+  const L = S.vl && S.vl.i < S.vl.q.length ? S.vl : null, dl = daysLeft(), today = dayKey(Date.now());
+  const goal = dl > 0 ? Math.ceil(nw.length / dl) : nw.length, todayNew = VOC.filter(v => { const s = vst(v); return s && !s.k && s.f === today; }).length;
+  return `<main><h1>🔤 מילים</h1>
+  <div class="card hero"><div style="font-size:26px;font-weight:800"><span class="ltr">${learned.length} / ${VOC.length}</span></div><div class="mut sm">מילים וביטויים מהאנלוגיות של ${EX.length} הבחינות שכבר נלמדו</div>
+  <div class="bar" style="margin-top:8px;background:rgba(255,255,255,.3)"><i style="width:${pct(learned.length, VOC.length)}%;background:#fff"></i></div></div>
+  <div class="kpis"><div class="kpi"><b>${due}</b><span>לחזרה עכשיו</span></div><div class="kpi"><b>${seen.length - learned.length}</b><span>בתהליך</span></div><div class="kpi"><b>${repL}/${rep.length}</b><span>החוזרות</span></div></div>
+  ${L ? `<div class="card"><b>באמצע: ${esc(L.title)}</b><p class="mut sm" style="margin:4px 0 8px">${L.i + 1} מתוך ${L.q.length}</p><button class="btn blue" onclick="go('vles')">להמשיך</button></div>` : ''}
+  ${nw.length ? `<div class="card"><b>היעד להיום: ${goal} מילים חדשות</b> <span class="mut sm">(${todayNew} כבר היום)</span><p class="mut sm" style="margin:4px 0 0">${nw.length} מילים שעוד לא ראית, ${dl > 0 ? `${dl} ימים עד הבחינה` : 'הבחינה עברה'}. שיעור = ${NEW_PER} חדשות, אז ${Math.ceil(goal / NEW_PER)} שיעורים ביום. מילים שאתה כבר מכיר מורידים מהר ב«מיון מהיר», והיעד יורד.</p></div>` : ''}
+  <button class="btn blue big" onclick="vStart('learn')">${nw.length ? `שיעור: ${Math.min(NEW_PER, nw.length)} מילים חדשות${due ? ` + ${Math.min(due, REV_MAX)} לחזרה` : ''}` : 'אין מילים חדשות. לחזרה'}</button>
+  ${nw.length ? `<button class="btn ghost" style="margin-bottom:10px" onclick="vsStart()">⚡ מיון מהיר: מה אני כבר מכיר (${nw.length})</button>` : ''}
+  <div class="row"><button class="btn ghost" onclick="vStart('review')">🔁 חזרה (${due})</button><button class="btn ghost" onclick="vStart('weak')">⚠️ טעיתי (${weak})</button></div>
+  <h2>🃏 כרטיסיות</h2><div class="card"><p class="sm" style="margin-top:0">מילה מקדימה, פירוש מאחורה. מדרגים: יודע, קצת מכיר, לא יודע. «לא יודע» חוזרת לחזרה הקרובה.</p>
+  <div class="seg" style="flex-wrap:wrap">${VC_F.map(([k, l]) => `<button onclick="vcStart('${k}')">${l}${k[0] === 'r' ? ` (${VOC.filter(v => vst(v) && vst(v).r === +k[1]).length})` : ''}</button>`).join('')}</div></div>
+  <button class="btn ghost" onclick="go('vlist')">📖 המילון: כל ${VOC.length} המילים</button>
+  <h2>איך לומדים</h2><div class="card"><p class="sm" style="margin:0">באנלוגיות (6 שאלות בכל פרק מילולי) שאלה נופלת בדרך כלל על מילה אחת שלא מכירים. המאגר הוא כל המילים מכל ${EX.length} הבחינות הרשמיות, ${hard} מהן קשות. <b>${rep.length} מילים חזרו ב-2 בחינות או יותר</b>, והן באות ראשונות.</p>
+  <p class="sm">קודם «מיון מהיר»: עוברים על המילים ומוציאים את מה שכבר מכירים (שניה למילה). מה שנשאר נלמד בשיעורים: ${NEW_PER} חדשות בכל שיעור, ואז חזרה על מה שהגיע זמנו (אחרי יום, יומיים, 4, 8, 16 ו-32). טעות מחזירה את המילה להתחלה. מילה נחשבת «נלמדה» אחרי 3 חזרות נכונות בימים שונים.</p>
+  ${rep.length - rep.filter(vst).length > 0 ? `<p class="sm" style="margin-bottom:0">רוצה להתחיל רק מהחוזרות? <a href="#" onclick="vStart('rep');return false">שיעור מ-${rep.length} החוזרות</a>.</p>` : ''}</div>
+  <p class="mut sm">${VOC_NOTE}</p></main>` + navBar();
+}
+
 // ===== הדרכה: רק קבצים רשמיים של מאל״ו =====
 function learn() {
   const row = ([d, t, u]) => `<div class="it"><input type="checkbox" style="width:20px;height:20px" ${S.read[u] ? 'checked' : ''} onchange="S.read['${u}']=this.checked;save()"><div class="grow">${link(u, esc(t) + ' ↗', '')}</div>${d !== 'writing' ? `<span class="tag ${d[0]}">${DOM[d]}</span>` : ''}</div>`;
@@ -589,7 +758,7 @@ function openQ(n) { const d = document.getElementById('q' + n); if (d) { d.open 
 function codeInput() { return `<div class="row"><input class="txt" id="cd" placeholder="קוד גישה" autocomplete="off" style="margin:0"><button class="btn blue" style="width:auto;padding:12px 18px" onclick="setCode(document.getElementById('cd').value)">לפתוח</button></div>`; }
 function codeCard() { return `<div class="card"><b>🔒 המפתחות וההסברים נעולים במכשיר הזה</b><p class="sm" style="margin:4px 0 8px">פותחים פעם אחת עם הקישור המלא שקיבלת, או מקלידים כאן את קוד הגישה.</p>${codeInput()}</div>`; }
 function expo() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, examDate: S.examDate }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
 function impo() {
