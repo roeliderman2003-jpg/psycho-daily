@@ -35,6 +35,7 @@ def clean(s):
     return ' '.join(t)
 
 
+MIN_LEVEL = 2  # רועי 17/11: «תשאיר רק 269 הקשות». 1 מוסיף גם את המילים שכדאי לוודא (עוד 548)
 # שורות שהחילוץ שבר (נבדק מול התמונה של השאלה)
 FIX = {('winter_2024', 0, 5): ['פעלתן', 'לפעול']}
 
@@ -99,7 +100,7 @@ def main():
     out = []
     for w, oc in occ.items():
         m = M.get(w)
-        if not m or m.get('l', 0) < 1 or not m.get('m'):
+        if not m or m.get('l', 0) < MIN_LEVEL or not m.get('m'):
             continue
         exams = sorted({o['e'] for o in oc}, key=order, reverse=True)
         oc = sorted(oc, key=lambda o: -order(o['e']))
@@ -121,7 +122,7 @@ def main():
     json.dump(out, open(P('content', 'words', 'words.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
     c = collections.Counter(r['l'] for r in out)
     print(f"אנלוגיות: {len(items)} שאלות, {len(occ)} מילים שונות")
-    print(f"ללימוד: {len(out)} (קשות {c[2]}, בינוניות {c[1]}), מהן ב-2 בחינות ומעלה: {sum(r['n'] > 1 for r in out)}")
+    print(f"ללימוד: {len(out)} (קשות {c[2]}, לוודא {c[1]}), מהן ב-2 בחינות ומעלה: {sum(r['n'] > 1 for r in out)}")
 
 
 if __name__ == '__main__':

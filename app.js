@@ -524,9 +524,9 @@ function dAns(k) {
   P.ans[q.n - 1] = k; P.at = Date.now(); save(); reRender();
 }
 
-// ===== מילים: כל המילים והביטויים מהאנלוגיות של 20 הבחינות, ולימוד בחזרה מרווחת (כמו באמירנט) =====
-// המאגר מגיע מוצפן בתוך sol.js (vocab.py → content/words/words.json → seal.js). לכל מילה: w המילה, m פירוש, x דוגמה, alt מובן נוסף,
-// l רמה (2 קשה, 1 כדאי לוודא), n בכמה בחינות הופיעה, o איפה: {t בחינה, s הזוג של השאלה, a התשובה הנכונה, p 0 בזוג של השאלה / 1-4 בתשובה}.
+// ===== מילים: המילים והביטויים הקשים מהאנלוגיות של 20 הבחינות, ולימוד בחזרה מרווחת (כמו באמירנט) =====
+// המאגר מגיע מוצפן בתוך sol.js (vocab.py → content/words/words.json → seal.js). רק המילים הקשות (רמה 2; MIN_LEVEL ב-vocab.py).
+// לכל מילה: w המילה, m פירוש, x דוגמה, alt מובן נוסף, l רמה, n בכמה בחינות הופיעה, o איפה: {t בחינה, s הזוג של השאלה, a התשובה הנכונה, p 0 בזוג של השאלה / 1-4 בתשובה}.
 // הסדר במאגר: קודם מה שחזר בכמה בחינות, אחר כך הקשות, ואז מהבחינות החדשות. המילים והזוגות של מאל״ו, הפירושים שלנו.
 let VOC = [];
 const VI = {};
@@ -538,7 +538,7 @@ const vLearned = v => { const s = vst(v); return !!s && (s.k || s.b >= 3); };
 const vDue = () => VOC.filter(v => { const s = vst(v); return s && !s.k && (s.due || 0) <= Date.now(); });
 const vWeak = () => VOC.filter(v => { const s = vst(v); return s && !s.k && s.bad > 0 && s.b < 3; });
 const vNew = () => VOC.filter(v => !vst(v));
-const vTags = v => `${v.l === 2 ? '<span class="tag r">קשה</span>' : ''}${v.n > 1 ? `<span class="tag v">${v.n} בחינות</span>` : ''}`;
+const vTags = v => v.n > 1 ? `<span class="tag v">${v.n} בחינות</span>` : ''; // המאגר כולו מילים קשות, אז אין תג «קשה»
 const vMark = (txt, w) => esc(txt).split(esc(w)).join(`<mark>${esc(w)}</mark>`);
 const vOcc = v => (v.o || []).map(o => `<div class="occ"><span class="mut sm">${esc(o.t)}${o.p ? ` · בתשובה ${o.p}` : ' · בשאלה'}</span><div>${vMark(o.s, v.w)} <span class="mut">→</span> ${vMark(o.a, v.w)}</div></div>`).join('');
 const VOC_NOTE = 'המילים והזוגות מהאנלוגיות בבחינות של מאל״ו. הפירושים והדוגמאות נכתבו אצלנו, כי מאל״ו לא מפרסמים מילון.';
@@ -629,11 +629,11 @@ function vcRate(r) {
   C.i++; C.flip = 0; save(); reRender();
 }
 // ===== המילון: כל המאגר, עם חיפוש וסינון =====
-const VL_F = [['all', 'הכל'], ['rep', 'חוזרות'], ['hard', 'קשות'], ['weak', 'טעיתי'], ['new', 'לא נלמדו']];
+const VL_F = [['all', 'הכל'], ['rep', 'חוזרות'], ['weak', 'טעיתי'], ['new', 'לא נלמדו']];
 let vlF = 'all', vlQ = '';
 function vlRows() {
   const q = vlQ.trim(), W = new Set(vWeak());
-  const L = VOC.filter(v => (vlF === 'rep' ? v.n > 1 : vlF === 'hard' ? v.l === 2 : vlF === 'weak' ? W.has(v) : vlF === 'new' ? !vst(v) : true) && (!q || v.w.includes(q) || v.m.includes(q)));
+  const L = VOC.filter(v => (vlF === 'rep' ? v.n > 1 : vlF === 'weak' ? W.has(v) : vlF === 'new' ? !vst(v) : true) && (!q || v.w.includes(q) || v.m.includes(q)));
   const dot = v => { const s = vst(v); return !s ? '' : s.k ? '✓' : W.has(v) ? '⚠️' : vLearned(v) ? '✓' : '·'; };
   return `<p class="mut sm">${L.length} מילים</p>` + L.map(v => `<details class="qx"><summary><b>${esc(v.w)}</b><span class="grow mut sm" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(v.m)}</span>${vTags(v)}<span>${dot(v)}</span></summary>
     <div style="padding:0 12px 12px">${vCard(v)}<button class="btn ghost" style="margin-top:10px" onclick="vToggleKnown(${VI[v.w]})">${vst(v) && vst(v).k ? 'להחזיר ללימוד' : 'אני כבר מכיר אותה'}</button></div></details>`).join('');
@@ -668,11 +668,11 @@ function vsAns(k) {
 function voc() {
   if (!VOC.length) return `<main><h1>🔤 מילים</h1>${window.SOLX ? codeCard() : '<div class="card">המאגר עוד לא נטען.</div>'}</main>` + navBar();
   const seen = VOC.filter(vst), learned = VOC.filter(vLearned), due = vDue().length, weak = vWeak().length, nw = vNew();
-  const rep = VOC.filter(v => v.n > 1), repL = rep.filter(vLearned).length, hard = VOC.filter(v => v.l === 2).length;
+  const rep = VOC.filter(v => v.n > 1), repL = rep.filter(vLearned).length;
   const L = S.vl && S.vl.i < S.vl.q.length ? S.vl : null, dl = daysLeft(), today = dayKey(Date.now());
   const goal = dl > 0 ? Math.ceil(nw.length / dl) : nw.length, todayNew = VOC.filter(v => { const s = vst(v); return s && !s.k && s.f === today; }).length;
   return `<main><h1>🔤 מילים</h1>
-  <div class="card hero"><div style="font-size:26px;font-weight:800"><span class="ltr">${learned.length} / ${VOC.length}</span></div><div class="mut sm">מילים וביטויים מהאנלוגיות של ${EX.length} הבחינות שכבר נלמדו</div>
+  <div class="card hero"><div style="font-size:26px;font-weight:800"><span class="ltr">${learned.length} / ${VOC.length}</span></div><div class="mut sm">מילים וביטויים קשים מהאנלוגיות של ${EX.length} הבחינות שכבר נלמדו</div>
   <div class="bar" style="margin-top:8px;background:rgba(255,255,255,.3)"><i style="width:${pct(learned.length, VOC.length)}%;background:#fff"></i></div></div>
   <div class="kpis"><div class="kpi"><b>${due}</b><span>לחזרה עכשיו</span></div><div class="kpi"><b>${seen.length - learned.length}</b><span>בתהליך</span></div><div class="kpi"><b>${repL}/${rep.length}</b><span>החוזרות</span></div></div>
   ${L ? `<div class="card"><b>באמצע: ${esc(L.title)}</b><p class="mut sm" style="margin:4px 0 8px">${L.i + 1} מתוך ${L.q.length}</p><button class="btn blue" onclick="go('vles')">להמשיך</button></div>` : ''}
@@ -683,7 +683,7 @@ function voc() {
   <h2>🃏 כרטיסיות</h2><div class="card"><p class="sm" style="margin-top:0">מילה מקדימה, פירוש מאחורה. מדרגים: יודע, קצת מכיר, לא יודע. «לא יודע» חוזרת לחזרה הקרובה.</p>
   <div class="seg" style="flex-wrap:wrap">${VC_F.map(([k, l]) => `<button onclick="vcStart('${k}')">${l}${k[0] === 'r' ? ` (${VOC.filter(v => vst(v) && vst(v).r === +k[1]).length})` : ''}</button>`).join('')}</div></div>
   <button class="btn ghost" onclick="go('vlist')">📖 המילון: כל ${VOC.length} המילים</button>
-  <h2>איך לומדים</h2><div class="card"><p class="sm" style="margin:0">באנלוגיות (6 שאלות בכל פרק מילולי) שאלה נופלת בדרך כלל על מילה אחת שלא מכירים. המאגר הוא כל המילים מכל ${EX.length} הבחינות הרשמיות, ${hard} מהן קשות. <b>${rep.length} מילים חזרו ב-2 בחינות או יותר</b>, והן באות ראשונות.</p>
+  <h2>איך לומדים</h2><div class="card"><p class="sm" style="margin:0">באנלוגיות (6 שאלות בכל פרק מילולי) שאלה נופלת בדרך כלל על מילה אחת שלא מכירים. המאגר הוא ${VOC.length} המילים והביטויים הקשים מכל ${EX.length} הבחינות הרשמיות: מילים ספרותיות, נדירות וניבים. <b>${rep.length} מהם חזרו ב-2 בחינות או יותר</b>, והם באים ראשונים.</p>
   <p class="sm">קודם «מיון מהיר»: עוברים על המילים ומוציאים את מה שכבר מכירים (שניה למילה). מה שנשאר נלמד בשיעורים: ${NEW_PER} חדשות בכל שיעור, ואז חזרה על מה שהגיע זמנו (אחרי יום, יומיים, 4, 8, 16 ו-32). טעות מחזירה את המילה להתחלה. מילה נחשבת «נלמדה» אחרי 3 חזרות נכונות בימים שונים.</p>
   ${rep.length - rep.filter(vst).length > 0 ? `<p class="sm" style="margin-bottom:0">רוצה להתחיל רק מהחוזרות? <a href="#" onclick="vStart('rep');return false">שיעור מ-${rep.length} החוזרות</a>.</p>` : ''}</div>
   <p class="mut sm">${VOC_NOTE}</p></main>` + navBar();
