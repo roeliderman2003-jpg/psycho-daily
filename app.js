@@ -28,6 +28,7 @@ async function qImg(id) {
   return IMG[id] = URL.createObjectURL(new Blob([pt], { type: 'image/png' }));
 }
 const PK = 'pd2k', UK = 'pd2u';
+const OPEN = '0487085caa'; // רועי 19/11: «תסיר את קוד הגישה». האפליקציה נפתחת לכולם בלי להקליד קוד
 // מזהה אישי להתקדמות: קוד הגישה משותף לכל מי שקיבל את הקישור, ולכן כל מכשיר חדש מקבל מזהה משלו ומתחיל מאפס.
 // '0' = המזהה הישן (קוד הגישה בלבד), למכשירים שנפתחו לפני 19/11. מעבר בין מכשירים: «הקישור האישי» בהגדרות (&u=...).
 let myUid = null;
@@ -202,7 +203,8 @@ const first = k => (S.res[k] || [])[0];
 const keyOf = k => (SOL[k] && SOL[k].k) || S.keys[k] || '';
 const isVoid = (k, n) => !!(SOL[k] && SOL[k].v && SOL[k].v.includes(n)); // שאלה שמאל״ו ביטלו: לא נחשבת טעות
 const expOf = (k, n) => (SOL[k] && SOL[k].x[n - 1]) || '';
-const locked = () => !!window.SOLX && !Object.keys(SOL).length;
+let opening = true; // בזמן שהמפתחות נפתחים בטעינה לא מציגים «נעול»
+const locked = () => !opening && !!window.SOLX && !Object.keys(SOL).length;
 const expHtml = t => esc(t).replace(/\n/g, '<br>');
 const EXP_NOTE = 'ההסברים נכתבו לפי המפתח הרשמי של מאל״ו. מאל״ו לא מפרסמים הסברים לבחינות, רק את המפתח.';
 const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + ((x && x === +key[i]) || isVoid(k, i + 1) ? 1 : 0), 0) : null; };
@@ -766,7 +768,7 @@ function settings() {
   <div class="card"><b>שמירה בענן</b><p class="sm" style="margin:4px 0 8px">${cloudId ? `כל פרק, מפתח וטעות שתוקנה נשמרים בענן. ההתקדמות אישית: מי שמקבל את הקישור הרגיל מתחיל מאפס. כדי להמשיך במכשיר נוסף שלך, פותחים בו את הקישור האישי.<br>${cloudLine()}` : 'נדלקת אחרי שפותחים את המפתחות עם קוד הגישה. עד אז ההתקדמות נשמרת רק במכשיר הזה.'}</p>${cloudId ? '<button class="btn ghost" onclick="cloudSync().then(render)">לסנכרן עכשיו</button><button class="btn ghost" onclick="copyMyLink()">📱 הקישור האישי שלי (למכשיר נוסף)</button><button class="btn ghost" onclick="pasteMyLink()">🔗 להמשיך כאן התקדמות ממכשיר אחר</button>' : ''}</div>
   <div class="card"><b>גיבוי ידני</b><p class="mut sm">קוד גיבוי של כל ההתקדמות, למקרה הצורך. מעתיקים, ומדביקים במכשיר אחר כדי לטעון.</p>
   <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
-  <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו. השאלות נפתחות מהאתר שלהם, והמפתחות שמורים כאן מוצפנים. ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
+  <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו.  ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
   <button class="btn ghost" onclick="go('home')">חזרה</button></main>` + navBar();
 }
 function openQ(n) { const d = document.getElementById('q' + n); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }
@@ -794,7 +796,9 @@ render();
   try { had = !!localStorage.getItem(PK); } catch (e) { } // מכשיר שכבר נפתח בעבר נשאר על ההתקדמות שלו
   if (m) { p = m[1]; history.replaceState(null, '', location.pathname + location.search); }
   if (!p) try { p = localStorage.getItem(PK); } catch (e) { }
-  if (p && await unseal(p)) { pickUid(mu && mu[1], had); try { localStorage.setItem(PK, p); } catch (e) { } render(); cloudInit(p); }
-  else if (m) toast('הקוד בקישור לא נכון');
+  if (!p || !(await unseal(p))) p = (await unseal(OPEN)) ? OPEN : null;
+  opening = false;
+  if (p) { pickUid(mu && mu[1], had); try { localStorage.setItem(PK, p); } catch (e) { } cloudInit(p); }
+  render();
 })();
 addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(); else if (cloudT) { clearTimeout(cloudT); cloudSync(); } });
