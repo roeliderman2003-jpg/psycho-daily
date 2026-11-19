@@ -27,7 +27,19 @@ async function qImg(id) {
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.subarray(0, 12) }, IKC, b.subarray(12));
   return IMG[id] = URL.createObjectURL(new Blob([pt], { type: 'image/png' }));
 }
-const PK = 'pd2k';
+const PK = 'pd2k', UK = 'pd2u';
+// מזהה אישי להתקדמות: קוד הגישה משותף לכל מי שקיבל את הקישור, ולכן כל מכשיר חדש מקבל מזהה משלו ומתחיל מאפס.
+// '0' = המזהה הישן (קוד הגישה בלבד), למכשירים שנפתחו לפני 19/11. מעבר בין מכשירים: «הקישור האישי» בהגדרות (&u=...).
+let myUid = null;
+function pickUid(fromLink, hadCode) {
+  let cur = null; try { cur = localStorage.getItem(UK); } catch (e) { }
+  if (!cur && hadCode) cur = '0';
+  let u = cur;
+  if (fromLink && fromLink !== cur && (!cur || confirm('הקישור הזה שייך להתקדמות אחרת. לעבור אליה? מה שנעשה במכשיר הזה יתמזג לתוכה.'))) u = fromLink;
+  if (!u) u = [...crypto.getRandomValues(new Uint8Array(9))].map(b => b.toString(16).padStart(2, '0')).join('');
+  try { localStorage.setItem(UK, u); } catch (e) { }
+  return myUid = u;
+}
 async function unseal(pass) {
   if (!window.SOLX || !window.crypto || !crypto.subtle) return false;
   try {
@@ -40,12 +52,15 @@ async function unseal(pass) {
 }
 async function setCode(v) {
   v = String(v || '').trim(); if (!v) return;
-  if (await unseal(v)) { try { localStorage.setItem(PK, v); } catch (e) { } toast('המפתחות וההסברים נפתחו ✓'); render(); cloudInit(v); }
+  const mk = v.match(/k=([\w-]+)/), mu = v.match(/[#&]u=([\w-]+)/); // אפשר להדביק גם את הקישור המלא (כולל הקישור האישי)
+  if (mk) v = mk[1];
+  let had = false; try { had = !!localStorage.getItem(PK); } catch (e) { }
+  if (await unseal(v)) { pickUid(mu && mu[1], had); try { localStorage.setItem(PK, v); } catch (e) { } toast('המפתחות וההסברים נפתחו ✓'); render(); cloudInit(v); }
   else toast('הקוד לא נכון');
 }
 function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { toast('השמירה במכשיר נכשלה'); } cloudSoon(); }
 
-// ===== שמירה בענן: כל ההתקדמות נשמרת גם בשרת, ומתמזגת בין מכשירים. המזהה נגזר מקוד הגישה =====
+// ===== שמירה בענן: כל ההתקדמות נשמרת גם בשרת, ומתמזגת בין מכשירים. המזהה נגזר מקוד הגישה ומהמזהה האישי (myUid) =====
 const CLOUD = { url: 'https://jezxhibenekurxymwxrb.supabase.co', key: 'sb_publishable_xGZcm2vZSZFN-mesHdnArg_vxRKIh3S' };
 let cloudId = null, cloudAt = null, cloudErr = false, cloudT = null;
 async function cloudRpc(fn, body) {
@@ -54,7 +69,7 @@ async function cloudRpc(fn, body) {
   const j = await r.json(); if (j && j.error) throw new Error(fn + ' ' + j.error); return j;
 }
 async function cloudInit(pass) {
-  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('psycho-daily:' + pass));
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('psycho-daily:' + pass + (myUid && myUid !== '0' ? ':' + myUid : '')));
   cloudId = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('');
   await cloudSync();
 }
@@ -748,7 +763,7 @@ function settings() {
   <div class="seg">${[['2026-12-04', 'ו׳ 4.12'], ['2026-12-06', 'א׳ 6.12']].map(([d, l]) => `<button class="${S.examDate === d ? 'on' : ''}" onclick="S.examDate='${d}';S.examDateAt=Date.now();save();render()">${l}</button>`).join('')}</div>
   <input class="txt" type="date" value="${S.examDate}" onchange="S.examDate=this.value;S.examDateAt=Date.now();save();render()"></div>
   ${window.SOLX ? `<div class="card"><b>מפתחות והסברים</b><p class="mut sm" style="margin:4px 0 8px">${locked() ? 'נעולים. צריך את קוד הגישה פעם אחת במכשיר.' : `פתוחים ✓ (${Object.keys(SOL).filter(k => !k.endsWith(':scale')).length} פרקים, טבלאות ציון ל-${Object.keys(SOL).filter(k => k.endsWith(':scale')).length} בחינות)`}</p>${locked() ? codeInput() : ''}</div>` : ''}
-  <div class="card"><b>שמירה בענן</b><p class="sm" style="margin:4px 0 8px">${cloudId ? `כל פרק, מפתח וטעות שתוקנה נשמרים בענן ומתמזגים בין מכשירים. כל מכשיר שנפתח עם קוד הגישה רואה את אותה התקדמות.<br>${cloudLine()}` : 'נדלקת אחרי שפותחים את המפתחות עם קוד הגישה. עד אז ההתקדמות נשמרת רק במכשיר הזה.'}</p>${cloudId ? '<button class="btn ghost" onclick="cloudSync().then(render)">לסנכרן עכשיו</button>' : ''}</div>
+  <div class="card"><b>שמירה בענן</b><p class="sm" style="margin:4px 0 8px">${cloudId ? `כל פרק, מפתח וטעות שתוקנה נשמרים בענן. ההתקדמות אישית: מי שמקבל את הקישור הרגיל מתחיל מאפס. כדי להמשיך במכשיר נוסף שלך, פותחים בו את הקישור האישי.<br>${cloudLine()}` : 'נדלקת אחרי שפותחים את המפתחות עם קוד הגישה. עד אז ההתקדמות נשמרת רק במכשיר הזה.'}</p>${cloudId ? '<button class="btn ghost" onclick="cloudSync().then(render)">לסנכרן עכשיו</button><button class="btn ghost" onclick="copyMyLink()">📱 הקישור האישי שלי (למכשיר נוסף)</button><button class="btn ghost" onclick="pasteMyLink()">🔗 להמשיך כאן התקדמות ממכשיר אחר</button>' : ''}</div>
   <div class="card"><b>גיבוי ידני</b><p class="mut sm">קוד גיבוי של כל ההתקדמות, למקרה הצורך. מעתיקים, ומדביקים במכשיר אחר כדי לטעון.</p>
   <button class="btn blue" onclick="expo()">העתקת קוד גיבוי</button><textarea class="txt" id="imp" rows="3" placeholder="להדביק כאן קוד גיבוי" style="margin-top:12px"></textarea><button class="btn ghost" onclick="impo()">טעינת גיבוי</button></div>
   <div class="card"><b>על האפליקציה</b><p class="mut sm">השאלות, נושאי החיבור, המפתחות וטבלאות הציון הם של מאל״ו. השאלות נפתחות מהאתר שלהם, והמפתחות שמורים כאן מוצפנים. ההסברים לכל שאלה נכתבו לפי המפתח הרשמי, כי מאל״ו לא מפרסמים הסברים. מוצר אישי, לא קשור למאל״ו.</p></div>
@@ -756,7 +771,13 @@ function settings() {
 }
 function openQ(n) { const d = document.getElementById('q' + n); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }
 function codeInput() { return `<div class="row"><input class="txt" id="cd" placeholder="קוד גישה" autocomplete="off" style="margin:0"><button class="btn blue" style="width:auto;padding:12px 18px" onclick="setCode(document.getElementById('cd').value)">לפתוח</button></div>`; }
-function codeCard() { return `<div class="card"><b>🔒 המפתחות וההסברים נעולים במכשיר הזה</b><p class="sm" style="margin:4px 0 8px">פותחים פעם אחת עם הקישור המלא שקיבלת, או מקלידים כאן את קוד הגישה.</p>${codeInput()}</div>`; }
+function codeCard() { return `<div class="card"><b>🔒 המפתחות וההסברים נעולים במכשיר הזה</b><p class="sm" style="margin:4px 0 8px">פותחים פעם אחת עם הקישור המלא שקיבלת, או מקלידים כאן את קוד הגישה. כדי להמשיך התקדמות ממכשיר אחר, מדביקים כאן את «הקישור האישי» מההגדרות שם.</p>${codeInput()}</div>`; }
+function pasteMyLink() { const v = prompt('להדביק כאן את «הקישור האישי» מהמכשיר השני:'); if (v && /[#&]u=[\w-]+/.test(v)) setCode(v); else if (v) toast('זה לא קישור אישי'); }
+function copyMyLink() { // הקישור האישי: קוד הגישה + המזהה האישי. פותח את אותה התקדמות במכשיר אחר
+  let k = ''; try { k = localStorage.getItem(PK) || ''; } catch (e) { }
+  const url = location.origin + location.pathname + '#k=' + k + '&u=' + myUid;
+  (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('הקישור האישי הועתק ✓ לא לשלוח אותו לאחרים'), () => prompt('הקישור האישי שלך (לא לשלוח לאחרים):', url));
+}
 function expo() {
   const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
@@ -769,10 +790,11 @@ function impo() {
 try { localStorage.removeItem('pd1'); } catch (e) { } // הגרסה הקודמת עם שאלות שלא ממאל״ו
 render();
 (async () => { // פתיחת המפתחות וההסברים: מהקישור (#k=...) או מהקוד שנשמר
-  let p = null; const m = location.hash.match(/k=([\w-]+)/);
+  let p = null, had = false; const m = location.hash.match(/k=([\w-]+)/), mu = location.hash.match(/[#&]u=([\w-]+)/);
+  try { had = !!localStorage.getItem(PK); } catch (e) { } // מכשיר שכבר נפתח בעבר נשאר על ההתקדמות שלו
   if (m) { p = m[1]; history.replaceState(null, '', location.pathname + location.search); }
   if (!p) try { p = localStorage.getItem(PK); } catch (e) { }
-  if (p && await unseal(p)) { try { localStorage.setItem(PK, p); } catch (e) { } render(); cloudInit(p); }
+  if (p && await unseal(p)) { pickUid(mu && mu[1], had); try { localStorage.setItem(PK, p); } catch (e) { } render(); cloudInit(p); }
   else if (m) toast('הקוד בקישור לא נכון');
 })();
 addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(); else if (cloudT) { clearTimeout(cloudT); cloudSync(); } });

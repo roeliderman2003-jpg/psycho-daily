@@ -5,7 +5,7 @@ create schema if not exists psycho;
 revoke all on schema psycho from public, anon, authenticated;
 
 create table if not exists psycho.saves (
-  id text primary key,                 -- sha256 (hex) של 'psycho-daily:' + קוד הגישה
+  id text primary key,                 -- sha256 (hex) של 'psycho-daily:' + קוד הגישה [+ ':' + מזהה אישי, מ-19/11; בלי מזהה = רועי]
   data jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
