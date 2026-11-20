@@ -790,6 +790,8 @@ function impo() {
 }
 
 try { localStorage.removeItem('pd1'); } catch (e) { } // הגרסה הקודמת עם שאלות שלא ממאל״ו
+// מבקשים מהדפדפן לא למחוק את האחסון של האתר כשחסר מקום. בלי זה, מכשיר שאיבד את המזהה האישי (pd2u) מתחיל מאפס
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { }); } catch (e) { }
 render();
 (async () => { // פתיחת המפתחות וההסברים: מהקישור (#k=...) או מהקוד שנשמר
   let p = null, had = false; const m = location.hash.match(/k=([\w-]+)/), mu = location.hash.match(/[#&]u=([\w-]+)/);
