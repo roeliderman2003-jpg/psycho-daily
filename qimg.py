@@ -9,10 +9,40 @@ PDF = os.path.join(ROOT, 'content', 'pdfs')
 OUT = os.path.join(ROOT, 'content', 'qimg')
 TOP, BOT, X0, X1, ZOOM = 72, 786, 42, 556, 2.5
 UNIT = ('reading', 'chart')
+OPT = (')1(', ')2(', ')3(', ')4(', '(1)', '(2)', '(3)', '(4)')
 
 
-def marks(d, c):
-    """y (top) של כל מספר שאלה בפרק, באותה שיטה כמו qpages."""
+def colmarks(d, c, fp):
+    """המיקום של כל מספר שאלה לפי הצורה ולא לפי הטקסט: קטע מודגש בעמודת המספרים (x 505-527).
+    בחלק מהקבצים הספרות מקודדות בגופן שלא נקרא (למשל «4.» יוצא כשורות ריקות), ולכן חיפוש טקסט מפספס אותן.
+    מתעלמים מדף הנוסחאות ומכל מה שלפני הכותרת של הסוג הראשון בפרק (דף הוראות)."""
+    H = headers(d, c); secs = c.get('sections') or []
+    first = H.get(secs[0]['from']) if secs else None
+    out = []
+    for p in range(c['page'], c['endPage'] + 1):
+        if p == fp: continue
+        ys = []
+        for b in d[p - 1].get_text('dict')['blocks']:
+            for l in b.get('lines', []):
+                for s in l['spans']:
+                    x0, y0, x1, y1 = s['bbox']
+                    if 'Bold' in s['font'] and 505 <= x0 <= 522 and 519 <= x1 <= 527 and TOP - 20 <= y0 < BOT and 8 < y1 - y0 < 22:
+                        if not any(abs(y0 - y) < 4 for y in ys): ys.append(y0)
+        out += [(p, y) for y in sorted(ys) if not first or (p, y) > first]
+    return out
+
+
+def marks(d, c, fp=None):
+    """y (top) של כל מספר שאלה בפרק. קודם לפי הצורה (colmarks), ובודקים שהיא מסכימה עם כל מספר שנקרא כטקסט."""
+    T = text_marks(d, c)
+    C = colmarks(d, c, fp)
+    if len(C) == c['questions'] and all(C[n - 1][0] == T[n][0] and abs(C[n - 1][1] - T[n][1]) < 4 for n in T):
+        return {n: C[n - 1] for n in range(1, c['questions'] + 1)}
+    return T
+
+
+def text_marks(d, c):
+    """y (top) של כל מספר שאלה שנקרא כטקסט («.N» בעמודת המספרים, ואחריו בעמוד תשובה «(1)»)."""
     found, nxt = {}, 1
     for p in range(c['page'], c['endPage'] + 1):
         ws = d[p - 1].get_text('words')
@@ -34,6 +64,18 @@ def headers(d, c):
             hit = [w for w in d[p - 1].get_text('words') if pat.search(w[4]) and w[1] < BOT]
             if hit: out[s['from']] = (p, min(w[1] for w in hit)); break
     return out
+
+
+def rule_below(pg, y):
+    """הקו האופקי הרחב (x 71-524) שמאל״ו מציירים בסוף כל שאלה. מתחתיו יכולות לבוא הוראות לסוג הבא,
+    שהטקסט שלהן לפעמים לא נקרא (ולכן headers() לא מוצא אותן). 9999 = אין קו."""
+    ys = []
+    for dr in pg.get_drawings():
+        for it in dr['items']:
+            if it[0] == 'l' and abs(it[1].y - it[2].y) < 1 and abs(it[1].x - it[2].x) > 400: ys.append(it[1].y)
+            elif it[0] == 're' and it[1].width > 400 and it[1].height < 3: ys.append(it[1].y0)
+    ys = [v for v in ys if y + 10 < v < BOT]
+    return min(ys) if ys else 9999
 
 
 def content_bottom(pg, y_from):
@@ -82,9 +124,12 @@ def shot(d, segs, rule=False):
 def run(eid):
     e = json.load(open(f'{EX}/{eid}.json', encoding='utf-8'))
     d = fitz.open(f'{PDF}/{eid}.pdf'); os.makedirs(f'{OUT}/{eid}', exist_ok=True)
-    meta = {}
+    meta = {}; miss = []; bad = []
     for ci, c in enumerate(e['chapters']):
-        M = marks(d, c); qp = c['qpages']; H = headers(d, c)
+        M = marks(d, c, e.get('formulasPage')); qp = c['qpages']; H = headers(d, c)
+        miss += [f'{ci}-{n}' for n in range(1, c['questions'] + 1) if n not in M]
+        # העמוד של כל שאלה לפי המיקום שנמצא (בעבר שאלה שלא נמצאה קיבלה את העמוד של השכנה)
+        c['qpages'] = qp = [M[n][0] if n in M else qp[n - 1] for n in range(1, c['questions'] + 1)]
         secs = c.get('sections') or []
         sec_of = lambda n: next((s for s in secs if s['from'] <= n <= s['to']), None)
         for n in range(1, c['questions'] + 1):
@@ -93,6 +138,7 @@ def run(eid):
                 p, y = M[n]
                 nx = M.get(n + 1)
                 cut = min([h[1] for h in H.values() if h[0] == p and h[1] > y + 5] or [9999])  # כותרת של סוג חדש באותו עמוד
+                cut = min(cut, rule_below(d[p - 1], y) + 4)  # או הקו שבסוף השאלה (ה-+4 כדי ש-shot ימחק אותו)
                 if nx and nx[0] == p: segs = [(p, y, min(nx[1], cut) - 2)]
                 elif cut < 9999: segs = [(p, y, cut - 2)]
                 else:
@@ -103,6 +149,10 @@ def run(eid):
                         if nx[1] - t > 20: segs.append((p + 1, t, nx[1] - 2))
             else:  # המספר לא זוהה: כל העמוד
                 p = qp[n - 1]; segs = [(p, content_top(d[p - 1]), content_bottom(d[p - 1], TOP))]
+            # בדיקה: בתמונה של שאלה צריכות להיות כל 4 התשובות (כשהטקסט שלהן נקרא), ורק פעם אחת כל אחת
+            seen = [re.sub(r'\D', '', w[4]) for p_, a, b in segs for w in d[p_ - 1].get_text('words') if w[4] in OPT and a - 2 <= w[1] <= b]
+            if any(w[4] in OPT for p_, a, b in segs for w in d[p_ - 1].get_text('words') if a - 2 <= w[1] <= b) and sorted(seen) != ['1', '2', '3', '4']:
+                bad.append(f'{ci}-{n}:{"".join(seen)}')
             open(f'{OUT}/{eid}/{ci}-{n}.png', 'wb').write(shot(d, segs, rule=True))
         # קטע קריאה / תרשים: מהעמוד שבו הוא מתחיל עד לפני השאלה הראשונה שלו
         for s in secs:
@@ -127,6 +177,13 @@ def run(eid):
         pg = d[fp - 1]; y0 = content_top(pg)
         hs = [h[1] for c in e['chapters'] for h in headers(d, c).values() if h[0] == fp]
         open(f'{OUT}/{eid}/f.png', 'wb').write(shot(d, [(fp, y0, (min(hs) - 4) if hs else content_bottom(pg, y0))]))
+    # מעדכנים את qpages במפה (רק השדה הזה), כדי שגם «פתיחה בקובץ» תגיע לעמוד הנכון
+    with open(f'{EX}/{eid}.json', 'w', encoding='utf-8', newline='\n') as fo:
+        fo.write(json.dumps(e, ensure_ascii=False, indent=2) + '\n')
+    if miss:
+        raise SystemExit(f'{eid}: לא נמצא המספר של {miss}. השאלות האלה היו מוצגות כעמוד שלם. לבדוק ידנית לפני seal')
+    if bad:
+        print(f'{eid}: בדיקת תשובות בתמונה (פרק-שאלה:התשובות שנמצאו): {bad}')
     return meta
 
 
