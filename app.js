@@ -269,6 +269,7 @@ function answered() { // כל שאלה שנענתה בניסיון הראשון,
 // רמה = אחוז נכון ב-3 הפרקים האחרונים של התחום (ניסיון ראשון). הציון שהרמה שווה = ממוצע על הטבלאות של כל הבחינות של מאל״ו,
 // כדי שלא יהיה תלוי בטבלה של בחינה אחת. כך רואים איך שיפור באחוזים הופך לנקודות.
 const LV_N = 3;
+const sgn = v => `<span dir="ltr">${v >= 0 ? '+' : ''}${v}</span>`; // מספר עם סימן, שלא יתהפך בעברית
 function chHist() { // כל הפרקים שיש להם מפתח, לפי הזמן שבו נעשו
   return done().filter(x => keyOf(x.key)).map(x => ({ x, at: first(x.key).at, d: x.c.domain, ok: scored(x.key), n: x.c.questions })).sort((a, b) => a.at - b.at);
 }
@@ -292,7 +293,8 @@ function lineChart(series, o) { // גרף קווים פשוט: series = [{c, nam
   const W = 600, H = o.h || 260, L = 64, R = 74, T = 14, B = 34, N = Math.max(2, o.n);
   const X = i => L + i * (W - L - R) / (N - 1), Y = v => T + (o.max - v) * (H - T - B) / (o.max - o.min);
   let g = o.ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 6}" text-anchor="end" font-size="19" fill="var(--mut)">${o.fmt(v)}</text>`).join('');
-  g += `<text x="${L}" y="${H - 6}" font-size="19" fill="var(--mut)">פרק 1</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="19" fill="var(--mut)">פרק ${o.n}</text>`;
+  const xl = o.xl || ['פרק 1', `פרק ${o.n}`];
+  g += `<text x="${L}" y="${H - 6}" font-size="19" fill="var(--mut)">${xl[0]}</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="19" fill="var(--mut)">${xl[1]}</text>`;
   series.forEach(s => {
     if (!s.pts.length) return;
     if (s.pts.length > 1) g += `<polyline fill="none" stroke="${s.c}" stroke-width="3" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ''} points="${s.pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}"/>`;
@@ -300,6 +302,27 @@ function lineChart(series, o) { // גרף קווים פשוט: series = [{c, nam
     const z = s.pts[s.pts.length - 1]; if (s.label) g += `<text x="${X(z[0]) + 12}" y="${Y(z[1]) + 7}" font-size="21" font-weight="700" fill="var(--ink)">${o.fmt(z[1])}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" role="img" aria-label="${esc(o.aria)}">${g}</svg>`;
+}
+// מגמה לכל סוג שאלה: אחוז נכון בכל פרק שהיה בו הסוג הזה (לפי הזמן), והזמן הממוצע לשאלה כשנמדד (a.t, מ-21/11)
+function typeTrendHtml(h) {
+  const pc = v => Math.round(v * 100) + '%';
+  const cards = Object.keys(TYPE_HE).map(ty => {
+    const P = h.map(y => {
+      const a = first(y.x.key), key = keyOf(y.x.key), qs = []; for (let n = 1; n <= y.n; n++) if (typeOf(y.x.c, n) === ty) qs.push(n);
+      if (!qs.length) return null;
+      const ok = qs.filter(n => a.ans[n - 1] === +key[n - 1] || isVoid(y.x.key, n)).length;
+      return { y, ok, n: qs.length, t: a.t ? qs.reduce((s, n) => s + (a.t[n - 1] || 0), 0) / qs.length : null };
+    }).filter(Boolean);
+    if (!P.length) return '';
+    const d = P[0].y.d, col = d === 'verbal' ? 'var(--o)' : 'var(--b)', last = P.slice(-LV_N), lv = last.reduce((s, p) => s + p.ok, 0) / last.reduce((s, p) => s + p.n, 0), p0 = P[0].ok / P[0].n;
+    const chart = P.length > 1 ? lineChart([{ c: col, dots: true, label: true, pts: P.map((p, i) => [i, 100 * p.ok / p.n, `${chTitle(p.y.x)}: ${p.ok}/${p.n}`]) }], { n: P.length, h: 200, min: 0, max: 100, ticks: [0, 50, 100], fmt: v => Math.round(v) + '%', xl: ['הראשון', 'האחרון'], aria: TYPE_HE[ty] }) : '';
+    const T = P.filter(p => p.t != null), dl = Math.round((lv - p0) * 100);
+    const tl = T.length ? `<p class="sm" style="margin:4px 0 0">⏱️ זמן לשאלה: ${T.length > 1 ? `${mmss(T[0].t)} בפעם הראשונה שנמדד → <b>${mmss(T[T.length - 1].t)}</b> בפרק האחרון` : `<b>${mmss(T[0].t)}</b> (נמדד בפרק אחד עד עכשיו)`}</p>` : '';
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b><span class="tag ${d[0]}">${DOM[d]}</span> ${TYPE_HE[ty]}</b><span class="sm">עכשיו <b>${pc(lv)}</b></span></div>
+      ${chart}
+      <p class="sm" style="margin:4px 0 0">${P.length > 1 ? `בפרק הראשון ${pc(p0)} (${P[0].ok}/${P[0].n}) · ממוצע ${last.length} האחרונים ${pc(lv)} <b>(${sgn(dl)})</b>` : `פרק אחד עד עכשיו: ${P[0].ok}/${P[0].n}. מהפרק הבא תראה כאן קו.`}</p>${tl}</div>`;
+  }).join('');
+  return cards ? `<h2>כל חלק לאורך הזמן</h2><p class="mut sm" style="margin-top:-4px">לכל סוג שאלה: אחוז נכון בכל פרק שהיה בו, לפי הסדר שעשית אותם. «עכשיו» = ממוצע ${LV_N} הפרקים האחרונים.</p>${cards}` : '';
 }
 function trendHtml() {
   const h = chHist(), T = scoreTrend(h), now = T.length ? T[T.length - 1] : null;
@@ -321,14 +344,15 @@ function trendHtml() {
   ...[0.8, 0.85, 0.9].filter(p => p > pq + 0.02).map(p => ({ l: `כמותי ${pc(p)}`, s: worth(pv, p).G }))];
   return `<div class="card">
     <div class="kpis" style="margin-top:0"><div class="kpi"><b>${pc(pv)}</b><span>מילולי עכשיו${nv < LV_N ? ` (${nv} פרק${nv > 1 ? 'ים' : ''})` : ''}</span></div><div class="kpi"><b>${pc(pq)}</b><span>כמותי עכשיו</span></div><div class="kpi"><b>${now.w.G}</b><span>הציון שזה שווה</span></div></div>
-    <p class="sm" style="margin:0">«עכשיו» = ${LV_N} הפרקים האחרונים בכל תחום. הציון: הממוצע לפי הטבלאות של כל ${EX.length} הבחינות של מאל״ו (מילולי ${now.w.V}, כמותי ${now.w.Q}).${sp.length > 1 ? ` מאז שיש ציון: ${dG >= 0 ? '+' : ''}${dG} נקודות.` : ''}</p></div>
+    <p class="sm" style="margin:0">«עכשיו» = ${LV_N} הפרקים האחרונים בכל תחום. הציון: הממוצע לפי הטבלאות של כל ${EX.length} הבחינות של מאל״ו (מילולי ${now.w.V}, כמותי ${now.w.Q}).${sp.length > 1 ? ` מאז שיש ציון: ${sgn(dG)} נקודות.` : ''}</p></div>
   <h2>אחוז נכון בכל פרק</h2><div class="card">${c1}<div class="legend"><span style="--c:var(--o)">מילולי</span><span style="--c:var(--b)">כמותי</span></div>
     <p class="mut sm" style="margin:6px 0 0">נקודה = פרק, לפי הסדר שעשית אותם. קו = הרמה (ממוצע ${LV_N} הפרקים האחרונים בתחום).</p></div>
   <h2>הציון שהרמה שלך שווה</h2><div class="card">${c2}<p class="mut sm" style="margin:6px 0 0">אחרי כל פרק: כמה הייתה שווה הרמה שלך באותו רגע.</p></div>
   <h2>כמה הציון יעלה</h2><div class="card">
-    <p class="sm" style="margin-top:0">כל תשובה נכונה נוספת בכל פרק מילולי: <b>+${plusV}</b> נקודות בערך. בכל פרק כמותי: <b>+${plusQ}</b>.</p>
-    <div class="list">${goals.map(g => `<div class="it" style="cursor:default"><div class="grow">אם תגיע ל<b>${g.l}</b></div><b>${g.s}</b><span class="mut sm">(${g.s - now.w.G >= 0 ? '+' : ''}${g.s - now.w.G})</span></div>`).join('')}</div>
-    <p class="mut sm" style="margin:6px 0 0">והתחום השני נשאר כמו עכשיו.${nv < LV_N || nq < LV_N ? ' ככל שתעשה יותר פרקים, המגמה תהיה אמינה יותר.' : ''}</p></div>`;
+    <p class="sm" style="margin-top:0">כל תשובה נכונה נוספת בכל פרק מילולי: <b>${sgn(plusV)}</b> נקודות בערך. בכל פרק כמותי: <b>${sgn(plusQ)}</b>.</p>
+    <div class="list">${goals.map(g => `<div class="it" style="cursor:default"><div class="grow">אם תגיע ל<b>${g.l}</b></div><b>${g.s}</b><span class="mut sm">(${sgn(g.s - now.w.G)})</span></div>`).join('')}</div>
+    <p class="mut sm" style="margin:6px 0 0">והתחום השני נשאר כמו עכשיו.${nv < LV_N || nq < LV_N ? ' ככל שתעשה יותר פרקים, המגמה תהיה אמינה יותר.' : ''}</p></div>
+  ${typeTrendHtml(h)}`;
 }
 
 // ===== מסכים =====
