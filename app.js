@@ -453,10 +453,13 @@ function result() {
   // השאלות שסומנו ב-🚩 בזמן הפרק (נשמרות בניסיון, a.flag): רשימה משלהן, והן פתוחות בהסברים גם כשענית נכון
   const fl = items.filter(y => y.flag);
   const flagBox = fl.length ? `<h2>🚩 סימנת לחזור (${fl.length})</h2><div class="card list">${fl.map(y => `<div class="it" onclick="openQ(${y.n})"><b>שאלה ${y.n}</b><div class="grow mut sm">${TYPE_HE[y.type] || ''}</div><span class="sm">${y.vd ? 'בוטלה' : y.ok ? '✓ נכון' : y.a ? `✗ ענית ${y.a}, הנכונה ${y.right}` : `לא ענית, הנכונה ${y.right}`}</span></div>`).join('')}</div>` : '';
-  let lastT = null;
+  let lastT = null; const psgShown = {};
   const exps = hasExp ? items.map(y => {
     const t = y.type, hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok && !y.flag ? '' : 'open'}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, 'closed')}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    // התרשים פתוח בכל שאלה של תרשים (בלעדיו אי אפשר להבין את השאלה). קטע קריאה ארוך: פתוח בשאלה הפתוחה הראשונה שלו, ובשאר בלחיצה
+    const op = !(y.ok && !y.flag), s = secOf(c, y.n), first = op && s && !psgShown[s.from]; if (first) psgShown[s.from] = 1;
+    const psg = t === 'chart' || first ? 'open' : 'closed';
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${op ? 'open' : ''}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, psg)}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
