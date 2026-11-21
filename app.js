@@ -137,7 +137,7 @@ document.addEventListener('toggle', ev => { if (ev.target.querySelectorAll) ev.t
 let rsT = null; addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => document.querySelectorAll('.qi img').forEach(sizeQ), 150); });
 function zoomQ(el) { // לחיצה על תמונה: מסך מלא, פי 2, עם גלילה לכל הכיוונים
   const im = el.querySelector('img'); if (!im) return;
-  const z = document.createElement('div'); z.className = 'zoom'; z.innerHTML = `<button class="icb" onclick="this.parentNode.remove()">✕ סגירה</button><div class="zin"><img src="${im.src}" alt=""></div>`;
+  const z = document.createElement('div'); z.className = 'zoom'; z.dataset.q = el.dataset.q || ''; z.innerHTML = `<button class="icb" onclick="this.parentNode.remove()">✕ סגירה</button><div class="zin"><img src="${im.src}" alt=""></div>`;
   document.body.appendChild(z); const zi = z.querySelector('.zin'); zi.scrollLeft = zi.scrollWidth;
 }
 const isUnit = sec => !!sec && ['reading', 'chart'].includes(sec.type);
@@ -329,12 +329,35 @@ function startChap(k) {
   const x = chByKey[k]; if (!x) return;
   if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו ולהתחיל את זה?')) return;
   const n = x.c.questions;
-  S.cur = { kind: 'chap', key: k, endAt: Date.now() + x.c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), flag: Array(n).fill(0), last: Date.now() };
+  S.cur = { kind: 'chap', key: k, endAt: Date.now() + x.c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), flag: Array(n).fill(0), t: Array(n).fill(0), last: Date.now() };
   save(); go('exam');
 }
+// זמן לכל שאלה (X.t, בשניות): כל שנייה שהמסך פתוח נזקפת לשאלה שמול העיניים.
+// מול העיניים = השאלה שמוגדלת במסך מלא, או השאלה (התמונה + שורת התשובות) שחוצה קו בשליש העליון של המסך, מתחת לפס העליון ולקטע הצמוד.
+// אין שאלה על הקו (רווח בין שאלות) → הקרובה אליו. שם קוראים, ולא בתחתית המסך.
+function qFocus(X) {
+  const pre = X.key.replace(':', '/') + '-', num = id => id && id.startsWith(pre) && /^\d+$/.test(id.slice(pre.length)) ? +id.slice(pre.length) - 1 : -1;
+  const z = document.querySelector('.zoom'); if (z) return num(z.dataset.q);
+  let top = 0;
+  document.querySelectorAll('.xtop, .two>.side').forEach(el => { const r = el.getBoundingClientRect(); if (getComputedStyle(el).position === 'sticky' && r.top <= top + 6 && r.bottom > top) top = r.bottom; });
+  const H = innerHeight, line = top + (H - top) * 0.35; let best = -1, bd = 1e9;
+  document.querySelectorAll(`.qi[data-q^="${pre}"]`).forEach(el => {
+    const i = num(el.dataset.q); if (i < 0) return;
+    const a = el.getBoundingClientRect().top, b = (el.nextElementSibling || el).getBoundingClientRect().bottom;
+    if (b <= top || a >= H) return; // לא במסך
+    const d = line < a ? a - line : line > b ? line - b : 0;
+    if (d < bd) { bd = d; best = i; }
+  });
+  return best;
+}
+let lastTk = 0, tkN = 0;
 function startTick() {
   const upd = () => {
     const X = S.cur; if (!X) return;
+    if (X.kind === 'chap') {
+      const now = Date.now(), dt = Math.min(now - (lastTk || now), 3000) / 1000; lastTk = now;
+      if (!document.hidden && dt > 0) { const i = qFocus(X); if (i >= 0) { (X.t = X.t || Array(X.ans.length).fill(0))[i] += dt; if (++tkN % 5 === 0) try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { } } }
+    }
     const left = (X.endAt - Date.now()) / 1000;
     const el = document.getElementById('tm'); if (el) { el.textContent = mmss(left); el.classList.toggle('warn', left < (X.kind === 'wr' ? 300 : 60)); }
     if (left <= 0) { toast('⏰ הזמן נגמר'); X.kind === 'wr' ? wDone() : submit(true); return; }
@@ -355,7 +378,7 @@ function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) 
 function submit(auto) {
   const X = S.cur; if (!X) return;
   if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
-  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
   const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
 }
 function keyin() {
@@ -379,11 +402,34 @@ function breakdown(items, keyf, label) {
     const p = pct(v.ok, v.n); return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${esc(label(k))}</span><b>${v.ok}/${v.n} · ${p}%</b></div><div class="bar ${p < 50 ? 'low' : p < 75 ? 'mid' : ''}"><i style="width:${p}%"></i></div></div>`;
   }).join('');
 }
+// איפה הלך הזמן בפרק: לפי סוג שאלה, השאלות הארוכות, וכמה זמן לקחו שאלות שצדקת מול שאלות שטעית
+function timeCard(items, a, per, bySec) {
+  if (!a.t) return `<h2>⏱️ איפה הלך הזמן</h2><div class="card"><p class="sm" style="margin:0">בפרק הזה נשמר רק הזמן הכולל (${mmss(a.dur)}). הזמן לכל שאלה נמדד מ-21/11, מהפרק הבא שתעשה.</p></div>`;
+  const tot = items.reduce((s, y) => s + y.t, 0), rest = Math.max(0, a.dur - tot), sh = v => pct(v, Math.max(a.dur, tot, 1));
+  const avg = l => l.length ? l.reduce((s, y) => s + y.t, 0) / l.length : 0;
+  const res = y => y.vd ? 'בוטלה' : y.ok ? '✓' : y.a ? '✗' : 'לא ענית';
+  const slow = items.filter(y => y.t > 0).sort((x, y) => y.t - x.t).slice(0, 5);
+  const g = {}; if (bySec) items.forEach(y => { if (y.type) (g[y.type] = g[y.type] || []).push(y); });
+  const secs = Object.entries(g).sort((x, y) => y[1].reduce((s, q) => s + q.t, 0) - x[1].reduce((s, q) => s + q.t, 0)).map(([t, l]) => {
+    const st = l.reduce((s, y) => s + y.t, 0), p = sh(st), ok = l.filter(y => y.ok).length;
+    return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span>${esc(TYPE_HE[t] || t)} <span class="mut sm">· ${l.length} שאלות · ${ok}/${l.length} נכון</span></span><b>${mmss(st)} · ${p}%</b></div><div class="bar tm"><i style="width:${p}%"></i></div><div class="mut sm">ממוצע ${mmss(avg(l))} לשאלה ${avg(l) > per * 1.3 ? '· ⚠️ איטי מהקצב' : ''}</div></div>`;
+  }).join('');
+  const okL = items.filter(y => y.ok && !y.vd), badL = items.filter(y => !y.ok && y.a);
+  return `<h2>⏱️ איפה הלך הזמן</h2><div class="card">
+    <p class="sm" style="margin-top:0">הקצב של מאל״ו: <b>${mmss(per)}</b> לשאלה. אצלך בממוצע: <b>${mmss(avg(items))}</b>.${okL.length && badL.length ? ` בשאלות שצדקת ${mmss(avg(okL))}, בשאלות שטעית ${mmss(avg(badL))}.` : ''}</p>
+    ${secs}
+    ${rest >= 20 ? `<p class="mut sm">${mmss(rest)} בלי שאלה מול העיניים (הוראות, דף הנוסחאות, קטע קריאה לבד במסך, או גלילה).</p>` : ''}
+    <b class="sm">5 השאלות שלקחו הכי הרבה זמן</b></div>
+  <div class="card list">${slow.map(y => `<div class="it" onclick="openQ(${y.n})"><b>שאלה ${y.n}</b><div class="grow mut sm">${TYPE_HE[y.type] || ''}</div><span class="sm">${res(y)} · <b>${mmss(y.t)}</b></span></div>`).join('')}</div>
+  <p class="mut sm" style="margin-top:-4px">נמדד לפי השאלה שהייתה מול העיניים במסך, או שהגדלת. ברשת למעלה: הזמן מתחת לכל שאלה, ובאדום שאלה שלקחה יותר מפי 2 מהקצב.</p>`;
+}
 function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
-  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i] }));
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null }));
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
-  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span></div>`).join('');
+  const per = c.minutes * 60 / c.questions; // הקצב שמאל״ו נותנים: זמן הפרק חלקי מספר השאלות
+  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span>${y.t != null ? `<em class="${y.t > 2 * per ? 'slow' : ''}">${mmss(y.t)}</em>` : ''}</div>`).join('');
+  const timeBox = timeCard(items, a, per, !!(c.sections && c.sections.length));
   const hasExp = items.some(y => expOf(arg.key, y.n));
   // השאלות שסומנו ב-🚩 בזמן הפרק (נשמרות בניסיון, a.flag): רשימה משלהן, והן פתוחות בהסברים גם כשענית נכון
   const fl = items.filter(y => y.flag);
@@ -391,13 +437,14 @@ function result() {
   let lastT = null;
   const exps = hasExp ? items.map(y => {
     const t = y.type, hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok && !y.flag ? '' : 'open'}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span><span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, 'closed')}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok && !y.flag ? '' : 'open'}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, 'closed')}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
   ${scoreCard(e)}
   <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו${hasExp ? '. לוחצים על שאלה כדי לראות את ההסבר.' : ''}</p><div class="rgrid">${grid}</div>
   ${flagBox}
+  ${timeBox}
   ${c.sections && c.sections.length ? `<h2>לפי סוג שאלה</h2><div class="card">${breakdown(items, y => y.type, t => TYPE_HE[t] || t)}</div>` : ''}
   ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
   <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">${hasExp ? 'קוראים את ההסבר, ואחרי יום או יומיים פותרים את השאלה שוב בלי שעון בלשונית «טעויות».' : 'פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח.'} הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
