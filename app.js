@@ -333,22 +333,24 @@ function startChap(k) {
   save(); go('exam');
 }
 // זמן לכל שאלה (X.t, בשניות): כל שנייה שהמסך פתוח נזקפת לשאלה שמול העיניים.
-// מול העיניים = השאלה שמוגדלת במסך מלא, או השאלה (התמונה + שורת התשובות) שחוצה קו בשליש העליון של המסך, מתחת לפס העליון ולקטע הצמוד.
-// אין שאלה על הקו (רווח בין שאלות) → הקרובה אליו. שם קוראים, ולא בתחתית המסך.
+// מול העיניים = השאלה שמוגדלת במסך מלא, או השאלה (התמונה + שורת התשובות) הראשונה מלמעלה שרובה גלוי,
+// מתחת לפס העליון ולקטע הצמוד. בטלפון שאלה תופסת כרבע מסך, והשאלה שקוראים היא העליונה, לא זו שבאמצע.
 function qFocus(X) {
   const pre = X.key.replace(':', '/') + '-', num = id => id && id.startsWith(pre) && /^\d+$/.test(id.slice(pre.length)) ? +id.slice(pre.length) - 1 : -1;
   const z = document.querySelector('.zoom'); if (z) return num(z.dataset.q);
   let top = 0;
-  document.querySelectorAll('.xtop, .two>.side').forEach(el => { const r = el.getBoundingClientRect(); if (getComputedStyle(el).position === 'sticky' && r.top <= top + 6 && r.bottom > top) top = r.bottom; });
-  const H = innerHeight, line = top + (H - top) * 0.35; let best = -1, bd = 1e9;
+  document.querySelectorAll('.xtop, .two>.side').forEach(el => { // פס או קטע שנעוץ עכשיו למעלה מכסה את מה שמתחתיו
+    const r = el.getBoundingClientRect(), st = getComputedStyle(el);
+    if (st.position === 'sticky' && r.top <= (parseFloat(st.top) || 0) + 2 && r.bottom > top) top = r.bottom;
+  });
+  const H = innerHeight; let first = -1, fa = 1e9, big = -1, bv = 40;
   document.querySelectorAll(`.qi[data-q^="${pre}"]`).forEach(el => {
     const i = num(el.dataset.q); if (i < 0) return;
-    const a = el.getBoundingClientRect().top, b = (el.nextElementSibling || el).getBoundingClientRect().bottom;
-    if (b <= top || a >= H) return; // לא במסך
-    const d = line < a ? a - line : line > b ? line - b : 0;
-    if (d < bd) { bd = d; best = i; }
+    const a = el.getBoundingClientRect().top, b = (el.nextElementSibling || el).getBoundingClientRect().bottom, v = Math.min(b, H) - Math.max(a, top);
+    if (v > bv) { bv = v; big = i; }
+    if ((v >= 0.6 * (b - a) || v >= 250) && a < fa) { fa = a; first = i; } // רובה גלוי (או לפחות 250 פיקסלים משאלה ארוכה)
   });
-  return best;
+  return first >= 0 ? first : big;
 }
 let lastTk = 0, tkN = 0;
 function startTick() {
@@ -356,7 +358,17 @@ function startTick() {
     const X = S.cur; if (!X) return;
     if (X.kind === 'chap') {
       const now = Date.now(), dt = Math.min(now - (lastTk || now), 3000) / 1000; lastTk = now;
-      if (!document.hidden && dt > 0) { const i = qFocus(X); if (i >= 0) { (X.t = X.t || Array(X.ans.length).fill(0))[i] += dt; if (++tkN % 5 === 0) try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { } } }
+      if (!document.hidden && dt > 0) {
+        // אחרי תשובה (X.pin) הזמן עובר מיד לשאלה הבאה שעוד אין לה תשובה, גם אם השאלה שענית עוד מול העיניים. גוללים לשאלה אחרת → חוזרים למדידה לפי המסך.
+        // זמן על שאלה שכבר יש לה תשובה = חזרה אליה (X.tb), ונספר גם בזמן שלה.
+        let i = qFocus(X);
+        if (X.pin != null) { if (i === X.pin || i < 0) i = X.ans.findIndex((v, j) => j > X.pin && !v); else delete X.pin; } // הבאה שעוד אין לה תשובה
+        if (i >= 0) {
+          (X.t = X.t || Array(X.ans.length).fill(0))[i] += dt;
+          if (X.ans[i]) (X.tb = X.tb || Array(X.ans.length).fill(0))[i] += dt;
+          if (++tkN % 5 === 0) try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { }
+        }
+      }
     }
     const left = (X.endAt - Date.now()) / 1000;
     const el = document.getElementById('tm'); if (el) { el.textContent = mmss(left); el.classList.toggle('warn', left < (X.kind === 'wr' ? 300 : 60)); }
@@ -366,19 +378,25 @@ function startTick() {
 }
 function exam() {
   const X = S.cur, x = chByKey[X.key], { e, c } = x, left = (X.endAt - Date.now()) / 1000;
-  const rows = chapterRows(X.key, i => `<div class="bub"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${X.ans[i] === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`);
-  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · ${X.ans.filter(Boolean).length}/${c.questions}</span></div>
+  const rows = chapterRows(X.key, i => `<div class="bub" id="bub${i}"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${X.ans[i] === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`);
+  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · <span id="xc">${X.ans.filter(Boolean).length}</span>/${c.questions}</span></div>
   <main class="full"><div class="one"><p class="mut sm" style="margin-top:0">${esc(c.label || '')}. לוחצים על שאלה כדי להגדיל.</p>${fmBox(X.key)}${locked() ? codeCard() : ''}</div>${rows}
   <div class="one"><button class="btn" style="margin-top:18px" onclick="submit()">סיום והגשה</button>
   <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></div></main>`;
 }
-function bub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; save(); const y = scrollY; render(); scrollTo(0, y); }
-function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); const y = scrollY; render(); scrollTo(0, y); }
+// תשובה או דגל מעדכנים רק את השורה שלהם. בלי לצייר את כל הדף, המסך לא קופץ והמדידה לא זזה לשאלה אחרת.
+function bubRow(i) {
+  const X = S.cur, r = document.getElementById('bub' + i); if (!r) { const y = scrollY; render(); scrollTo(0, y); return; }
+  r.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j < 4 ? X.ans[i] === j + 1 : !!X.flag[i]));
+  const c = document.getElementById('xc'); if (c) c.textContent = X.ans.filter(Boolean).length;
+}
+function bub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; if (X.ans[i]) X.pin = i; else delete X.pin; save(); bubRow(i); }
+function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); bubRow(i); }
 function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) return; delete S.cur; save(); go('home'); }
 function submit(auto) {
   const X = S.cur; if (!X) return;
   if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
-  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
   const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
 }
 function keyin() {
@@ -415,17 +433,18 @@ function timeCard(items, a, per, bySec) {
     return `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:14px"><span>${esc(TYPE_HE[t] || t)} <span class="mut sm">· ${l.length} שאלות · ${ok}/${l.length} נכון</span></span><b>${mmss(st)} · ${p}%</b></div><div class="bar tm"><i style="width:${p}%"></i></div><div class="mut sm">ממוצע ${mmss(avg(l))} לשאלה ${avg(l) > per * 1.3 ? '· ⚠️ איטי מהקצב' : ''}</div></div>`;
   }).join('');
   const okL = items.filter(y => y.ok && !y.vd), badL = items.filter(y => !y.ok && y.a);
+  const tb = items.reduce((s, y) => s + y.tb, 0), tbMax = items.reduce((m, y) => y.tb > m.tb ? y : m, items[0]);
   return `<h2>⏱️ איפה הלך הזמן</h2><div class="card">
-    <p class="sm" style="margin-top:0">הקצב של מאל״ו: <b>${mmss(per)}</b> לשאלה. אצלך בממוצע: <b>${mmss(avg(items))}</b>.${okL.length && badL.length ? ` בשאלות שצדקת ${mmss(avg(okL))}, בשאלות שטעית ${mmss(avg(badL))}.` : ''}</p>
+    <p class="sm" style="margin-top:0">הקצב של מאל״ו: <b>${mmss(per)}</b> לשאלה. אצלך בממוצע: <b>${mmss(avg(items))}</b>.${okL.length && badL.length ? ` בשאלות שצדקת ${mmss(avg(okL))}, בשאלות שטעית ${mmss(avg(badL))}.` : ''}${tb >= 10 ? ` חזרת לשאלות שכבר ענית עליהן: <b>${mmss(tb)}</b> בסך הכל (הכי הרבה בשאלה ${tbMax.n}, ${mmss(tbMax.tb)}).` : ''}</p>
     ${secs}
     ${rest >= 20 ? `<p class="mut sm">${mmss(rest)} בלי שאלה מול העיניים (הוראות, דף הנוסחאות, קטע קריאה לבד במסך, או גלילה).</p>` : ''}
     <b class="sm">5 השאלות שלקחו הכי הרבה זמן</b></div>
-  <div class="card list">${slow.map(y => `<div class="it" onclick="openQ(${y.n})"><b>שאלה ${y.n}</b><div class="grow mut sm">${TYPE_HE[y.type] || ''}</div><span class="sm">${res(y)} · <b>${mmss(y.t)}</b></span></div>`).join('')}</div>
-  <p class="mut sm" style="margin-top:-4px">נמדד לפי השאלה שהייתה מול העיניים במסך, או שהגדלת. ברשת למעלה: הזמן מתחת לכל שאלה, ובאדום שאלה שלקחה יותר מפי 2 מהקצב.</p>`;
+  <div class="card list">${slow.map(y => `<div class="it" onclick="openQ(${y.n})"><b>שאלה ${y.n}</b><div class="grow mut sm">${TYPE_HE[y.type] || ''}</div><span class="sm">${res(y)} · <b>${mmss(y.t)}</b>${y.tb >= 5 ? ` <span class="mut">(חזרה ${mmss(y.tb)})</span>` : ''}</span></div>`).join('')}</div>
+  <p class="mut sm" style="margin-top:-4px">נמדד לפי השאלה שהייתה מול העיניים במסך, או שהגדלת. אחרי שעונים, הזמן עובר מיד לשאלה הבאה. כשגוללים חזרה לשאלה שכבר ענית, הזמן נספר לה ומופיע כ«חזרה». ברשת למעלה: הזמן מתחת לכל שאלה, ובאדום שאלה שלקחה יותר מפי 2 מהקצב.</p>`;
 }
 function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
-  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null }));
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null, tb: a.tb ? a.tb[i] || 0 : 0 }));
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
   const per = c.minutes * 60 / c.questions; // הקצב שמאל״ו נותנים: זמן הפרק חלקי מספר השאלות
   const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span>${y.t != null ? `<em class="${y.t > 2 * per ? 'slow' : ''}">${mmss(y.t)}</em>` : ''}</div>`).join('');
@@ -437,7 +456,7 @@ function result() {
   let lastT = null;
   const exps = hasExp ? items.map(y => {
     const t = y.type, hd = t && t !== lastT ? `<div class="sech">${TYPE_HE[t]}</div>` : ''; lastT = t;
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok && !y.flag ? '' : 'open'}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, 'closed')}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${y.ok && !y.flag ? '' : 'open'}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, 'closed')}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
