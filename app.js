@@ -481,13 +481,19 @@ function bubRow(i) {
   r.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j < 4 ? X.ans[i] === j + 1 : !!X.flag[i]));
   const c = document.getElementById('xc'); if (c) c.textContent = X.ans.filter(Boolean).length;
 }
-function bub(i, k) { const X = S.cur; X.ans[i] = X.ans[i] === k ? 0 : k; if (X.ans[i]) X.pin = i; else delete X.pin; save(); bubRow(i); }
+// לחיצה על תשובה: בוחרת אותה. לחיצה שנייה על אותה תשובה לא מוחקת אותה (לחיצה כפולה מחקה תשובות בלי לשים לב).
+// כל שינוי נרשם (X.hs[i]: התשובות לפי הסדר), כדי שבתוצאות יראו בדיוק מה סומן ואם שונה.
+function bub(i, k) {
+  const X = S.cur; if (X.ans[i] === k) return;
+  X.ans[i] = k; X.pin = i; ((X.hs = X.hs || [])[i] = X.hs[i] || []).push(k);
+  save(); bubRow(i);
+}
 function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); bubRow(i); }
 function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) return; delete S.cur; save(); go('home'); }
 function submit(auto) {
   const X = S.cur; if (!X) return;
   if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
-  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), ...(X.hs ? { hs: X.ans.map((v, i) => (X.hs[i] || []).join('')) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
   const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
 }
 function keyin() {
@@ -535,7 +541,9 @@ function timeCard(items, a, per, bySec) {
 }
 function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
-  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null, tb: a.tb ? a.tb[i] || 0 : 0 }));
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null, tb: a.tb ? a.tb[i] || 0 : 0, hs: a.hs ? a.hs[i] || '' : null }));
+  // מה סומן בפועל (נשמר מ-21/11): «סימנת 4, ואחר כך 1». בלי היסטוריה מוצגת רק התשובה הסופית.
+  const hsTxt = y => y.hs && y.hs.length > 1 ? `<div class="sm" style="margin:6px 2px 0">✏️ סימנת ${y.hs.split('').join(', ואחר כך ')}. נשארה ${y.a}.</div>` : '';
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
   const per = c.minutes * 60 / c.questions; // הקצב שמאל״ו נותנים: זמן הפרק חלקי מספר השאלות
   const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span>${y.t != null ? `<em class="${y.t > 2 * per ? 'slow' : ''}">${mmss(y.t)}</em>` : ''}</div>`).join('');
@@ -550,7 +558,7 @@ function result() {
     // התרשים פתוח בכל שאלה של תרשים (בלעדיו אי אפשר להבין את השאלה). קטע קריאה ארוך: פתוח בשאלה הפתוחה הראשונה שלו, ובשאר בלחיצה
     const op = !(y.ok && !y.flag), s = secOf(c, y.n), first = op && s && !psgShown[s.from]; if (first) psgShown[s.from] = 1;
     const psg = t === 'chart' || first ? 'open' : 'closed';
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${op ? 'open' : ''}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${qView(arg.key, y.n, psg)}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${op ? 'open' : ''}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}${y.hs && y.hs.length > 1 ? ' ✏️' : ''}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${hsTxt(y)}${qView(arg.key, y.n, psg)}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
