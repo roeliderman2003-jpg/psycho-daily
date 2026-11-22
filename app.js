@@ -14,6 +14,8 @@ S.read = S.read || {};  // קובצי הדרכה של מאל״ו שסומנו כ
 S.prac = S.prac || {};  // תרגול חופשי בלי שעון: מפתח פרק -> {at, ans[]}. לא נכנס לציון ולא ל«טעויות»
 S.voc = S.voc || {};    // מילים: מילה -> {b תיבה 0-6, due, ok, bad, at, day, k מכיר כבר, r דירוג בכרטיסיות 1-3}
 S.examDate = S.examDate || '2026-12-04';
+S.gone = S.gone || {};  // ניסיונות שהוסרו מהנתונים: "מפתח@at" -> מתי הוסר. נשמר (גם בענן) כדי שמכשיר אחר לא יחזיר אותם במיזוג
+dropGone(S);
 // מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
 let SOL = {};
 // תמונות השאלות: q/<בחינה>/<פרק>-<שאלה>.bin, מוצפנות במפתח שנמצא בתוך sol.js. נפתחות רק עם קוד הגישה.
@@ -79,14 +81,28 @@ function mergeS(a, b) {
   if (!b || typeof b !== 'object') return false;
   a.prac = a.prac || {};
   a.voc = a.voc || {};
-  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc]);
+  a.gone = a.gone || {};
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone]);
   for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
+  a.gone = { ...(b.gone || {}), ...a.gone }; dropGone(a); // ניסיון שהוסר במכשיר אחד לא חוזר מהשני
   a.keys = { ...(b.keys || {}), ...a.keys }; a.fix = { ...(b.fix || {}), ...a.fix }; a.read = { ...(b.read || {}), ...a.read };
   const wa = new Set(a.wr.map(x => x.at)); a.wr = a.wr.concat((b.wr || []).filter(x => !wa.has(x.at))).sort((x, y) => x.at - y.at);
   for (const [w, v] of Object.entries(b.voc || {})) if (v && (!a.voc[w] || (v.at || 0) > (a.voc[w].at || 0))) a.voc[w] = v; // מילים: המצב האחרון של כל מילה
   for (const [k, v] of Object.entries(b.prac || {})) if (v && (!a.prac[k] || (v.at || 0) > (a.prac[k].at || 0))) a.prac[k] = v; // בתרגול חופשי: הגרסה האחרונה של הפרק
   if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
-  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc]);
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone]);
+}
+// מוחקים מ-res כל ניסיון שהוסר. פרק שלא נשאר לו ניסיון נראה כאילו לא נעשה, והפעם הבאה שלו נכנסת לנתונים כרגיל
+function dropGone(s) {
+  for (const g of Object.keys(s.gone || {})) {
+    const i = g.lastIndexOf('@'), k = g.slice(0, i), at = +g.slice(i + 1);
+    if (s.res && s.res[k]) { s.res[k] = s.res[k].filter(x => x.at !== at); if (!s.res[k].length) delete s.res[k]; }
+  }
+}
+function removeAtt(key, k) { // רועי 22/11: «אפשרות להסיר כאילו לא עשיתי אותו», לפרק שנעשה בטעות
+  const a = (S.res[key] || [])[k]; if (!a) return;
+  if (!confirm('להסיר את הפרק הזה מהנתונים?\n\nהוא ייעלם מהציון, מהמגמה, מהחוזקות ומ«טעויות», כאילו לא עשית אותו. כשתעשה אותו שוב, הוא ייכנס לנתונים כרגיל.\n\nאי אפשר לבטל.')) return;
+  S.gone[`${key}@${a.at}`] = Date.now(); dropGone(S); save(); toast('הפרק הוסר מהנתונים'); go('home');
 }
 async function cloudSync() { // מושכים, ממזגים, ושומרים את האיחוד. ככה מכשיר שנשאר פתוח לא מוחק את מה שנעשה במכשיר אחר
   if (!cloudId) return;
@@ -570,7 +586,8 @@ function result() {
   ${hasExp ? `<h2>הסבר לכל שאלה</h2><p class="mut sm" style="margin-top:-4px">השאלות שטעית בהן פתוחות. כדאי לפתוח את הקובץ בצד (${link(pdf(e, c.page), 'עמוד ' + c.page, 'sm')}). ${EXP_NOTE}</p>${exps}` : locked() ? codeCard() : ''}
   <div class="card"><b>איך לומדים מהטעויות</b><p class="sm" style="margin:4px 0 8px">${hasExp ? 'קוראים את ההסבר, ואחרי יום או יומיים פותרים את השאלה שוב בלי שעון בלשונית «טעויות».' : 'פותחים את השאלה בקובץ ופותרים שוב בלי שעון. בלשונית «טעויות» מסמנים תשובה חדשה ובודקים מול המפתח.'} הסברים רשמיים לכל סוג שאלה נמצאים בלשונית «הדרכה».</p>
   <div class="row">${link(pdf(e, c.page), '📄 לשאלות בקובץ')}<button class="btn blue" onclick="go('fix')">לתרגל את הטעויות</button></div></div>
-  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב בזמן</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div></main>` + navBar();
+  <div class="row"><button class="btn ghost" onclick="startChap('${arg.key}')">לעשות שוב בזמן</button>${SOL[arg.key] ? '' : `<button class="btn ghost" onclick="go('keyin',{key:'${arg.key}'})">לתקן מפתח</button>`}</div>
+  <p style="text-align:center;margin-top:18px"><button class="icb" onclick="removeAtt('${arg.key}',${k})">🗑️ להסיר את הפרק מהנתונים (נעשה בטעות)</button></p></main>` + navBar();
 }
 
 // ===== חוזקות: רק מהתשובות שלך מול המפתח הרשמי =====
@@ -589,7 +606,9 @@ function stats() {
 }
 
 // ===== טעויות: פותרים שוב בקובץ ובודקים מול המפתח =====
-function mistakes() { return answered().filter(x => !x.ok && !S.fix[`${x.key}:${x.n}`]); }
+// תיקון בלשונית «טעויות» תקף רק לניסיון שהוא תיקן: true (לפני 22/11) לא נספר בפרק שהוסר ממנו ניסיון; זמן תיקון חייב להיות אחרי הניסיון
+const fixOk = x => { const f = S.fix[`${x.key}:${x.n}`]; if (!f) return false; if (f === true) return !Object.keys(S.gone).some(g => g.startsWith(x.key + '@')); const a = first(x.key); return !a || f > a.at; };
+function mistakes() { return answered().filter(x => !x.ok && !fixOk(x)); }
 function fix() {
   const M = mistakes(), fixed = Object.keys(S.fix).length;
   const by = {}; M.forEach(m => (by[m.key] = by[m.key] || []).push(m));
@@ -601,7 +620,7 @@ function fix() {
 let RP = 0;
 function retry() {
   const x = chByKey[arg.key], { e, c } = x, n = arg.n, right = +keyOf(arg.key)[n - 1];
-  const opts = [1, 2, 3, 4].map(k => `<button class="${RP ? (k === right ? 'ok' : k === RP ? 'bad' : '') : ''}" ${RP ? 'disabled' : `onclick="RP=${k};if(${k}===${right}){S.fix['${arg.key}:${n}']=true;save()}render()"`}>${k}</button>`).join('');
+  const opts = [1, 2, 3, 4].map(k => `<button class="${RP ? (k === right ? 'ok' : k === RP ? 'bad' : '') : ''}" ${RP ? 'disabled' : `onclick="RP=${k};if(${k}===${right}){S.fix['${arg.key}:${n}']=Date.now();save()}render()"`}>${k}</button>`).join('');
   return `<div class="xtop"><button class="icb" onclick="RP=0;go('fix')">→ חזרה</button><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · שאלה ${n}</span></div>
   <main class="${isUnit(secOf(c, n)) ? 'full' : ''}">${isUnit(secOf(c, n)) ? `<div class="two"><div class="side">${psgBox(arg.key, secOf(c, n), true)}</div><div>` : ''}<div class="card"><p style="margin-top:0"><b>שאלה ${n}</b> ב${esc(c.label || DOM[c.domain])} (${TYPE_HE[typeOf(c, n)] || ''})</p></div>${qBox(qid(arg.key, n), pdf(e, qPage(c, n)))}${fmBox(arg.key)}
   <p>התשובה שלך עכשיו:</p><div class="bub big">${opts}</div>
@@ -951,7 +970,7 @@ function copyMyLink() { // הקישור האישי: קוד הגישה + המזה
   (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('הקישור האישי הועתק ✓ לא לשלוח אותו לאחרים'), () => prompt('הקישור האישי שלך (לא לשלוח לאחרים):', url));
 }
 function expo() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate, gone: S.gone }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
 function impo() {
