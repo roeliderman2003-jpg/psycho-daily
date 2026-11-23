@@ -282,9 +282,10 @@ function answered() { // כל שאלה שנענתה בניסיון הראשון,
 }
 
 // ===== מגמה: הרמה שלך לאורך הזמן, ומה הציון שהיא שווה =====
-// רמה = אחוז נכון ב-3 הפרקים האחרונים של התחום (ניסיון ראשון). הציון שהרמה שווה = ממוצע על הטבלאות של כל הבחינות של מאל״ו,
+// רמה = אחוז נכון ב-LV_N הפרקים האחרונים של התחום (ניסיון ראשון). הציון שהרמה שווה = ממוצע על הטבלאות של כל הבחינות של מאל״ו,
 // כדי שלא יהיה תלוי בטבלה של בחינה אחת. כך רואים איך שיפור באחוזים הופך לנקודות.
-const LV_N = 3;
+// 5 ולא 3 (23/11, רועי: «3 או 5, מה שאתה חושב»): 3 פרקים כמותיים = 60 שאלות, והאחוז קפץ בכ-±5% (כ-±15 נקודות) מפרק לפרק. 5 = 100 שאלות, יציב יותר, ועדיין מתעדכן תוך יום-יומיים.
+const LV_N = 5;
 const sgn = v => `<span dir="ltr">${v >= 0 ? '+' : ''}${v}</span>`; // מספר עם סימן, שלא יתהפך בעברית
 function chHist() { // כל הפרקים שיש להם מפתח, לפי הזמן שבו נעשו
   return done().filter(x => keyOf(x.key)).map(x => ({ x, at: first(x.key).at, d: x.c.domain, ok: scored(x.key), n: x.c.questions })).sort((a, b) => a.at - b.at);
@@ -345,7 +346,7 @@ function trendHtml() {
   if (!now || !now.w) return `<div class="card"><p class="sm" style="margin:0">המגמה מופיעה אחרי שיש לפחות פרק אחד מילולי ופרק אחד כמותי (עם מפתח).</p></div>`;
   const pc = v => Math.round(v * 100) + '%', V = 'var(--o)', Q = 'var(--b)';
   const tip = y => `${chTitle(y.x)} · ${y.ok}/${y.n} · ${fmtDate(y.at)}`;
-  // גרף 1: אחוז נכון בכל פרק (נקודות), והרמה של 3 הפרקים האחרונים (קו)
+  // גרף 1: אחוז נכון בכל פרק (נקודות), והרמה של LV_N הפרקים האחרונים (קו)
   const ser = d => [{ c: d === 'verbal' ? V : Q, dots: true, pts: h.map((y, i) => y.d === d ? [i, 100 * y.ok / y.n, tip(y)] : null).filter(Boolean) },
   { c: d === 'verbal' ? V : Q, label: true, pts: T.map(t => (d === 'verbal' ? t.v : t.q) && t.y.d === d ? [t.i, 100 * (d === 'verbal' ? t.v : t.q)[0]] : null).filter(Boolean) }];
   const c1 = lineChart([...ser('verbal'), ...ser('quant')], { n: h.length, min: 0, max: 100, ticks: [0, 25, 50, 75, 100], fmt: v => Math.round(v) + '%', aria: 'אחוז נכון בכל פרק' });
@@ -411,7 +412,7 @@ function home() {
   // הציון של בחינה אחת נכנס רק לבחינה שעשית בה גם מילולי וגם כמותי, ולכן הוא יכול להיות ישן. הוא מוצג מתחת.
   const se = scoredExams(), ls = se[se.length - 1], TT = scoreTrend(chHist()), nw = TT.length ? TT[TT.length - 1] : null;
   if (nw && nw.w) h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>הציון שהרמה שלך שווה עכשיו</b><span class="mut sm">${LV_N} הפרקים האחרונים בכל תחום</span></div>
-    <div class="big-score" style="font-size:40px">${nw.w.G}</div><div style="text-align:center" class="sm">מילולי ${Math.round(nw.v[0] * 100)}% → ${nw.w.V} · כמותי ${Math.round(nw.q[0] * 100)}% → ${nw.w.Q}</div>
+    <div class="big-score" style="font-size:40px">${nw.w.G}</div><div style="text-align:center" class="sm">מילולי ${Math.round(nw.v[0] * 100)}%${nw.v[1] < LV_N ? ` (${nw.v[1] > 1 ? nw.v[1] + ' פרקים' : 'פרק אחד'})` : ''} → ${nw.w.V} · כמותי ${Math.round(nw.q[0] * 100)}%${nw.q[1] < LV_N ? ` (${nw.q[1] > 1 ? nw.q[1] + ' פרקים' : 'פרק אחד'})` : ''} → ${nw.w.Q}</div>
     ${ls ? `<p class="mut sm" style="margin:8px 0 0">בחינה שלמה אחרונה (מילולי וכמותי מאותה בחינה): ${esc(ls.e.title)} ${ls.sc.G.est}${ls.sc.full ? '' : '*'} (טווח ${ls.sc.G.lo}-${ls.sc.G.hi})${se.length > 1 ? ` · לפני: ${se.slice(-3, -1).map(y => `${esc(y.e.title)} ${y.sc.G.est}${y.sc.full ? '' : '*'}`).join(' · ')}` : ''}</p>` : ''}
     <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו (ממוצע על כל ${EX.length} הבחינות). נקודת הפתיחה: 620.</p>
     <button class="btn ghost" style="margin-top:10px" onclick="go('stats');setTimeout(()=>document.getElementById('trend')&&document.getElementById('trend').scrollIntoView(),50)">📈 המגמה וכמה הציון יעלה</button></div>`;
