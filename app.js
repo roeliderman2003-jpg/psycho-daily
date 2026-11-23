@@ -114,7 +114,7 @@ async function cloudSync() { // מושכים, ממזגים, ושומרים את 
   if (!cloudId) return;
   try {
     const got = await cloudRpc('psycho_load', { p_id: cloudId });
-    const changed = mergeS(S, got.data);
+    const changed = mergeS(S, got.data); fixPre(S);
     try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { }
     const { cur, vl, vc, vs, ...data } = S; // שיעור מילים וכרטיסיות באמצע נשארים במכשיר
     const r = await cloudRpc('psycho_save', { p_id: cloudId, p_data: data });
@@ -229,7 +229,22 @@ let opening = true; // בזמן שהמפתחות נפתחים בטעינה לא 
 const locked = () => !opening && !!window.SOLX && !Object.keys(SOL).length;
 const expHtml = t => esc(t).replace(/\n/g, '<br>');
 const EXP_NOTE = 'ההסברים נכתבו לפי המפתח הרשמי של מאל״ו. מאל״ו לא מפרסמים הסברים לבחינות, רק את המפתח.';
-const scored = k => { const a = first(k), key = keyOf(k); return a && key ? a.ans.reduce((n, x, i) => n + ((x && x === +key[i]) || isVoid(k, i + 1) ? 1 : 0), 0) : null; };
+// שאלות שתורגלו לפני הפרק בזמן (רועי 23/11: «עושה מבחנים בשאלות שתרגלתי כבר וזה הורס לי את אפקט המבחן»).
+// a.pre = מספרי השאלות שנענו בתרגול לפני שהפרק התחיל. הן לא נספרות: הציון = הנכונות בשאר השאלות, מוגדלת לכל הפרק.
+const pracQs = k => ((S.prac[k] || {}).ans || []).map((v, i) => v ? i + 1 : 0).filter(Boolean);
+function fixPre(s) { // ניסיון מלפני 23/11: מה שתורגל, אם התרגול האחרון בפרק היה לפני הניסיון. נקבע פעם אחת ונשמר
+  for (const [k, list] of Object.entries(s.res || {})) (list || []).forEach(a => {
+    if (a.pre) return; const p = (s.prac || {})[k];
+    a.pre = p && (p.at || 0) < a.at ? (p.ans || []).map((v, i) => v ? i + 1 : 0).filter(Boolean) : [];
+  });
+}
+fixPre(S);
+const scored = k => {
+  const a = first(k), key = keyOf(k); if (!a || !key) return null;
+  const pre = new Set(a.pre || []); let ok = 0, n = 0;
+  a.ans.forEach((x, i) => { if (pre.has(i + 1)) return; n++; if ((x && x === +key[i]) || isVoid(k, i + 1)) ok++; });
+  return n === a.ans.length ? ok : n ? Math.round(ok * a.ans.length / n) : 0;
+};
 const done = () => CH.filter(x => first(x.key));
 
 // ===== אומדן הציון: הטבלאות הרשמיות שבסוף כל בחינה של מאל״ו (מוצפנות ב-sol.js) =====
@@ -274,7 +289,10 @@ function scoreCard(e) {
   <p class="sm" style="margin:4px 0 8px">${sc.full ? 'זה האומדן הרשמי של מאל״ו לבחינה הזו: נכונות בשני הפרקים של כל תחום, ציון תחום מהטבלה של הבחינה, והטווח הכללי מהממוצע של שני התחומים. המספר הגדול הוא המקום בתוך הטווח.' : `* זמני: ${left.length} ${left.length === 1 ? 'פרק' : 'פרקים'} מהבחינה הזו עוד לא נעשו. בתחום שנעשה בו רק פרק אחד, אחוז הנכונות הוכפל לשני הפרקים והומר בטבלה של מאל״ו. ${G ? '' : 'ציון כללי מופיע אחרי פרק מכל תחום. '}האומדן נהיה רשמי כשכל ארבעת הפרקים נעשו.`} נספר הניסיון הראשון בכל פרק, כמו בבחינה. מאל״ו לא כוללים את מטלת הכתיבה באומדן.</p>
   ${left.length ? `<div class="row">${left.slice(0, 1).map(x => `<button class="btn blue" onclick="go('home',{pick:'${x.key}'})">לפרק הבא בבחינה הזו</button>`).join('')}</div>` : ''}</div>`;
 }
-const todayCh = () => CH.find(x => !first(x.key) && !S.prac[x.key]) || CH.find(x => !first(x.key)) || null; // פרק שתורגל חופשי כבר לא טרי לפרק בזמן
+const todayCh = () => { // קודם פרק נקי (לא נעשה ולא תורגל), ואחריו הפרק שתורגלו בו הכי מעט שאלות
+  const L = CH.filter(x => !first(x.key)); if (!L.length) return null;
+  return L.find(x => !pracQs(x.key).length) || L.slice().sort((a, b) => pracQs(a.key).length - pracQs(b.key).length)[0];
+};
 function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
 function streak() {
   const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.wr.forEach(x => days.add(dayKey(x.at)));
@@ -396,13 +414,15 @@ function render() {
 const chTitle = x => `${x.e.title} · ${x.c.label || DOM[x.c.domain]}`;
 function chRow(x) {
   const a = first(x.key), sc = scored(x.key);
-  const right = a ? (sc != null ? `<b>${sc}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>') + ` <span class="mut sm">${fmtDate(a.at)}</span>` : S.prac[x.key] ? '<span class="mut sm">🧘 תורגל חופשי</span>' : '<span class="mut sm">עוד לא נעשה</span>';
+  const np = pracQs(x.key).length, pre = a && a.pre && a.pre.length;
+  const right = a ? (sc != null ? `<b>${sc}${pre ? '*' : ''}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>') + ` <span class="mut sm">${fmtDate(a.at)}</span>` : np ? `<span class="mut sm">🧘 ${np} שאלות תורגלו</span>` : '<span class="mut sm">✨ נקי</span>';
   return `<div class="it" onclick="${a ? `go('${keyOf(x.key) ? 'result' : 'keyin'}',{key:'${x.key}'})` : `go('home',{pick:'${x.key}'})`}"><span class="tag ${x.c.domain[0]}">${DOM[x.c.domain]}</span><div class="grow"><b>${esc(x.e.title)}</b><div class="mut sm">${esc(x.c.label || '')} · ${x.c.questions} שאלות · ${x.c.minutes} דק׳</div></div><div>${right}</div></div>`;
 }
 function chCard(x) {
   const { e, c } = x;
   return `<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:17px">${esc(e.title)}</b></div>
     <p class="mut sm" style="margin:2px 0 10px">${esc(c.label || '')} · ${c.questions} שאלות · ${c.minutes} דקות · <b>עמודים ${c.page} עד ${c.endPage} בקובץ</b>${c.printed ? ` (בדף: ${c.printed})` : ''}</p>
+    ${pracQs(x.key).length && !first(x.key) ? `<p class="sm" style="margin:0 0 10px;color:var(--o)">🧘 כבר תרגלת ${pracQs(x.key).length} שאלות מהפרק הזה (${pracQs(x.key).join(', ')}). הן לא ייספרו בציון, והציון יחושב מהשאר.</p>` : ''}
     <div class="row">${link(pdf(e, c.page), '📄 לפתוח את הפרק')}<button class="btn" onclick="startChap('${x.key}')">▶️ טיימר ודף תשובות</button></div>
     <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
 }
@@ -445,8 +465,9 @@ function all() {
 function startChap(k) {
   const x = chByKey[k]; if (!x) return;
   if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו ולהתחיל את זה?')) return;
-  const n = x.c.questions;
-  S.cur = { kind: 'chap', key: k, endAt: Date.now() + x.c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), flag: Array(n).fill(0), t: Array(n).fill(0), last: Date.now() };
+  const n = x.c.questions, pre = first(k) ? [] : pracQs(k); // בניסיון חוזר הציון ממילא לא נספר
+  if (pre.length && !confirm(`כבר תרגלת ${pre.length} שאלות מהפרק הזה (${pre.join(', ')}).\n\nהן לא ייספרו בציון, והציון יחושב מ-${n - pre.length} השאלות האחרות. להתחיל?`)) return;
+  S.cur = { kind: 'chap', key: k, endAt: Date.now() + x.c.minutes * 60e3, start: Date.now(), ans: Array(n).fill(0), flag: Array(n).fill(0), t: Array(n).fill(0), last: Date.now(), pre };
   save(); go('exam');
 }
 // זמן לכל שאלה (X.t, בשניות): כל שנייה שהמסך פתוח נזקפת לשאלה שמול העיניים.
@@ -528,7 +549,7 @@ function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) 
 function submit(auto) {
   const X = S.cur; if (!X) return;
   if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
-  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), ...(X.hs ? { hs: X.ans.map((v, i) => (X.hs[i] || []).join('')) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000) });
+  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), ...(X.hs ? { hs: X.ans.map((v, i) => (X.hs[i] || []).join('')) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000), pre: X.pre || [] });
   const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
 }
 function keyin() {
@@ -580,8 +601,10 @@ function result() {
   // מה סומן בפועל (נשמר מ-21/11): «סימנת 4, ואחר כך 1». בלי היסטוריה מוצגת רק התשובה הסופית.
   const hsTxt = y => y.hs && y.hs.length > 1 ? `<div class="sm" style="margin:6px 2px 0">✏️ סימנת ${y.hs.split('').join(', ואחר כך ')}. נשארה ${y.a}.</div>` : '';
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
+  const preS = new Set(a.pre || []), preL = items.filter(y => preS.has(y.n)), cl = items.filter(y => !preS.has(y.n)), clOk = cl.filter(y => y.ok).length;
+  const preBox = preL.length ? `<div class="card" style="border-color:var(--o)"><b>🧘 ${preL.length} שאלות תורגלו לפני הפרק</b><p class="sm" style="margin:4px 0 0">שאלות ${preL.map(y => y.n).join(', ')} (מסומנות 🧘 ברשת) כבר נפתרו בתרגול, ולכן לא נספרות. ${k ? '' : `הציון שנספר: <b>${clOk} נכונות מתוך ${cl.length}</b> השאלות שלא ראית, כלומר כ-<b>${scored(arg.key)}/${c.questions}</b>. זה מה שנכנס לרמה, למגמה ולאומדן.`}</p></div>` : '';
   const per = c.minutes * 60 / c.questions; // הקצב שמאל״ו נותנים: זמן הפרק חלקי מספר השאלות
-  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span>${y.t != null ? `<em class="${y.t > 2 * per ? 'slow' : ''}">${mmss(y.t)}</em>` : ''}</div>`).join('');
+  const grid = items.map(y => `<div class="rq ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" onclick="openQ(${y.n})">${y.flag ? '<i class="fg">🚩</i>' : ''}<b>${preS.has(y.n) ? '🧘' : ''}${y.n}</b><span>${y.vd ? 'בוטלה' : y.ok ? '✓' : `${y.a || '—'}→${y.right}`}</span>${y.t != null ? `<em class="${y.t > 2 * per ? 'slow' : ''}">${mmss(y.t)}</em>` : ''}</div>`).join('');
   const timeBox = timeCard(items, a, per, !!(c.sections && c.sections.length));
   const hasExp = items.some(y => expOf(arg.key, y.n));
   // השאלות שסומנו ב-🚩 בזמן הפרק (נשמרות בניסיון, a.flag): רשימה משלהן, והן פתוחות בהסברים גם כשענית נכון
@@ -597,6 +620,7 @@ function result() {
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
+  ${preBox}
   ${scoreCard(e)}
   <h2>כל השאלות</h2><p class="mut sm" style="margin-top:-4px">ענית → התשובה הנכונה לפי המפתח של מאל״ו${hasExp ? '. לוחצים על שאלה כדי לראות את ההסבר.' : ''}</p><div class="rgrid">${grid}</div>
   ${flagBox}
@@ -676,15 +700,19 @@ function fpReset() { if (!confirm('לנקות את כל התשובות של הת
 const RESERVE = 8; // הבחינות החדשות נשמרות לפרקים בזמן, כדי שהציון המשוער שלהן יהיה אמיתי
 const UNIT_TYPES = ['reading', 'chart']; // קטע קריאה ותרשים: כל השאלות על אותו קטע באות יחד
 const pracAns = (k, n) => ((S.prac[k] || {}).ans || [])[n - 1] || 0;
+// רועי 23/11: תרגול לא לוקח שאלות מפרק נקי (שלא נעשה בזמן ולא תורגל), כדי שהפרקים בזמן יישארו מבחן אמיתי.
+// הסדר: קודם שאלות מפרקים שכבר נעשו בזמן ועוד לא תורגלו, אחר כך שאלות חדשות בפרקים שכבר תורגלו בהם (מהבחינה הישנה ביותר), ובסוף שאלות שכבר תורגלו
+const cleanCh = x => !first(x.key) && !pracQs(x.key).length;
 function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל השאלות של קטע קריאה / תרשים
   const out = [], resv = new Set(EX.slice(0, S.pracAll ? 0 : RESERVE).map(e => e.id));
   CH.forEach(x => {
-    const { e, c, key } = x; if (resv.has(e.id) && !first(key)) return; if (dom && c.domain !== dom) return;
+    const { e, c, key } = x, done = !!first(key); if (dom && c.domain !== dom) return;
+    if (!S.pracAll && !done && (resv.has(e.id) || cleanCh(x))) return;
     (c.sections || []).forEach(sec => {
       if (type && sec.type !== type) return;
       const qs = []; for (let n = sec.from; n <= sec.to; n++) if (!isVoid(key, n)) qs.push(n);
       const groups = UNIT_TYPES.includes(sec.type) ? [qs] : qs.map(n => [n]);
-      groups.forEach(g => g.length && out.push({ key, type: sec.type, qs: g, seen: g.some(n => pracAns(key, n)) || !!first(key) }));
+      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, done, pr, ei: EX.indexOf(e), seen: pr || done }); });
     });
   });
   return out;
@@ -692,7 +720,8 @@ function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל הש�
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function startDrill(dom, type, title) {
   if (!Object.keys(SOL).length) return toast('צריך קודם לפתוח את המפתחות עם קוד הגישה');
-  const U = pracUnits(dom, type), pool = shuffle(U.filter(u => !u.seen)).concat(shuffle(U.filter(u => u.seen))), byType = {};
+  const U = pracUnits(dom, type), byType = {};
+  const pool = shuffle(U.filter(u => u.done && !u.pr)).concat(shuffle(U.filter(u => !u.done && !u.pr)).sort((a, b) => b.ei - a.ei), shuffle(U.filter(u => u.pr)));
   pool.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
   const types = shuffle(Object.keys(byType)), list = [];
   let more = true;
@@ -715,8 +744,10 @@ function prac() {
   const st = t => { let n = 0, ok = 0; CH.forEach(({ c, key }) => { const k = keyOf(key); if (!k) return; for (let q = 1; q <= c.questions; q++) if (typeOf(c, q) === t && pracAns(key, q)) { n++; if (pracAns(key, q) === +k[q - 1] || isVoid(key, q)) ok++; } }); return n ? `${ok}/${n} נכון בתרגול` : 'עוד לא תורגל'; };
   const types = [['verbal', ['analogy', 'inference', 'reading']], ['quant', ['problem', 'chart']]];
   const D = S.drill && S.drill.i < S.drill.list.length ? S.drill : null;
-  const M = mistakes().length, opts = CH.filter(x => EX.indexOf(x.e) >= (S.pracAll ? 0 : RESERVE) || first(x.key)).map(x => `<option value="${x.key}">${esc(chTitle(x))}</option>`).join('');
+  const M = mistakes().length, opts = CH.filter(x => first(x.key) || S.pracAll || (EX.indexOf(x.e) >= RESERVE && !cleanCh(x))).map(x => `<option value="${x.key}">${esc(chTitle(x))}</option>`).join('');
+  const nClean = d => CH.filter(x => x.c.domain === d && cleanCh(x)).length;
   return `<main><h1>🧘 תרגול</h1><p class="mut sm" style="margin-top:-6px">בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. לא נכנס לציון המשוער.</p>
+  <div class="card"><p class="sm" style="margin:0">✨ פרקים נקיים שנשמרים לפרק בזמן: <b>מילולי ${nClean('verbal')}</b> · <b>כמותי ${nClean('quant')}</b>. התרגול לא לוקח מהם שאלות.</p></div>
   ${locked0 ? codeCard() : ''}
   ${D ? `<div class="card"><b>באמצע: ${esc(D.title)}</b><p class="mut sm" style="margin:4px 0 8px">שאלה ${D.i + 1} מתוך ${D.list.length}</p><button class="btn blue" onclick="go('drill')">להמשיך</button></div>` : ''}
   <div class="card"><b>📜 היסטוריה</b><p class="mut sm" style="margin:4px 0 8px">${S.dh.length ? `${S.dh.length === 1 ? 'סבב אחד' : `${S.dh.length} סבבים`}. האחרון: ${esc(S.dh[S.dh.length - 1].title)}, ${dhScore(S.dh[S.dh.length - 1])}.` : 'כל סבב שתסיים יופיע כאן, עם כל שאלה, מה ענית וההסבר.'}</p><button class="btn ghost" onclick="go('hist')">לכל מה שתרגלתי</button></div>
@@ -726,7 +757,7 @@ function prac() {
   <p class="mut sm" style="margin-top:-4px">בהבנת הנקרא ובהסקה מתרשים, כל השאלות על אותו קטע באות ברצף.</p>
   <h2>🔁 טעויות מפרקים בזמן</h2><div class="card"><p class="sm" style="margin-top:0">${M ? `${M} שאלות מחכות לפתרון חוזר.` : 'אין טעויות שמחכות.'}</p><button class="btn ghost" onclick="go('fix')">לטעויות</button></div>
   <h2>פרק שלם בלי שעון</h2><div class="card"><select class="txt" id="fch" style="margin:0 0 8px">${opts}</select><button class="btn ghost" onclick="go('free',{key:document.getElementById('fch').value})">לפתוח</button></div>
-  <div class="card"><label class="sm" style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${S.pracAll ? 'checked' : ''} onchange="S.pracAll=this.checked;save();render()">לכלול גם את ${RESERVE} הבחינות החדשות</label><p class="mut sm" style="margin:6px 0 0">בלי הסימון, התרגול לוקח שאלות רק מהבחינות הישנות ומפרקים שכבר עשית בזמן. הבחינות החדשות נשמרות לפרק בזמן, כדי שהציון המשוער יהיה אמיתי.</p></div></main>` + navBar();
+  <div class="card"><label class="sm" style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${S.pracAll ? 'checked' : ''} onchange="S.pracAll=this.checked;save();render()">לכלול גם פרקים נקיים</label><p class="mut sm" style="margin:6px 0 0">בלי הסימון, התרגול לוקח שאלות קודם מפרקים שכבר עשית בזמן, ואחר כך מפרקים ישנים שכבר תרגלת בהם. פרק נקי (שלא נעשה בזמן ולא תורגל) וכל ${RESERVE} הבחינות החדשות נשמרים לפרק בזמן, כדי שהציון יהיה אמיתי.</p></div></main>` + navBar();
 }
 function drill() {
   const D = S.drill; if (!D) return prac();
