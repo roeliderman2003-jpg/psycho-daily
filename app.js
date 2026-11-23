@@ -289,10 +289,14 @@ function scoreCard(e) {
   <p class="sm" style="margin:4px 0 8px">${sc.full ? 'זה האומדן הרשמי של מאל״ו לבחינה הזו: נכונות בשני הפרקים של כל תחום, ציון תחום מהטבלה של הבחינה, והטווח הכללי מהממוצע של שני התחומים. המספר הגדול הוא המקום בתוך הטווח.' : `* זמני: ${left.length} ${left.length === 1 ? 'פרק' : 'פרקים'} מהבחינה הזו עוד לא נעשו. בתחום שנעשה בו רק פרק אחד, אחוז הנכונות הוכפל לשני הפרקים והומר בטבלה של מאל״ו. ${G ? '' : 'ציון כללי מופיע אחרי פרק מכל תחום. '}האומדן נהיה רשמי כשכל ארבעת הפרקים נעשו.`} נספר הניסיון הראשון בכל פרק, כמו בבחינה. מאל״ו לא כוללים את מטלת הכתיבה באומדן.</p>
   ${left.length ? `<div class="row">${left.slice(0, 1).map(x => `<button class="btn blue" onclick="go('home',{pick:'${x.key}'})">לפרק הבא בבחינה הזו</button>`).join('')}</div>` : ''}</div>`;
 }
-const todayCh = () => { // קודם פרק נקי (לא נעשה ולא תורגל), ואחריו הפרק שתורגלו בו הכי מעט שאלות
-  const L = CH.filter(x => !first(x.key)); if (!L.length) return null;
-  return L.find(x => !pracQs(x.key).length) || L.slice().sort((a, b) => pracQs(a.key).length - pracQs(b.key).length)[0];
+const todayCh = dom => { // קודם פרק נקי (לא נעשה ולא תורגל), ואחריו הפרק שתורגלו בו הכי מעט שאלות. dom: רק מילולי / רק כמותי
+  const L = CH.filter(x => !first(x.key) && (!dom || x.c.domain === dom)); if (!L.length) return null;
+  return L.find(x => !pracQs(x.key).length) || L.slice().sort((a, b) => taint(a.key) - taint(b.key) || pracQs(a.key).length - pracQs(b.key).length)[0];
 };
+// רועי 23/11: עדיפות לפרק «גם לפי כמה שתורגלו פחות, וגם לפי כמה שתורגלו ממזמן». מספר השאלות שתורגלו, ומשקל שיורד ככל שעבר זמן מהתרגול האחרון בפרק
+// (היום = מלא, אחרי 3 ימים = חצי, אחרי שבוע = כשליש). הזמן נשמר לכל פרק, לא לכל שאלה
+const pracDays = k => { const p = S.prac[k]; return p && p.at ? Math.max(0, (Date.now() - p.at) / 864e5) : 99; };
+const taint = k => pracQs(k).length / (1 + pracDays(k) / 3);
 function daysLeft() { return Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 864e5); }
 function streak() {
   const days = new Set(); Object.values(S.res).forEach(a => a.forEach(x => days.add(dayKey(x.at)))); S.wr.forEach(x => days.add(dayKey(x.at)));
@@ -422,7 +426,7 @@ function chCard(x) {
   const { e, c } = x;
   return `<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b style="font-size:17px">${esc(e.title)}</b></div>
     <p class="mut sm" style="margin:2px 0 10px">${esc(c.label || '')} · ${c.questions} שאלות · ${c.minutes} דקות · <b>עמודים ${c.page} עד ${c.endPage} בקובץ</b>${c.printed ? ` (בדף: ${c.printed})` : ''}</p>
-    ${pracQs(x.key).length && !first(x.key) ? `<p class="sm" style="margin:0 0 10px;color:var(--o)">🧘 כבר תרגלת ${pracQs(x.key).length} שאלות מהפרק הזה (${pracQs(x.key).join(', ')}). הן לא ייספרו בציון, והציון יחושב מהשאר.</p>` : ''}
+    ${pracQs(x.key).length && !first(x.key) ? `<p class="sm" style="margin:0 0 10px;color:var(--o)">🧘 כבר תרגלת ${pracQs(x.key).length} שאלות מהפרק הזה (${pracQs(x.key).join(', ')}), ${pracDays(x.key) < 1 ? 'היום' : `לפני ${Math.floor(pracDays(x.key))} ימים`}. הן לא ייספרו בציון, והציון יחושב מהשאר.</p>` : ''}
     <div class="row">${link(pdf(e, c.page), '📄 לפתוח את הפרק')}<button class="btn" onclick="startChap('${x.key}')">▶️ טיימר ודף תשובות</button></div>
     <p class="mut sm" style="margin:6px 0 0">פותחים את הקובץ של מאל״ו בעמוד ${c.page}, ופותרים שם. כאן מסמנים תשובות, והזמן רץ כמו בבחינה.${c.domain === 'quant' && e.formulasPage ? ` דף הנוסחאות הרשמי: עמוד ${e.formulasPage}.` : ''}</p></div>`;
 }
@@ -430,7 +434,11 @@ function home() {
   const dl = daysLeft(), st = streak(), A = answered();
   const pv = A.filter(x => x.c.domain === 'verbal'), pq = A.filter(x => x.c.domain === 'quant');
   const p = l => l.length ? Math.round(100 * l.filter(x => x.ok).length / l.length) + '%' : '—';
-  const pick = arg && arg.pick ? chByKey[arg.pick] : null, x = pick || todayCh();
+  const pick = arg && arg.pick ? chByKey[arg.pick] : null, x = pick || todayCh(S.tDom) || todayCh();
+  // רועי 23/11: «לעשות פרק נקי רק כמותי או מילולי, ולבחור». הבחירה נשמרת עד שמשנים
+  const nc = d => CH.filter(y => (!d || y.c.domain === d) && cleanCh(y)).length;
+  const dBtn = (d, l) => `<button class="btn ${(S.tDom || '') === d && !pick ? 'blue' : 'ghost'}" style="padding:8px 6px" onclick="S.tDom='${d}';save();go('home')">${l}<div class="sm" style="font-weight:400">✨ ${nc(d)} נקיים</div></button>`;
+  const domRow = `<div class="row" style="margin:0 0 10px">${dBtn('', 'הכל')}${dBtn('verbal', 'מילולי')}${dBtn('quant', 'כמותי')}</div>`;
   let h = `<main><div class="card hero"><div class="mut sm">הפסיכומטרי הדו-תחומי · ${new Date(S.examDate).toLocaleDateString('he-IL')}</div>
     <div style="font-size:30px;font-weight:800;margin:4px 0">${dl > 0 ? `עוד ${dl} ימים` : dl === 0 ? 'הבחינה היום 💪' : 'הבחינה עברה'}</div>
     <div class="mut sm">${CH.length} פרקים אמיתיים מ-${EX.length} בחינות של מאל״ו</div></div>
@@ -443,7 +451,7 @@ function home() {
     ${ls ? `<p class="mut sm" style="margin:8px 0 0">בחינה שלמה אחרונה (מילולי וכמותי מאותה בחינה): ${esc(ls.e.title)} ${ls.sc.G.est}${ls.sc.full ? '' : '*'} (טווח ${ls.sc.G.lo}-${ls.sc.G.hi})${se.length > 1 ? ` · לפני: ${se.slice(-3, -1).map(y => `${esc(y.e.title)} ${y.sc.G.est}${y.sc.full ? '' : '*'}`).join(' · ')}` : ''}</p>` : ''}
     <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו (ממוצע על כל ${EX.length} הבחינות). נקודת הפתיחה: 620.</p>
     <button class="btn ghost" style="margin-top:10px" onclick="go('stats');setTimeout(()=>document.getElementById('trend')&&document.getElementById('trend').scrollIntoView(),50)">📈 המגמה וכמה הציון יעלה</button></div>`;
-  if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
+  if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${domRow}${!pick && S.tDom && !todayCh(S.tDom) ? `<p class="sm">עשית את כל הפרקים ב${DOM[S.tDom]}, אז הנה פרק מהתחום השני.</p>` : ''}${chCard(x)}`;
   else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
   if (VOC.length) { const d = vDue().length, l = VOC.filter(vLearned).length; h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>🔤 מילים</b><div class="mut sm">${l} מתוך ${VOC.length} נלמדו${d ? ` · ${d} מחכות לחזרה` : ''}</div></div><button class="btn blue" style="width:auto;padding:10px 16px" onclick="${d || vNew().length ? "vStart('learn')" : "go('voc')"}">${d ? 'לחזרה' : 'שיעור'}</button></div></div>`; }
   if (locked()) h += codeCard();
