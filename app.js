@@ -215,7 +215,7 @@ const mmss = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)
 const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const fmtDate = t => new Date(t).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
 function toast(m) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
-function go(v, a) { view = v; arg = a ?? null; render(); scrollTo(0, 0); }
+function go(v, a) { dPause(); view = v; arg = a ?? null; render(); scrollTo(0, 0); }
 const link = (u, t, cls = 'btn ghost') => `<a class="${cls}" style="text-decoration:none" href="${u}" target="_blank" rel="noopener">${t}</a>`;
 
 // ===== חישובים (רק מהתשובות שלך מול המפתח הרשמי) =====
@@ -389,6 +389,7 @@ function render() {
   $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result', 'pq'].includes(view));
   $app.innerHTML = f(); hydrate();
   if (view === 'exam' || view === 'wx') startTick();
+  else if (view === 'drill' && dRun) tick = setInterval(dShow, 1000);
 }
 const chTitle = x => `${x.e.title} · ${x.c.label || DOM[x.c.domain]}`;
 function chRow(x) {
@@ -729,17 +730,20 @@ function drill() {
   const D = S.drill; if (!D) return prac();
   if (D.i >= D.list.length) return `<main><h1>🧘 ${esc(D.title)}</h1><div class="big-score">${D.a}/${D.list.length}</div><div style="text-align:center" class="mut">נכון בסבב הזה</div>
     <div class="row" style="margin-top:14px"><button class="btn blue" onclick="startDrill(S.drill.dom,S.drill.type,S.drill.title)">עוד סבב</button><button class="btn ghost" onclick="go('prac')">לתרגול</button></div>
+    ${dTimeLine(D.list)}
     <h2>השאלות בסבב</h2><p class="mut sm" style="margin-top:-6px">לוחצים על שאלה כדי לראות אותה שוב עם ההסבר. הסבב נשמר גם ב«📜 היסטוריה» בלשונית תרגול.</p>
     <div class="card list">${D.list.map(q => hRow(q, 'drill')).join('')}</div></main>` + navBar();
   const q = D.list[D.i], x = chByKey[q.k], { e, c } = x, t = typeOf(c, q.n), right = +keyOf(q.k)[q.n - 1], a = q.ans || 0, good = a === right || isVoid(q.k, q.n);
+  if (a) dRun = null; else if (!dRun || dRun.i !== D.i) dRun = { i: D.i, t0: Date.now() }; // הסטופר רץ מהרגע שהשאלה על המסך ועד שעונים
   const btns = [1, 2, 3, 4].map(k => `<button class="${a ? (k === right ? 'ok' : k === a ? 'bad' : '') : ''}" ${a ? 'disabled' : `onclick="dAns(${k})"`}>${k}</button>`).join('');
   const ex = expOf(q.k, q.n), u = q.unit, what = t === 'chart' ? 'תרשים' : 'קטע', sp = u ? secPage(c, secOf(c, q.n)) : 0;
-  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(D.title)} · ${D.i + 1}/${D.list.length} · ✓ ${D.a}</span></div>
+  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(D.title)} · ${D.i + 1}/${D.list.length} · ✓ ${D.a}</span><span class="grow"></span><b id="dsw" style="font-variant-numeric:tabular-nums">⏱ ${fmtT(a ? (q.t || 0) * 1000 : dEl())}</b></div>
   <main class="${u ? 'full' : ''}">${u ? `<div class="two"><div class="side">${psgBox(q.k, secOf(c, q.n), u.first)}</div><div>` : ''}<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${TYPE_HE[t] || ''}</b></div>
   <p class="sm" style="margin:0 0 8px">${esc(e.title)} · ${esc(c.label || DOM[c.domain])} · <b>שאלה ${q.n}</b>${u ? `. שאלות ${u.from} עד ${u.to} הן על אותו ${what}.` : ''}</p></div>
   ${qBox(qid(q.k, q.n), pdf(e, qPage(c, q.n)))}${fmBox(q.k)}
   <p style="margin:14px 0 0">התשובה שלך:</p><div class="bub big">${btns}</div>
   ${a ? `<p style="font-weight:800;font-size:18px;color:${good ? 'var(--gd)' : 'var(--rd)'}">${isVoid(q.k, q.n) ? 'מאל״ו ביטלו את השאלה' : good ? '✅ נכון!' : `❌ התשובה הנכונה: ${right}`}</p>
+  ${q.t != null ? `<p class="sm" style="margin:-6px 0 10px">⏱ ענית תוך <b>${fmtT(q.t * 1000)}</b>${u && u.first ? ' (כולל קריאת ה' + what + ')' : ''}</p>` : ''}
   ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}
   <button class="btn blue big" onclick="dNext()">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}${u ? '</div></div>' : ''}</main>` + navBar();
 }
@@ -747,8 +751,23 @@ function dNext() { S.drill.i++; if (S.drill.i >= S.drill.list.length) dArchive(S
 function dArchive(D) { // סבב נכנס להיסטוריה פעם אחת, כשהסתיים או כשמתחילים סבב חדש באמצע
   if (!D || D.done || !D.list || !D.list.some(q => q.ans)) return;
   D.done = 1;
-  S.dh.push({ at: Date.now(), title: D.title, dom: D.dom, type: D.type, a: D.a, list: D.list.map(q => ({ k: q.k, n: q.n, ans: q.ans || 0 })) });
+  S.dh.push({ at: Date.now(), title: D.title, dom: D.dom, type: D.type, a: D.a, list: D.list.map(q => ({ k: q.k, n: q.n, ans: q.ans || 0, ...(q.t != null ? { t: q.t } : {}) })) });
   if (S.dh.length > 300) S.dh = S.dh.slice(-300);
+}
+// ===== סטופר לכל שאלה בתרגול (רועי 23/11): q.el = זמן שכבר נצבר במ״ש, q.t = שניות עד התשובה. עוצר כשיוצאים מהמסך או כשהמסך כבוי =====
+let dRun = null; // {i, t0} השאלה שהסטופר רץ עליה עכשיו
+const fmtT = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const dEl = () => { const D = S.drill, q = D && D.list[D.i]; return q ? (q.el || 0) + (dRun && dRun.i === D.i ? Date.now() - dRun.t0 : 0) : 0; };
+function dShow() { const el = document.getElementById('dsw'); if (el && dRun) el.textContent = '⏱ ' + fmtT(dEl()); }
+function dPause() {
+  if (!dRun || !S.drill) { dRun = null; return; }
+  const q = S.drill.list[dRun.i]; if (q && !q.ans) { q.el = (q.el || 0) + Date.now() - dRun.t0; save(); }
+  dRun = null;
+}
+function dTimeLine(list) { // סיכום זמנים לסבב
+  const ts = list.filter(q => q.ans && q.t != null).map(q => q.t); if (!ts.length) return '';
+  const sum = ts.reduce((x, y) => x + y, 0), slow = ts.filter(s => s > 90).length;
+  return `<div class="card" style="margin-top:14px"><p class="sm" style="margin:0">⏱ סה״כ <b>${fmtT(sum * 1000)}</b> · בממוצע <b>${fmtT(sum / ts.length * 1000)}</b> לשאלה${slow ? ` · ${slow} שאלות מעל דקה וחצי` : ''}</p><p class="mut sm" style="margin:4px 0 0">בבחינה יש בערך דקה לשאלה, כולל השאלות הקלות.</p></div>`;
 }
 const dhScore = r => { const n = r.list.filter(q => q.ans).length; return `${r.a}/${n} נכון${n < r.list.length ? ` (נענו ${n} מתוך ${r.list.length})` : ''}`; };
 const fmtWhen = t => new Date(t).toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -756,13 +775,13 @@ function hRow(q, from) { // שורה של שאלה בהיסטוריה. לחיצ�
   const x = chByKey[q.k]; if (!x) return '';
   const right = +keyOf(q.k)[q.n - 1] || 0, good = q.ans === right || isVoid(q.k, q.n);
   const ic = !q.ans ? '⏭️' : !right ? '•' : good ? '✅' : '❌';
-  return `<div class="it" onclick="go('pq',{k:'${q.k}',n:${q.n},a:${q.ans || 0},from:'${from}'})"><span>${ic}</span><div class="grow"><b>${TYPE_HE[typeOf(x.c, q.n)] || ''}</b> · שאלה ${q.n}<div class="mut sm">${esc(chTitle(x))} · ${q.ans ? `ענית ${q.ans}${right && !good ? `, הנכונה ${right}` : ''}` : 'לא נענתה'}</div></div><b style="color:var(--b)">◀</b></div>`;
+  return `<div class="it" onclick="go('pq',{k:'${q.k}',n:${q.n},a:${q.ans || 0},t:${q.t != null ? q.t : -1},from:'${from}'})"><span>${ic}</span><div class="grow"><b>${TYPE_HE[typeOf(x.c, q.n)] || ''}</b> · שאלה ${q.n}<div class="mut sm">${esc(chTitle(x))} · ${q.ans ? `ענית ${q.ans}${right && !good ? `, הנכונה ${right}` : ''}` : 'לא נענתה'}</div></div>${q.ans && q.t != null ? `<span class="sm" style="font-variant-numeric:tabular-nums">⏱ ${fmtT(q.t * 1000)}</span>` : ''}<b style="color:var(--b)">◀</b></div>`;
 }
 let histArg = null;
 function hist() { // כל מה שתורגל: הסבבים (החדש למעלה), וכל שאלה שנענתה בתרגול לפי סוג
   const A = histArg = arg || histArg || { t: '', w: 0 };
   const R = S.dh.slice().reverse();
-  const rounds = R.length ? R.map((r, i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary><b>${esc(r.title)}</b> · ${dhScore(r)} <span class="mut sm">· ${fmtWhen(r.at)}</span></summary><div class="list" style="margin-top:8px">${r.list.map(q => hRow(q, 'hist')).join('')}</div></details>`).join('')
+  const rounds = R.length ? R.map((r, i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary><b>${esc(r.title)}</b> · ${dhScore(r)} <span class="mut sm">· ${fmtWhen(r.at)}${(s => s ? ` · ⏱ ${fmtT(s * 1000)}` : '')(r.list.reduce((x, q) => x + (q.ans && q.t ? q.t : 0), 0))}</span></summary><div class="list" style="margin-top:8px">${r.list.map(q => hRow(q, 'hist')).join('')}</div></details>`).join('')
     : '<div class="card"><p class="sm" style="margin:0">עוד אין סבבים שמורים. מעכשיו כל סבב שתסיים יישמר כאן.</p></div>';
   const all = [];
   Object.entries(S.prac).forEach(([k, P]) => { const x = chByKey[k]; if (!x || !keyOf(k)) return; (P.ans || []).forEach((v, i) => { if (!v) return; const right = +keyOf(k)[i]; if (A.t && typeOf(x.c, i + 1) !== A.t) return; if (A.w && (v === right || isVoid(k, i + 1))) return; all.push({ k, n: i + 1, ans: v, at: P.at || 0 }); }); });
@@ -777,7 +796,7 @@ function hist() { // כל מה שתורגל: הסבבים (החדש למעלה),
   ${all.length > 150 ? `<p class="mut sm">מוצגות 150 האחרונות מתוך ${all.length}.</p>` : ''}</main>` + navBar();
 }
 function pq() { // שאלה אחת מההיסטוריה: השאלה, מה ענית, התשובה הנכונה וההסבר
-  const { k, n, a, from } = arg || {}, x = chByKey[k]; if (!x) return hist();
+  const { k, n, a, t: secs, from } = arg || {}, x = chByKey[k]; if (!x) return hist();
   const { c } = x, right = +keyOf(k)[n - 1] || 0, vd = isVoid(k, n), good = a === right || vd, ex = expOf(k, n);
   const btns = [1, 2, 3, 4].map(i => `<button class="${i === right ? 'ok' : i === a ? 'bad' : ''}" disabled>${i}</button>`).join('');
   return `<div class="xtop"><button class="icb" onclick="${from === 'drill' ? "go('drill')" : 'go(\'hist\',histArg)'}">→ חזרה</button><span class="ttl">📜 ${TYPE_HE[typeOf(c, n)] || ''} · שאלה ${n}</span></div>
@@ -785,10 +804,12 @@ function pq() { // שאלה אחת מההיסטוריה: השאלה, מה עני
   ${qView(k, n, 'closed')}
   <p style="margin:14px 0 0">${a ? 'התשובה שלך:' : 'לא ענית על השאלה הזו.'}</p><div class="bub big">${btns}</div>
   <p style="font-weight:800;font-size:18px;color:${vd || good ? 'var(--gd)' : 'var(--rd)'}">${vd ? 'מאל״ו ביטלו את השאלה' : !right ? '' : good ? `✅ ענית ${a}, נכון` : a ? `❌ ענית ${a} · הנכונה ${right}` : `התשובה הנכונה: ${right}`}</p>
+  ${a && secs >= 0 ? `<p class="sm" style="margin:-6px 0 10px">⏱ ענית תוך <b>${fmtT(secs * 1000)}</b></p>` : ''}
   ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}</main>` + navBar();
 }
 function dAns(k) {
   const D = S.drill, q = D.list[D.i], c = chByKey[q.k].c, right = +keyOf(q.k)[q.n - 1];
+  q.t = Math.round(dEl() / 1000); delete q.el; dRun = null;
   q.ans = k; if (k === right || isVoid(q.k, q.n)) D.a++;
   const P = S.prac[q.k] = S.prac[q.k] && S.prac[q.k].ans && S.prac[q.k].ans.length ? S.prac[q.k] : { ans: Array(c.questions).fill(0) };
   P.ans[q.n - 1] = k; P.at = Date.now(); save(); reRender();
@@ -1056,4 +1077,5 @@ render();
   if (p) { pickUid(mu && mu[1], had); try { localStorage.setItem(PK, p); } catch (e) { } cloudInit(p); }
   render();
 })();
+addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') dPause(); else if (view === 'drill') reRender(); }); // הסטופר בתרגול עוצר כשהמסך כבוי או באפליקציה אחרת
 addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cloudSync(); else if (cloudT) { clearTimeout(cloudT); cloudSync(); } });
