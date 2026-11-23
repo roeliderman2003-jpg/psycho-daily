@@ -440,24 +440,33 @@ function startChap(k) {
   save(); go('exam');
 }
 // זמן לכל שאלה (X.t, בשניות): כל שנייה שהמסך פתוח נזקפת לשאלה שמול העיניים.
-// מול העיניים = השאלה שמוגדלת במסך מלא, או השאלה (התמונה + שורת התשובות) הראשונה מלמעלה שרובה גלוי,
-// מתחת לפס העליון ולקטע הצמוד. בטלפון שאלה תופסת כרבע מסך, והשאלה שקוראים היא העליונה, לא זו שבאמצע.
+// מול העיניים = השאלה שמוגדלת במסך מלא, או מבין השאלות (התמונה + שורת התשובות) שרובן גלוי:
+// הראשונה שעוד אין לה תשובה. כשכל הגלויות כבר נענו (חזרה לשאלה), העליונה מהן.
+// רועי 23/11: «יש בעיות במדידת זמנים פר שאלה». עד אז: (1) העליונה הגלויה קיבלה את הזמן גם כשכבר נענתה וקראו את זו שמתחתיה;
+// (2) במסך 1600+ התרשים בעמודה בצד נחשב כמכסה גם את השאלות שלידו, ושאלות התרשים הראשונות קיבלו 0-1 שניות.
+// לכן פס או קטע נעוץ מכסה רק שאלה שנמצאת מתחתיו באותו טור.
 function qFocus(X) {
   const pre = X.key.replace(':', '/') + '-', num = id => id && id.startsWith(pre) && /^\d+$/.test(id.slice(pre.length)) ? +id.slice(pre.length) - 1 : -1;
   const z = document.querySelector('.zoom'); if (z) return num(z.dataset.q);
-  let top = 0;
-  document.querySelectorAll('.xtop, .two>.side').forEach(el => { // פס או קטע שנעוץ עכשיו למעלה מכסה את מה שמתחתיו
+  const stuck = [];
+  document.querySelectorAll('.xtop, .two>.side').forEach(el => { // פס או קטע שנעוץ עכשיו למעלה
     const r = el.getBoundingClientRect(), st = getComputedStyle(el);
-    if (st.position === 'sticky' && r.top <= (parseFloat(st.top) || 0) + 2 && r.bottom > top) top = r.bottom;
+    if (st.position === 'sticky' && r.top <= (parseFloat(st.top) || 0) + 2) stuck.push(r);
   });
-  const H = innerHeight; let first = -1, fa = 1e9, big = -1, bv = 40;
+  const H = innerHeight; let first = -1, fa = 1e9, open = -1, oa = 1e9, skip = -1, sa = 1e9, big = -1, bv = 40;
   document.querySelectorAll(`.qi[data-q^="${pre}"]`).forEach(el => {
     const i = num(el.dataset.q); if (i < 0) return;
-    const a = el.getBoundingClientRect().top, b = (el.nextElementSibling || el).getBoundingClientRect().bottom, v = Math.min(b, H) - Math.max(a, top);
+    const q = el.getBoundingClientRect(), a = q.top, b = (el.nextElementSibling || el).getBoundingClientRect().bottom;
+    const top = stuck.reduce((t, r) => r.left < q.right - 1 && r.right > q.left + 1 && r.bottom > t ? r.bottom : t, 0); // רק מה שמעליה באותו טור
+    const v = Math.min(b, H) - Math.max(a, top);
     if (v > bv) { bv = v; big = i; }
-    if ((v >= 0.6 * (b - a) || v >= 250) && a < fa) { fa = a; first = i; } // רובה גלוי (או לפחות 250 פיקסלים משאלה ארוכה)
+    if (v >= 0.6 * (b - a) || v >= 250) { // רובה גלוי (או לפחות 250 פיקסלים משאלה ארוכה)
+      if (a < fa) { fa = a; first = i; }
+      if (!X.ans[i] && !X.flag[i] && a < oa) { oa = a; open = i; } // שאלה שדילגו עליה עם 🚩 בלי תשובה לא «תופסת» את הזמן של הבאה
+      if (!X.ans[i] && a < sa) { sa = a; skip = i; }
+    }
   });
-  return first >= 0 ? first : big;
+  return open >= 0 ? open : skip >= 0 ? skip : first >= 0 ? first : big;
 }
 let lastTk = 0, tkN = 0;
 function startTick() {
