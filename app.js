@@ -40,7 +40,9 @@ function pickUid(fromLink, hadCode) {
   let cur = null; try { cur = localStorage.getItem(UK); } catch (e) { }
   if (!cur && hadCode) cur = '0';
   let u = cur;
-  if (fromLink && fromLink !== cur && (!cur || confirm('הקישור הזה שייך להתקדמות אחרת. לעבור אליה? מה שנעשה במכשיר הזה יתמזג לתוכה.'))) u = fromLink;
+  // רועי 23/11: מי שקיבל קישור מאדם אחר מתחיל מאפס. גם במכשיר חדש שואלים לפני שנכנסים להתקדמות קיימת מקישור אישי
+  if (fromLink && fromLink !== cur && confirm(cur ? 'הקישור הזה שייך להתקדמות אחרת. לעבור אליה? מה שנעשה במכשיר הזה יתמזג לתוכה.'
+    : 'הקישור הזה פותח התקדמות אישית שכבר קיימת.\n\nאישור: זה הקישור האישי שלך ממכשיר אחר, ממשיכים מאותו מקום.\nביטול: קיבלת אותו ממישהו אחר. מתחילים מאפס, וההתקדמות שלו לא תופיע אצלך.')) u = fromLink;
   if (!u) u = [...crypto.getRandomValues(new Uint8Array(9))].map(b => b.toString(16).padStart(2, '0')).join('');
   try { localStorage.setItem(UK, u); } catch (e) { }
   return myUid = u;
