@@ -406,12 +406,14 @@ function home() {
   let h = `<main><div class="card hero"><div class="mut sm">הפסיכומטרי הדו-תחומי · ${new Date(S.examDate).toLocaleDateString('he-IL')}</div>
     <div style="font-size:30px;font-weight:800;margin:4px 0">${dl > 0 ? `עוד ${dl} ימים` : dl === 0 ? 'הבחינה היום 💪' : 'הבחינה עברה'}</div>
     <div class="mut sm">${CH.length} פרקים אמיתיים מ-${EX.length} בחינות של מאל״ו</div></div>
-    <div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${p(pv)}</b><span>נכון במילולי</span></div><div class="kpi"><b>${p(pq)}</b><span>נכון בכמותי</span></div></div>`;
-  const se = scoredExams(), ls = se[se.length - 1];
-  if (ls) h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>הציון המשוער האחרון</b><span class="mut sm">${esc(ls.e.title)}${ls.sc.full ? '' : ' · זמני*'}</span></div>
-    <div class="big-score" style="font-size:40px">${ls.sc.G.est}</div><div style="text-align:center" class="sm">טווח מאל״ו ${ls.sc.G.lo} עד ${ls.sc.G.hi} · מילולי ${ls.sc.V.s} · כמותי ${ls.sc.Q.s}</div>
-    ${se.length > 1 ? `<p class="mut sm" style="margin:8px 0 0">לפני: ${se.slice(-4, -1).map(y => `${esc(y.e.title)} ${y.sc.G.est}${y.sc.full ? '' : '*'}`).join(' · ')}</p>` : ''}
-    <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו לאותה בחינה. נקודת הפתיחה: 620.</p>
+    <div class="kpis"><div class="kpi"><b>${done().length}</b><span>פרקים נעשו</span></div><div class="kpi"><b>${p(pv)}</b><span>נכון במילולי (בכל הפרקים)</span></div><div class="kpi"><b>${p(pq)}</b><span>נכון בכמותי (בכל הפרקים)</span></div></div>`;
+  // רועי 23/11: «זה לא מתאים» (622 כאן מול 634 במגמה). המספר הראשי = הרמה עכשיו, אותו חישוב כמו ב«📈 המגמה».
+  // הציון של בחינה אחת נכנס רק לבחינה שעשית בה גם מילולי וגם כמותי, ולכן הוא יכול להיות ישן. הוא מוצג מתחת.
+  const se = scoredExams(), ls = se[se.length - 1], TT = scoreTrend(chHist()), nw = TT.length ? TT[TT.length - 1] : null;
+  if (nw && nw.w) h += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>הציון שהרמה שלך שווה עכשיו</b><span class="mut sm">${LV_N} הפרקים האחרונים בכל תחום</span></div>
+    <div class="big-score" style="font-size:40px">${nw.w.G}</div><div style="text-align:center" class="sm">מילולי ${Math.round(nw.v[0] * 100)}% → ${nw.w.V} · כמותי ${Math.round(nw.q[0] * 100)}% → ${nw.w.Q}</div>
+    ${ls ? `<p class="mut sm" style="margin:8px 0 0">בחינה שלמה אחרונה (מילולי וכמותי מאותה בחינה): ${esc(ls.e.title)} ${ls.sc.G.est}${ls.sc.full ? '' : '*'} (טווח ${ls.sc.G.lo}-${ls.sc.G.hi})${se.length > 1 ? ` · לפני: ${se.slice(-3, -1).map(y => `${esc(y.e.title)} ${y.sc.G.est}${y.sc.full ? '' : '*'}`).join(' · ')}` : ''}</p>` : ''}
+    <p class="mut sm" style="margin:6px 0 0">לפי הטבלאות של מאל״ו (ממוצע על כל ${EX.length} הבחינות). נקודת הפתיחה: 620.</p>
     <button class="btn ghost" style="margin-top:10px" onclick="go('stats');setTimeout(()=>document.getElementById('trend')&&document.getElementById('trend').scrollIntoView(),50)">📈 המגמה וכמה הציון יעלה</button></div>`;
   if (x) h += `<h2>${pick ? 'הפרק שבחרת' : 'פרק היום'}${st ? ` <span class="mut sm">· ${st} ימים ברצף 🔥</span>` : ''}</h2>${chCard(x)}`;
   else h += `<div class="card"><b>עשית את כל הפרקים 🎉</b><p class="mut sm">אפשר לעשות פרק שוב מ«בחינות», או לתרגל ב«פסיכורשת».</p></div>`;
