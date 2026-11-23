@@ -16,6 +16,8 @@ S.voc = S.voc || {};    // מילים: מילה -> {b תיבה 0-6, due, ok, bad
 S.examDate = S.examDate || '2026-12-04';
 S.gone = S.gone || {};  // ניסיונות שהוסרו מהנתונים: "מפתח@at" -> מתי הוסר. נשמר (גם בענן) כדי שמכשיר אחר לא יחזיר אותם במיזוג
 dropGone(S);
+S.dh = S.dh || [];      // היסטוריית תרגול (רועי 23/11: «מסיים ולא יכול לחזור לראות»): סבבים שהסתיימו {at, title, dom, type, a, list:[{k,n,ans}]}
+if (S.drill && S.drill.list && S.drill.i >= S.drill.list.length) dArchive(S.drill); // סבב שהסתיים לפני שהייתה היסטוריה
 // מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
 let SOL = {};
 // תמונות השאלות: q/<בחינה>/<פרק>-<שאלה>.bin, מוצפנות במפתח שנמצא בתוך sol.js. נפתחות רק עם קוד הגישה.
@@ -82,7 +84,9 @@ function mergeS(a, b) {
   a.prac = a.prac || {};
   a.voc = a.voc || {};
   a.gone = a.gone || {};
-  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone]);
+  a.dh = a.dh || [];
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh]);
+  const ha = new Set(a.dh.map(x => x.at)); a.dh = a.dh.concat((b.dh || []).filter(x => x && !ha.has(x.at))).sort((x, y) => x.at - y.at).slice(-300); // סבבי תרגול לפי זמן
   for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
   a.gone = { ...(b.gone || {}), ...a.gone }; dropGone(a); // ניסיון שהוסר במכשיר אחד לא חוזר מהשני
   a.keys = { ...(b.keys || {}), ...a.keys }; a.fix = { ...(b.fix || {}), ...a.fix }; a.read = { ...(b.read || {}), ...a.read };
@@ -90,7 +94,7 @@ function mergeS(a, b) {
   for (const [w, v] of Object.entries(b.voc || {})) if (v && (!a.voc[w] || (v.at || 0) > (a.voc[w].at || 0))) a.voc[w] = v; // מילים: המצב האחרון של כל מילה
   for (const [k, v] of Object.entries(b.prac || {})) if (v && (!a.prac[k] || (v.at || 0) > (a.prac[k].at || 0))) a.prac[k] = v; // בתרגול חופשי: הגרסה האחרונה של הפרק
   if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
-  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone]);
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh]);
 }
 // מוחקים מ-res כל ניסיון שהוסר. פרק שלא נשאר לו ניסיון נראה כאילו לא נעשה, והפעם הבאה שלו נכנסת לנתונים כרגיל
 function dropGone(s) {
@@ -373,7 +377,7 @@ function trendHtml() {
 }
 
 // ===== מסכים =====
-const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', keyin: 'all', result: 'all', vles: 'voc', vcards: 'voc', vlist: 'voc', vsort: 'voc' };
+const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', hist: 'prac', pq: 'prac', keyin: 'all', result: 'all', vles: 'voc', vcards: 'voc', vlist: 'voc', vsort: 'voc' };
 function navBar() {
   const it = [['home', '🏠', 'היום'], ['all', '⏱️', 'בחינות'], ['prac', '🧘', 'תרגול'], ['voc', '🔤', 'מילים'], ['stats', '🎯', 'חוזקות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${(NAV_OF[view] || view) === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
@@ -381,8 +385,8 @@ function navBar() {
 function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
-  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill, voc, vles, vcards, vlist, vsort }[view] || home;
-  $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result'].includes(view));
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill, hist, pq, voc, vles, vcards, vlist, vsort }[view] || home;
+  $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result', 'pq'].includes(view));
   $app.innerHTML = f(); hydrate();
   if (view === 'exam' || view === 'wx') startTick();
 }
@@ -700,6 +704,7 @@ function startDrill(dom, type, title) {
     }
   }
   if (!list.length) return toast('אין שאלות לתרגול כאן');
+  dArchive(S.drill); // סבב שנעזב באמצע נשמר בהיסטוריה עם מה שנענה בו
   S.drill = { title, dom, type, list, i: 0, a: 0 }; save(); go('drill');
 }
 function prac() {
@@ -711,6 +716,7 @@ function prac() {
   return `<main><h1>🧘 תרגול</h1><p class="mut sm" style="margin-top:-6px">בלי שעון. מסמנים תשובה ורואים מיד אם צדקת ואת ההסבר. לא נכנס לציון המשוער.</p>
   ${locked0 ? codeCard() : ''}
   ${D ? `<div class="card"><b>באמצע: ${esc(D.title)}</b><p class="mut sm" style="margin:4px 0 8px">שאלה ${D.i + 1} מתוך ${D.list.length}</p><button class="btn blue" onclick="go('drill')">להמשיך</button></div>` : ''}
+  <div class="card"><b>📜 היסטוריה</b><p class="mut sm" style="margin:4px 0 8px">${S.dh.length ? `${S.dh.length === 1 ? 'סבב אחד' : `${S.dh.length} סבבים`}. האחרון: ${esc(S.dh[S.dh.length - 1].title)}, ${dhScore(S.dh[S.dh.length - 1])}.` : 'כל סבב שתסיים יופיע כאן, עם כל שאלה, מה ענית וההסבר.'}</p><button class="btn ghost" onclick="go('hist')">לכל מה שתרגלתי</button></div>
   <h2>מעורב</h2><div class="card"><p class="sm" style="margin-top:0">כ-10 שאלות, כל פעם מסוג אחר ומבחינה אחרת.</p>
   <div class="row"><button class="btn blue" onclick="startDrill(null,null,'מעורב')">הכל</button><button class="btn ghost" onclick="startDrill('verbal',null,'מעורב מילולי')">מילולי</button><button class="btn ghost" onclick="startDrill('quant',null,'מעורב כמותי')">כמותי</button></div></div>
   <h2>לפי נושא</h2><div class="card list">${types.map(([d, ts]) => ts.map(t => `<div class="it" onclick="startDrill('${d}','${t}','${TYPE_HE[t]}')"><span class="tag ${d[0]}">${DOM[d]}</span><div class="grow"><b>${TYPE_HE[t]}</b><div class="mut sm">${st(t)}</div></div><b style="color:var(--b)">◀</b></div>`).join('')).join('')}</div>
@@ -722,7 +728,9 @@ function prac() {
 function drill() {
   const D = S.drill; if (!D) return prac();
   if (D.i >= D.list.length) return `<main><h1>🧘 ${esc(D.title)}</h1><div class="big-score">${D.a}/${D.list.length}</div><div style="text-align:center" class="mut">נכון בסבב הזה</div>
-    <div class="row" style="margin-top:14px"><button class="btn blue" onclick="startDrill(S.drill.dom,S.drill.type,S.drill.title)">עוד סבב</button><button class="btn ghost" onclick="go('prac')">לתרגול</button></div></main>` + navBar();
+    <div class="row" style="margin-top:14px"><button class="btn blue" onclick="startDrill(S.drill.dom,S.drill.type,S.drill.title)">עוד סבב</button><button class="btn ghost" onclick="go('prac')">לתרגול</button></div>
+    <h2>השאלות בסבב</h2><p class="mut sm" style="margin-top:-6px">לוחצים על שאלה כדי לראות אותה שוב עם ההסבר. הסבב נשמר גם ב«📜 היסטוריה» בלשונית תרגול.</p>
+    <div class="card list">${D.list.map(q => hRow(q, 'drill')).join('')}</div></main>` + navBar();
   const q = D.list[D.i], x = chByKey[q.k], { e, c } = x, t = typeOf(c, q.n), right = +keyOf(q.k)[q.n - 1], a = q.ans || 0, good = a === right || isVoid(q.k, q.n);
   const btns = [1, 2, 3, 4].map(k => `<button class="${a ? (k === right ? 'ok' : k === a ? 'bad' : '') : ''}" ${a ? 'disabled' : `onclick="dAns(${k})"`}>${k}</button>`).join('');
   const ex = expOf(q.k, q.n), u = q.unit, what = t === 'chart' ? 'תרשים' : 'קטע', sp = u ? secPage(c, secOf(c, q.n)) : 0;
@@ -733,7 +741,51 @@ function drill() {
   <p style="margin:14px 0 0">התשובה שלך:</p><div class="bub big">${btns}</div>
   ${a ? `<p style="font-weight:800;font-size:18px;color:${good ? 'var(--gd)' : 'var(--rd)'}">${isVoid(q.k, q.n) ? 'מאל״ו ביטלו את השאלה' : good ? '✅ נכון!' : `❌ התשובה הנכונה: ${right}`}</p>
   ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}
-  <button class="btn blue big" onclick="S.drill.i++;save();go('drill')">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}${u ? '</div></div>' : ''}</main>` + navBar();
+  <button class="btn blue big" onclick="dNext()">${D.i + 1 < D.list.length ? 'לשאלה הבאה' : 'לסיכום'}</button>` : ''}${u ? '</div></div>' : ''}</main>` + navBar();
+}
+function dNext() { S.drill.i++; if (S.drill.i >= S.drill.list.length) dArchive(S.drill); save(); go('drill'); }
+function dArchive(D) { // סבב נכנס להיסטוריה פעם אחת, כשהסתיים או כשמתחילים סבב חדש באמצע
+  if (!D || D.done || !D.list || !D.list.some(q => q.ans)) return;
+  D.done = 1;
+  S.dh.push({ at: Date.now(), title: D.title, dom: D.dom, type: D.type, a: D.a, list: D.list.map(q => ({ k: q.k, n: q.n, ans: q.ans || 0 })) });
+  if (S.dh.length > 300) S.dh = S.dh.slice(-300);
+}
+const dhScore = r => { const n = r.list.filter(q => q.ans).length; return `${r.a}/${n} נכון${n < r.list.length ? ` (נענו ${n} מתוך ${r.list.length})` : ''}`; };
+const fmtWhen = t => new Date(t).toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+function hRow(q, from) { // שורה של שאלה בהיסטוריה. לחיצה פותחת אותה שוב עם התשובה וההסבר
+  const x = chByKey[q.k]; if (!x) return '';
+  const right = +keyOf(q.k)[q.n - 1] || 0, good = q.ans === right || isVoid(q.k, q.n);
+  const ic = !q.ans ? '⏭️' : !right ? '•' : good ? '✅' : '❌';
+  return `<div class="it" onclick="go('pq',{k:'${q.k}',n:${q.n},a:${q.ans || 0},from:'${from}'})"><span>${ic}</span><div class="grow"><b>${TYPE_HE[typeOf(x.c, q.n)] || ''}</b> · שאלה ${q.n}<div class="mut sm">${esc(chTitle(x))} · ${q.ans ? `ענית ${q.ans}${right && !good ? `, הנכונה ${right}` : ''}` : 'לא נענתה'}</div></div><b style="color:var(--b)">◀</b></div>`;
+}
+let histArg = null;
+function hist() { // כל מה שתורגל: הסבבים (החדש למעלה), וכל שאלה שנענתה בתרגול לפי סוג
+  const A = histArg = arg || histArg || { t: '', w: 0 };
+  const R = S.dh.slice().reverse();
+  const rounds = R.length ? R.map((r, i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary><b>${esc(r.title)}</b> · ${dhScore(r)} <span class="mut sm">· ${fmtWhen(r.at)}</span></summary><div class="list" style="margin-top:8px">${r.list.map(q => hRow(q, 'hist')).join('')}</div></details>`).join('')
+    : '<div class="card"><p class="sm" style="margin:0">עוד אין סבבים שמורים. מעכשיו כל סבב שתסיים יישמר כאן.</p></div>';
+  const all = [];
+  Object.entries(S.prac).forEach(([k, P]) => { const x = chByKey[k]; if (!x || !keyOf(k)) return; (P.ans || []).forEach((v, i) => { if (!v) return; const right = +keyOf(k)[i]; if (A.t && typeOf(x.c, i + 1) !== A.t) return; if (A.w && (v === right || isVoid(k, i + 1))) return; all.push({ k, n: i + 1, ans: v, at: P.at || 0 }); }); });
+  all.sort((a, b) => b.at - a.at);
+  const tb = (t, l) => `<option value="${t}" ${A.t === t ? 'selected' : ''}>${l}</option>`;
+  return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">📜 היסטוריית תרגול</span></div><main>
+  <h2>סבבים</h2>${rounds}
+  <h2>כל השאלות שענית בתרגול</h2><p class="mut sm" style="margin-top:-6px">מכל הסבבים ומפרק שלם בלי שעון, גם מלפני שההיסטוריה נשמרה. התשובה האחרונה שלך לכל שאלה.</p>
+  <select class="txt" style="margin:0" onchange="go('hist',{t:this.value,w:${A.w}})">${tb('', 'כל הסוגים')}${Object.entries(TYPE_HE).map(([t, l]) => tb(t, l)).join('')}</select>
+  <label class="sm" style="display:flex;gap:8px;align-items:center;margin:10px 0"><input type="checkbox" style="width:20px;height:20px" ${A.w ? 'checked' : ''} onchange="go('hist',{t:'${A.t}',w:this.checked?1:0})">רק טעויות</label>
+  <div class="card list">${all.length ? all.slice(0, 150).map(q => hRow(q, 'hist')).join('') : '<p class="sm" style="margin:0">אין שאלות כאן.</p>'}</div>
+  ${all.length > 150 ? `<p class="mut sm">מוצגות 150 האחרונות מתוך ${all.length}.</p>` : ''}</main>` + navBar();
+}
+function pq() { // שאלה אחת מההיסטוריה: השאלה, מה ענית, התשובה הנכונה וההסבר
+  const { k, n, a, from } = arg || {}, x = chByKey[k]; if (!x) return hist();
+  const { c } = x, right = +keyOf(k)[n - 1] || 0, vd = isVoid(k, n), good = a === right || vd, ex = expOf(k, n);
+  const btns = [1, 2, 3, 4].map(i => `<button class="${i === right ? 'ok' : i === a ? 'bad' : ''}" disabled>${i}</button>`).join('');
+  return `<div class="xtop"><button class="icb" onclick="${from === 'drill' ? "go('drill')" : 'go(\'hist\',histArg)'}">→ חזרה</button><span class="ttl">📜 ${TYPE_HE[typeOf(c, n)] || ''} · שאלה ${n}</span></div>
+  <main><div class="card"><p class="sm" style="margin:0">${esc(chTitle(x))} · <b>שאלה ${n}</b></p></div>
+  ${qView(k, n, 'closed')}
+  <p style="margin:14px 0 0">${a ? 'התשובה שלך:' : 'לא ענית על השאלה הזו.'}</p><div class="bub big">${btns}</div>
+  <p style="font-weight:800;font-size:18px;color:${vd || good ? 'var(--gd)' : 'var(--rd)'}">${vd ? 'מאל״ו ביטלו את השאלה' : !right ? '' : good ? `✅ ענית ${a}, נכון` : a ? `❌ ענית ${a} · הנכונה ${right}` : `התשובה הנכונה: ${right}`}</p>
+  ${ex ? `<div class="card"><b>ההסבר</b><p class="xp" style="margin:6px 0 0">${expHtml(ex)}</p></div>` : ''}</main>` + navBar();
 }
 function dAns(k) {
   const D = S.drill, q = D.list[D.i], c = chByKey[q.k].c, right = +keyOf(q.k)[q.n - 1];
@@ -982,7 +1034,7 @@ function copyMyLink() { // הקישור האישי: קוד הגישה + המזה
   (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('הקישור האישי הועתק ✓ לא לשלוח אותו לאחרים'), () => prompt('הקישור האישי שלך (לא לשלוח לאחרים):', url));
 }
 function expo() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate, gone: S.gone }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate, gone: S.gone, dh: S.dh }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
 function impo() {
