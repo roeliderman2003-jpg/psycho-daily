@@ -16,7 +16,8 @@ S.voc = S.voc || {};    // מילים: מילה -> {b תיבה 0-6, due, ok, bad
 S.examDate = S.examDate || '2026-12-04';
 S.gone = S.gone || {};  // ניסיונות שהוסרו מהנתונים: "מפתח@at" -> מתי הוסר. נשמר (גם בענן) כדי שמכשיר אחר לא יחזיר אותם במיזוג
 dropGone(S);
-S.dh = S.dh || [];      // היסטוריית תרגול (רועי 23/11: «מסיים ולא יכול לחזור לראות»): סבבים שהסתיימו {at, title, dom, type, a, list:[{k,n,ans}]}
+S.dh = S.dh || [];
+S.sims = S.sims || [];  // סימולציות מלאות שהסתיימו: {at, end, id בחינה, atts:[{k פרק, at הניסיון ב-res}]}. S.sim = סימולציה שרצה עכשיו      // היסטוריית תרגול (רועי 23/11: «מסיים ולא יכול לחזור לראות»): סבבים שהסתיימו {at, title, dom, type, a, list:[{k,n,ans}]}
 if (S.drill && S.drill.list && S.drill.i >= S.drill.list.length) dArchive(S.drill); // סבב שהסתיים לפני שהייתה היסטוריה
 // מפתחות והסברים: sol.js מוצפן (הבחינות של מאל״ו אסורות בהפצה). קוד הגישה מגיע פעם אחת בקישור (#k=...) ונשמר במכשיר.
 let SOL = {};
@@ -87,7 +88,9 @@ function mergeS(a, b) {
   a.voc = a.voc || {};
   a.gone = a.gone || {};
   a.dh = a.dh || [];
-  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh]);
+  a.sims = a.sims || [];
+  const before = JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh, a.sims]);
+  const hs = new Set(a.sims.map(x => x.at)); a.sims = a.sims.concat((b.sims || []).filter(x => x && !hs.has(x.at))).sort((x, y) => x.at - y.at); // סימולציות מלאות לפי זמן
   const ha = new Set(a.dh.map(x => x.at)); a.dh = a.dh.concat((b.dh || []).filter(x => x && !ha.has(x.at))).sort((x, y) => x.at - y.at).slice(-300); // סבבי תרגול לפי זמן
   for (const [k, list] of Object.entries(b.res || {})) { const have = new Set((a.res[k] || []).map(x => x.at)); a.res[k] = (a.res[k] || []).concat((list || []).filter(x => !have.has(x.at))).sort((x, y) => x.at - y.at); }
   a.gone = { ...(b.gone || {}), ...a.gone }; dropGone(a); // ניסיון שהוסר במכשיר אחד לא חוזר מהשני
@@ -96,7 +99,7 @@ function mergeS(a, b) {
   for (const [w, v] of Object.entries(b.voc || {})) if (v && (!a.voc[w] || (v.at || 0) > (a.voc[w].at || 0))) a.voc[w] = v; // מילים: המצב האחרון של כל מילה
   for (const [k, v] of Object.entries(b.prac || {})) if (v && (!a.prac[k] || (v.at || 0) > (a.prac[k].at || 0))) a.prac[k] = v; // בתרגול חופשי: הגרסה האחרונה של הפרק
   if (b.examDate && (!a.examDateAt || (b.examDateAt || 0) > a.examDateAt)) { a.examDate = b.examDate; a.examDateAt = b.examDateAt; }
-  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh]);
+  return before !== JSON.stringify([a.res, a.keys, a.fix, a.wr, a.read, a.examDate, a.prac, a.voc, a.gone, a.dh, a.sims]);
 }
 // מוחקים מ-res כל ניסיון שהוסר. פרק שלא נשאר לו ניסיון נראה כאילו לא נעשה, והפעם הבאה שלו נכנסת לנתונים כרגיל
 function dropGone(s) {
@@ -399,7 +402,7 @@ function trendHtml() {
 }
 
 // ===== מסכים =====
-const NAV_OF = { fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', hist: 'prac', pq: 'prac', keyin: 'all', result: 'all', vles: 'voc', vcards: 'voc', vlist: 'voc', vsort: 'voc' };
+const NAV_OF = { simres: 'all', fix: 'prac', retry: 'prac', free: 'prac', drill: 'prac', hist: 'prac', pq: 'prac', keyin: 'all', result: 'all', vles: 'voc', vcards: 'voc', vlist: 'voc', vsort: 'voc' };
 function navBar() {
   const it = [['home', '🏠', 'היום'], ['all', '⏱️', 'בחינות'], ['prac', '🧘', 'תרגול'], ['voc', '🔤', 'מילים'], ['stats', '🎯', 'חוזקות'], ['write', '✍️', 'כתיבה'], ['learn', '📘', 'הדרכה']];
   return `<nav class="nav">${it.map(([v, ic, l]) => `<button class="${(NAV_OF[view] || view) === v ? 'on' : ''}" onclick="go('${v}')"><span class="ic">${ic}</span>${l}</button>`).join('')}</nav>`;
@@ -407,7 +410,7 @@ function navBar() {
 function render() {
   clearInterval(tick); tick = null;
   if (S.cur && !['exam', 'wx'].includes(view)) view = S.cur.kind === 'wr' ? 'wx' : 'exam';
-  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill, hist, pq, voc, vles, vcards, vlist, vsort }[view] || home;
+  const f = { home, all, stats, fix, write, learn, settings, exam, keyin, result, wx, wres, retry, free, prac, drill, hist, pq, simres, voc, vles, vcards, vlist, vsort }[view] || home;
   $app.classList.toggle('wide', ['exam', 'free', 'drill', 'retry', 'result', 'pq'].includes(view));
   $app.innerHTML = f(); hydrate();
   if (view === 'exam' || view === 'wx') startTick();
@@ -463,6 +466,7 @@ function home() {
 }
 function all() {
   return `<main><h1>⏱️ הבחינות של מאל״ו</h1><p class="mut sm">כל הבחינות שמאל״ו פרסמו באתר שלהם, מהחדשה לישנה. בכל אחת 2 פרקים מילולי ו-2 כמותי, בלי אנגלית. כאן הכל בזמן, כמו בבחינה. בלי שעון: לשונית «🧘 תרגול».</p>
+  ${simCard()}
   ${EX.map(e => `<h2 style="display:flex;justify-content:space-between;align-items:center">${esc(e.title)} ${link(e.url, 'הקובץ ↗', 'sm')}</h2><div class="card list">${CH.filter(x => x.e === e).map(chRow).join('')}</div>`).join('')}
   <p class="mut sm">המקור: ${link(NITE_PREP, 'דף ההכנה של מאל״ו', 'sm')}</p></main>` + navBar();
 }
@@ -531,7 +535,7 @@ function startTick() {
 function exam() {
   const X = S.cur, x = chByKey[X.key], { e, c } = x, left = (X.endAt - Date.now()) / 1000;
   const rows = chapterRows(X.key, i => `<div class="bub" id="bub${i}"><b>${i + 1}</b>${[1, 2, 3, 4].map(k => `<button class="${X.ans[i] === k ? 'on' : ''}" onclick="bub(${i},${k})">${k}</button>`).join('')}<button class="fl ${X.flag[i] ? 'on' : ''}" onclick="flg(${i})" title="לחזור אליה">🚩</button></div>`);
-  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${esc(e.title)} · ${DOM[c.domain]} · <span id="xc">${X.ans.filter(Boolean).length}</span>/${c.questions}</span></div>
+  return `<div class="xtop"><span class="timer ${left < 60 ? 'warn' : ''}" id="tm">${mmss(left)}</span><span class="ttl">${S.sim && S.sim.keys[S.sim.i] === X.key ? `🎓 פרק ${S.sim.i + 1}/${S.sim.keys.length} · ` : ''}${esc(e.title)} · ${DOM[c.domain]} · <span id="xc">${X.ans.filter(Boolean).length}</span>/${c.questions}</span></div>
   <main class="full"><div class="one"><p class="mut sm" style="margin-top:0">${esc(c.label || '')}. לוחצים על שאלה כדי להגדיל.</p>${fmBox(X.key)}${locked() ? codeCard() : ''}</div>${rows}
   <div class="one"><button class="btn" style="margin-top:18px" onclick="submit()">סיום והגשה</button>
   <p style="text-align:center"><button class="icb" onclick="quit()">לצאת בלי לשמור</button></p></div></main>`;
@@ -550,12 +554,64 @@ function bub(i, k) {
   save(); bubRow(i);
 }
 function flg(i) { const X = S.cur; X.flag[i] = X.flag[i] ? 0 : 1; save(); bubRow(i); }
-function quit() { if (!confirm('לצאת? מה שסימנת לא יישמר.')) return; delete S.cur; save(); go('home'); }
+function quit() { if (!confirm(S.sim ? 'לצאת? מה שסימנת בפרק הזה לא יישמר, והסימולציה תבוטל.' : 'לצאת? מה שסימנת לא יישמר.')) return; delete S.cur; delete S.sim; save(); go('home'); }
 function submit(auto) {
   const X = S.cur; if (!X) return;
   if (!auto) { const empty = X.ans.filter(a => !a).length; if (!confirm(empty ? `נשארו ${empty} שאלות בלי תשובה. מאל״ו ממליצים לנחש (אין הפחתה על טעות). להגיש בכל זאת?` : 'להגיש?')) return; }
-  (S.res[X.key] = S.res[X.key] || []).push({ at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), ...(X.hs ? { hs: X.ans.map((v, i) => (X.hs[i] || []).join('')) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000), pre: X.pre || [] });
-  const k = X.key; delete S.cur; save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
+  const att = { at: Date.now(), ans: X.ans.slice(), flag: X.flag.slice(), ...(X.t ? { t: X.t.map(v => Math.round(v)) } : {}), ...(X.tb ? { tb: X.tb.map(v => Math.round(v)) } : {}), ...(X.hs ? { hs: X.ans.map((v, i) => (X.hs[i] || []).join('')) } : {}), dur: Math.round((Math.min(Date.now(), X.endAt) - X.start) / 1000), pre: X.pre || [] };
+  (S.res[X.key] = S.res[X.key] || []).push(att);
+  const k = X.key; delete S.cur;
+  if (S.sim && S.sim.keys[S.sim.i] === k) return simNext(k, att.at);
+  save(); go(keyOf(k) ? 'result' : 'keyin', { key: k });
+}
+// ===== סימולציה מלאה (רועי 24/11): 4 הפרקים של בחינה אחת ברצף, בלי הפסקה, וציון לפי הטבלה של אותה בחינה =====
+// כל פרק נשמר ב-res כרגיל (אם עשית אותו קודם, זה ניסיון חוזר). הציון של הסימולציה מחושב רק מהניסיונות שלה.
+const simChs = e => CH.filter(x => x.e === e);
+function simState(e) { const L = simChs(e); return { done: L.filter(x => first(x.key)).length, pr: L.reduce((n, x) => n + pracQs(x.key).length, 0) }; }
+const simLabel = e => { const s = simState(e); return s.done || s.pr ? [s.done ? `${s.done} פרקים כבר נעשו` : '', s.pr ? `${s.pr} שאלות תורגלו` : ''].filter(Boolean).join(' · ') : '✨ נקייה'; };
+function startSim(id) {
+  const e = EX.find(x => x.id === id); if (!e) return;
+  if (!Object.keys(SOL).length) return toast('צריך קודם לפתוח את המפתחות עם קוד הגישה');
+  if (S.cur && !confirm('יש פרק אחר באמצע. לוותר עליו ולהתחיל סימולציה?')) return;
+  const L = simChs(e), min = L.reduce((n, x) => n + x.c.minutes, 0), st = simState(e);
+  if (!confirm(`סימולציה מלאה: ${e.title}\n\n${L.length} פרקים ברצף, ${min} דקות, בלי הפסקה. כשפרק נגמר או מוגש, הבא מתחיל מיד. בסוף: הציון לפי הטבלה של מאל״ו לבחינה הזו.${st.done || st.pr ? `\n\nשים לב: ${simLabel(e)}. הציון עלול לצאת גבוה מהאמיתי.` : ''}\n\nלהתחיל?`)) return;
+  delete S.cur; S.sim = { id, at: Date.now(), i: 0, keys: L.map(x => x.key), atts: [] }; save(); startChap(S.sim.keys[0]);
+}
+function simNext(k, at) {
+  const M = S.sim; M.atts.push({ k, at }); M.i++;
+  if (M.i < M.keys.length) { save(); toast(`🎓 פרק ${M.i + 1} מתוך ${M.keys.length} מתחיל`); return startChap(M.keys[M.i]); }
+  delete S.sim; S.sims.push({ at: M.at, end: Date.now(), id: M.id, atts: M.atts }); save(); go('simres', { at: M.at });
+}
+function simCancel() { if (!confirm('לבטל את הסימולציה? הפרקים שכבר הגשת נשארים שמורים כפרקים רגילים.')) return; delete S.sim; save(); render(); }
+function simScore(r) {
+  const e = EX.find(x => x.id === r.id), t = scaleOf(r.id);
+  const rows = r.atts.map(s => { const x = chByKey[s.k], a = (S.res[s.k] || []).find(y => y.at === s.at), key = keyOf(s.k); if (!x || !a || !key) return null;
+    const ok = a.ans.reduce((n, v, i) => n + ((v && v === +key[i]) || isVoid(s.k, i + 1) ? 1 : 0), 0), nv = (SOL[s.k] && SOL[s.k].v || []).length;
+    return { x, a, ok, nv, k: (S.res[s.k] || []).indexOf(a), pre: (a.pre || []).length, rep: (S.res[s.k] || []).indexOf(a) > 0 }; }).filter(Boolean);
+  const dom = d => { const L = rows.filter(y => y.x.c.domain === d); if (!L.length || !t) return null; const raw = L.reduce((n, y) => n + y.ok - y.nv, 0), tab = d === 'verbal' ? t.v : t.q; return { s: tab[Math.min(tab.length - 1, raw)], raw, n: L.reduce((n, y) => n + y.x.c.questions - y.nv, 0) }; };
+  const V = dom('verbal'), Q = dom('quant');
+  return { e, rows, V, Q, G: V && Q && t ? genScore(t, (V.s + Q.s) / 2) : null };
+}
+function simres() {
+  const r = S.sims.find(y => y.at === (arg && arg.at)) || S.sims[S.sims.length - 1]; if (!r) return all();
+  const { e, rows, V, Q, G } = simScore(r);
+  const dur = rows.reduce((n, y) => n + (y.a.dur || 0), 0), seen = rows.filter(y => y.rep).length, pre = rows.reduce((n, y) => n + y.pre, 0);
+  return `<main><h1>🎓 סימולציה: ${esc(e.title)}</h1><p class="mut sm" style="margin-top:-6px">${fmtWhen(r.at)} · ${rows.length} פרקים ברצף · ${mmss(dur)} דקות</p>
+  ${G ? `<div class="card"><b>הציון לפי הטבלה של מאל״ו לבחינה הזו</b><div class="big-score" style="font-size:44px">${G.est}</div><div style="text-align:center" class="sm">טווח האומדן: <b>${G.lo} עד ${G.hi}</b> · כ-${G.below}% מהנבחנים קיבלו פחות</div>
+  <div class="kpis"><div class="kpi"><b>${V.s}</b><span>מילולי · ${V.raw}/${V.n}</span></div><div class="kpi"><b>${Q.s}</b><span>כמותי · ${Q.raw}/${Q.n}</span></div></div>
+  <p class="mut sm" style="margin:4px 0 0">כמו אצל מאל״ו: נכונות בשני הפרקים של כל תחום → ציון תחום מהטבלה, והציון הכללי מהממוצע. בלי מטלת הכתיבה, שגם מאל״ו לא כוללים באומדן.</p></div>` : '<div class="card"><p class="sm" style="margin:0">אין לבחינה הזו טבלת המרה, אז אין ציון כללי. הנכונות בכל פרק למטה.</p></div>'}
+  ${seen || pre ? `<div class="card" style="border-color:var(--o)"><p class="sm" style="margin:0">⚠️ ${seen ? `${seen} מהפרקים כבר נעשו לפני הסימולציה` : ''}${seen && pre ? ', ו-' : ''}${pre ? `${pre} שאלות תורגלו לפני` : ''}. הציון כנראה גבוה קצת מהאמיתי.</p></div>` : ''}
+  <h2>הפרקים</h2><div class="card list">${rows.map((y, i) => `<div class="it" onclick="go('result',{key:'${y.x.key}',k:${y.k}})"><b>${i + 1}</b><span class="tag ${y.x.c.domain[0]}">${DOM[y.x.c.domain]}</span><div class="grow"><b>${esc(y.x.c.label || '')}</b><div class="mut sm">${mmss(y.a.dur || 0)} דקות</div></div><b>${y.ok}/${y.x.c.questions}</b><b style="color:var(--b)">◀</b></div>`).join('')}</div>
+  <p class="mut sm" style="margin-top:-4px">לוחצים על פרק כדי לראות את התשובות, הזמנים וההסברים.</p>
+  <button class="btn ghost" onclick="go('all')">לכל הבחינות</button></main>` + navBar();
+}
+function simCard() { // בראש «בחינות»: לבחור בחינה, להתחיל, ומה כבר נעשה
+  const best = EX.slice().sort((a, b) => { const x = simState(a), y = simState(b); return (x.done * 30 + x.pr) - (y.done * 30 + y.pr); })[0];
+  const M = S.sim && !S.cur ? S.sim : null;
+  return `<div class="card"><b>🎓 סימולציה מלאה</b><p class="sm" style="margin:4px 0 8px">4 הפרקים של בחינה אחת ברצף, ${4 * 20} דקות בלי הפסקה, וציון אמיתי לפי הטבלה של מאל״ו לאותה בחינה. כדאי לבחור בחינה נקייה, שלא עשית ולא תרגלת ממנה.</p>
+  ${M ? `<p class="sm" style="color:var(--o)">סימולציה של ${esc(EX.find(x => x.id === M.id).title)} באמצע: ${M.i} מתוך ${M.keys.length} פרקים הוגשו.</p><div class="row"><button class="btn blue" onclick="startChap('${M.keys[M.i]}')">להמשיך לפרק ${M.i + 1}</button><button class="btn ghost" onclick="simCancel()">לבטל</button></div>`
+    : `<select class="txt" id="simx" style="margin:0 0 8px">${EX.map(e => `<option value="${e.id}" ${e === best ? 'selected' : ''}>${esc(e.title)} · ${simLabel(e)}</option>`).join('')}</select><button class="btn blue" onclick="startSim(document.getElementById('simx').value)">▶️ להתחיל סימולציה</button>`}
+  ${S.sims.length ? `<div class="list" style="margin-top:10px">${S.sims.slice().reverse().map(r => { const s = simScore(r); return `<div class="it" onclick="go('simres',{at:${r.at}})"><div class="grow"><b>${esc(s.e.title)}</b><div class="mut sm">${fmtWhen(r.at)}</div></div><b>${s.G ? s.G.est : '—'}</b><b style="color:var(--b)">◀</b></div>`; }).join('')}</div>` : ''}</div>`;
 }
 function keyin() {
   const x = chByKey[arg.key], { e, c } = x;
@@ -1093,7 +1149,7 @@ function copyMyLink() { // הקישור האישי: קוד הגישה + המזה
   (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('הקישור האישי הועתק ✓ לא לשלוח אותו לאחרים'), () => prompt('הקישור האישי שלך (לא לשלוח לאחרים):', url));
 }
 function expo() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate, gone: S.gone, dh: S.dh }))));
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ res: S.res, keys: S.keys, fix: S.fix, wr: S.wr, read: S.read, prac: S.prac, voc: S.voc, examDate: S.examDate, gone: S.gone, dh: S.dh, sims: S.sims }))));
   (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject()).then(() => toast('הקוד הועתק ✓'), () => { document.getElementById('imp').value = code; toast('הקוד בתיבה — להעתיק ידנית'); });
 }
 function impo() {
