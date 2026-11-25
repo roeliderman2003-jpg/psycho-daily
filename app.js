@@ -472,8 +472,11 @@ function home() {
   if (locked()) h += codeCard();
   const miss = done().filter(y => !keyOf(y.key));
   if (miss.length) h += `<div class="card"><b>⚠️ ${miss.length} פרקים בלי מפתח תשובות</b><p class="mut sm" style="margin:4px 0 8px">בלי המפתח אין ציון ולא רואים איפה טעית.</p><button class="btn blue" onclick="go('keyin',{key:'${miss[0].key}'})">להקליד מפתח</button></div>`;
-  const last = done().slice(-3).reverse();
-  if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(chRow).join('')}</div>`;
+  // רועי 25/11: «זה לא באמת האחרונים» — היה לפי הסדר של הבחינות. עכשיו 3 הפרקים האחרונים לפי מתי הוגשו (כולל ניסיון חוזר וסימולציה)
+  const last = CH.flatMap(x => (S.res[x.key] || []).map((a, k) => ({ x, a, k }))).sort((p, q) => q.a.at - p.a.at).slice(0, 3);
+  const lastRow = ({ x, a, k }) => { const key = keyOf(x.key), ok = key ? a.ans.reduce((n, v, i) => n + (okQ(x.key, i + 1, v, key, a.at) ? 1 : 0), 0) : null;
+    return `<div class="it" onclick="go('${key ? 'result' : 'keyin'}',{key:'${x.key}',k:${k}})"><span class="tag ${x.c.domain[0]}">${DOM[x.c.domain]}</span><div class="grow"><b>${esc(x.e.title)}</b>${k ? ' <span class="tag">חוזר</span>' : ''}<div class="mut sm">${esc(x.c.label || '')} · ${x.c.questions} שאלות · ${x.c.minutes} דק׳</div></div><div>${ok != null ? `<b>${ok}/${x.c.questions}</b>` : '<span class="mut sm">חסר מפתח</span>'} <span class="mut sm">${fmtWhen(a.at)}</span></div></div>`; };
+  if (last.length) h += `<h2>אחרונים</h2><div class="card list">${last.map(lastRow).join('')}</div>`;
   h += `<div class="card"><b>מאל״ו:</b> <span class="sm">הציון מחושב רק לפי התשובות הנכונות, ואין הפחתת נקודות על תשובה שגויה. השאירו כדקה בסוף הפרק כדי לסמן תשובה בכל שאלה שלא הגעתם אליה.</span> ${link(NITE_TIPS, 'כל ההנחיות לנבחנים ↗', 'sm')}</div>
     <button class="btn ghost" onclick="go('settings')">⚙️ הגדרות וגיבוי</button>${cloudId ? `<p class="mut sm" style="text-align:center">${cloudLine()}</p>` : ''}</main>` + navBar();
   return h;
