@@ -165,7 +165,8 @@ function zoomQ(el) { // לחיצה על תמונה: מסך מלא, פי 2, עם 
   const z = document.createElement('div'); z.className = 'zoom'; z.dataset.q = el.dataset.q || ''; z.innerHTML = `<button class="icb" onclick="this.parentNode.remove()">✕ סגירה</button><div class="zin"><img src="${im.src}" alt=""></div>`;
   document.body.appendChild(z); const zi = z.querySelector('.zin'); zi.scrollLeft = zi.scrollWidth;
 }
-const isUnit = sec => !!sec && ['reading', 'chart'].includes(sec.type);
+// psg: כמה שאלות הבנה והסקה שנוגעות לקטע אחד («שאלות 10-12 נוגעות לקטע הבא»), רועי 25/11. הקטע מוצג לידן כמו בהבנת הנקרא
+const isUnit = sec => !!sec && (['reading', 'chart'].includes(sec.type) || !!sec.psg);
 const wideNow = () => matchMedia('(min-width: 900px)').matches;
 const psgBox = (key, sec, open) => { const { e, c } = chByKey[key]; return `<details class="psg" ${open || wideNow() ? 'open' : ''}><summary>📖 ${sec.type === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${sec.from} עד ${sec.to})</summary>${qBox(sid(key, sec.from), pdf(e, secPage(c, sec)))}</details>`; };
 const fmBox = key => { const { e, c } = chByKey[key]; return c.domain === 'quant' && e.formulasPage ? `<details class="psg"><summary>📐 דף הנוסחאות</summary>${qBox(e.id + '/f', pdf(e, e.formulasPage))}</details>` : ''; };
@@ -173,14 +174,14 @@ const layout = (side, body) => side ? `<div class="two"><div class="side">${side
 function chapterRows(key, rowFn) { // כל השאלות של פרק לפי סוג. קטע קריאה / תרשים עומד בצד של השאלות שלו
   const { e, c } = chByKey[key], secs = c.sections && c.sections.length ? c.sections : [{ type: null, from: 1, to: c.questions }];
   return secs.map(sec => {
-    let inner = sec.type ? `<div class="sech">${TYPE_HE[sec.type]}</div>` : '';
+    const pv = secs[secs.indexOf(sec) - 1]; let inner = sec.type && !(pv && pv.type === sec.type) ? `<div class="sech">${TYPE_HE[sec.type]}</div>` : '';
     for (let n = sec.from; n <= sec.to; n++) inner += qBox(qid(key, n), pdf(e, qPage(c, n))) + rowFn(n - 1);
     return layout(isUnit(sec) ? psgBox(key, sec, true) : '', inner);
   }).join('');
 }
 function qView(key, n, passage) { // השאלה, ולפניה הקטע / התרשים שלה. passage: 'open' | 'closed' | ''
   const { e, c } = chByKey[key], t = typeOf(c, n), s = secOf(c, n);
-  const psg = passage && s && ['reading', 'chart'].includes(t) ? `<details class="psg" ${passage === 'open' ? 'open' : ''}><summary>📖 ${t === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${s.from} עד ${s.to})</summary>${qBox(sid(key, s.from), pdf(e, secPage(c, s)))}</details>` : '';
+  const psg = passage && s && isUnit(s) ? `<details class="psg" ${passage === 'open' ? 'open' : ''}><summary>📖 ${t === 'chart' ? 'התרשים' : 'הקטע'} (שאלות ${s.from} עד ${s.to})</summary>${qBox(sid(key, s.from), pdf(e, secPage(c, s)))}</details>` : '';
   const fm = passage && c.domain === 'quant' && e.formulasPage ? `<details class="psg"><summary>📐 דף הנוסחאות</summary>${qBox(e.id + '/f', pdf(e, e.formulasPage))}</details>` : '';
   return psg + qBox(qid(key, n), pdf(e, qPage(c, n))) + fm;
 }
@@ -227,6 +228,19 @@ const link = (u, t, cls = 'btn ghost') => `<a class="${cls}" style="text-decorat
 const first = k => (S.res[k] || [])[0];
 const keyOf = k => (SOL[k] && SOL[k].k) || S.keys[k] || '';
 const isVoid = (k, n) => !!(SOL[k] && SOL[k].v && SOL[k].v.includes(n)); // שאלה שמאל״ו ביטלו: לא נחשבת טעות
+// רועי 25/11: «תשנה שצדקתי». שאלה שהתמונה שלה הוצגה בלי נתון (חיתוך שגוי ב-qimg.py, תוקן 25/11) נספרת כנכונה בכל ניסיון שנעשה לפני התיקון.
+// BADQ: "פרק#שאלה" → מתי התמונה תוקנה. ממלאים מתוך הבדיקה של כל התמונות.
+const FIX_IMG = Date.parse('2026-11-25T11:00:00Z');
+const BADQ = Object.fromEntries([
+  'winter_2023:3#14', // «x פעמים» מעל הסוגר נחתך
+  'winter_2021:3#8', // המונה 26 נחתך
+  'autumn_2023:1#10', 'autumn_2023:1#11', 'autumn_2023:1#12', // הקטע והסרטוט של שאלות 10-12 לא הוצגו
+  'spring_2023:0#14', 'spring_2023:0#15', 'spring_2023:0#16', // הקטע של שאלות 14-16 לא הוצג
+  'summer_2024:1#13', 'summer_2024:1#14', // הנתון של שאלות 13-14 לא הוצג
+  'winter_2022:1#10', 'winter_2022:1#11', // הקטע (כתב הצופן) של שאלות 10-11 לא הוצג
+].map(k => [k, FIX_IMG]));
+const badQ = (k, n, at) => !!(BADQ[k + '#' + n] && (at || 0) < BADQ[k + '#' + n]);
+const okQ = (k, n, v, key, at) => (v && v === +key[n - 1]) || isVoid(k, n) || badQ(k, n, at);
 const expOf = (k, n) => (SOL[k] && SOL[k].x[n - 1]) || '';
 let opening = true; // בזמן שהמפתחות נפתחים בטעינה לא מציגים «נעול»
 const locked = () => !opening && !!window.SOLX && !Object.keys(SOL).length;
@@ -244,7 +258,7 @@ function fixPre(s) { // ניסיון מלפני 23/11: מה שתורגל, אם �
 fixPre(S);
 const scored = k => {
   const a = first(k), key = keyOf(k); if (!a || !key) return null;
-  return a.ans.reduce((n, x, i) => n + ((x && x === +key[i]) || isVoid(k, i + 1) ? 1 : 0), 0);
+  return a.ans.reduce((n, x, i) => n + (okQ(k, i + 1, x, key, a.at) ? 1 : 0), 0);
 };
 const done = () => CH.filter(x => first(x.key));
 
@@ -306,7 +320,7 @@ function streak() {
 }
 function answered() { // כל שאלה שנענתה בניסיון הראשון, בפרקים שיש להם מפתח
   const out = [];
-  done().forEach(({ e, c, key }) => { const a = first(key), k = keyOf(key); if (!k) return; for (let i = 0; i < c.questions; i++) out.push({ e, c, key, n: i + 1, type: typeOf(c, i + 1), a: a.ans[i], right: +k[i], ok: a.ans[i] === +k[i] || isVoid(key, i + 1) }); });
+  done().forEach(({ e, c, key }) => { const a = first(key), k = keyOf(key); if (!k) return; for (let i = 0; i < c.questions; i++) out.push({ e, c, key, n: i + 1, type: typeOf(c, i + 1), a: a.ans[i], right: +k[i], ok: okQ(key, i + 1, a.ans[i], k, a.at) }); });
   return out;
 }
 
@@ -356,7 +370,7 @@ function typeTrendHtml(h) {
     const P = h.map(y => {
       const a = first(y.x.key), key = keyOf(y.x.key), qs = []; for (let n = 1; n <= y.n; n++) if (typeOf(y.x.c, n) === ty) qs.push(n);
       if (!qs.length) return null;
-      const ok = qs.filter(n => a.ans[n - 1] === +key[n - 1] || isVoid(y.x.key, n)).length;
+      const ok = qs.filter(n => okQ(y.x.key, n, a.ans[n - 1], key, a.at)).length;
       return { y, ok, n: qs.length, t: a.t ? qs.reduce((s, n) => s + (a.t[n - 1] || 0), 0) / qs.length : null };
     }).filter(Boolean);
     if (!P.length) return '';
@@ -586,7 +600,7 @@ function simCancel() { if (!confirm('לבטל את הסימולציה? הפרק�
 function simScore(r) {
   const e = EX.find(x => x.id === r.id), t = scaleOf(r.id);
   const rows = r.atts.map(s => { const x = chByKey[s.k], a = (S.res[s.k] || []).find(y => y.at === s.at), key = keyOf(s.k); if (!x || !a || !key) return null;
-    const ok = a.ans.reduce((n, v, i) => n + ((v && v === +key[i]) || isVoid(s.k, i + 1) ? 1 : 0), 0), nv = (SOL[s.k] && SOL[s.k].v || []).length;
+    const ok = a.ans.reduce((n, v, i) => n + (okQ(s.k, i + 1, v, key, a.at) ? 1 : 0), 0), nv = (SOL[s.k] && SOL[s.k].v || []).length;
     return { x, a, ok, nv, k: (S.res[s.k] || []).indexOf(a), pre: (a.pre || []).length, rep: (S.res[s.k] || []).indexOf(a) > 0 }; }).filter(Boolean);
   const dom = d => { const L = rows.filter(y => y.x.c.domain === d); if (!L.length || !t) return null; const raw = L.reduce((n, y) => n + y.ok - y.nv, 0), tab = d === 'verbal' ? t.v : t.q; return { s: tab[Math.min(tab.length - 1, raw)], raw, n: L.reduce((n, y) => n + y.x.c.questions - y.nv, 0) }; };
   const V = dom('verbal'), Q = dom('quant');
@@ -658,7 +672,7 @@ function timeCard(items, a, per, bySec) {
 }
 function result() {
   const x = chByKey[arg.key], { e, c } = x, att = S.res[arg.key], k = arg.k ?? att.length - 1, a = att[k], key = keyOf(arg.key);
-  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: v === +key[i] || isVoid(arg.key, i + 1), vd: isVoid(arg.key, i + 1), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null, tb: a.tb ? a.tb[i] || 0 : 0, hs: a.hs ? a.hs[i] || '' : null }));
+  const items = a.ans.map((v, i) => ({ n: i + 1, a: v, right: +key[i], ok: okQ(arg.key, i + 1, v, key, a.at), vd: isVoid(arg.key, i + 1), bad: badQ(arg.key, i + 1, a.at), type: typeOf(c, i + 1), flag: a.flag && a.flag[i], t: a.t ? a.t[i] || 0 : null, tb: a.tb ? a.tb[i] || 0 : 0, hs: a.hs ? a.hs[i] || '' : null }));
   // מה סומן בפועל (נשמר מ-21/11): «סימנת 4, ואחר כך 1». בלי היסטוריה מוצגת רק התשובה הסופית.
   const hsTxt = y => y.hs && y.hs.length > 1 ? `<div class="sm" style="margin:6px 2px 0">✏️ סימנת ${y.hs.split('').join(', ואחר כך ')}. נשארה ${y.a}.</div>` : '';
   const r = items.filter(y => y.ok).length, empty = items.filter(y => !y.a).length;
@@ -677,7 +691,7 @@ function result() {
     // התרשים פתוח בכל שאלה של תרשים (בלעדיו אי אפשר להבין את השאלה). קטע קריאה ארוך: פתוח בשאלה הפתוחה הראשונה שלו, ובשאר בלחיצה
     const op = !(y.ok && !y.flag), s = secOf(c, y.n), first = op && s && !psgShown[s.from]; if (first) psgShown[s.from] = 1;
     const psg = t === 'chart' || first ? 'open' : 'closed';
-    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${op ? 'open' : ''}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}${y.hs && y.hs.length > 1 ? ' ✏️' : ''}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${hsTxt(y)}${qView(arg.key, y.n, psg)}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
+    return hd + `<details class="qx ${y.ok ? 'ok' : y.a ? 'bad' : 'skip'}" id="q${y.n}" ${op ? 'open' : ''}><summary><b>${y.flag ? '🚩 ' : ''}שאלה ${y.n}</b><span class="grow"></span>${y.t != null ? `<span class="sm mut">⏱️ ${mmss(y.t)}${y.tb >= 5 ? ` (חזרה ${mmss(y.tb)})` : ''}</span>` : ''}<span class="sm">${y.vd ? 'מאל״ו ביטלו את השאלה' : y.bad ? `✓ נספרה כנכונה: בתמונה שהוצגה חסר נתון (ענית ${y.a || '—'}, הנכונה ${y.right})` : y.ok ? `✓ ${y.right}` : `${y.a ? `ענית ${y.a}${y.hs && y.hs.length > 1 ? ' ✏️' : ''}` : 'לא ענית'} · הנכונה <b>${y.right}</b>`}</span></summary>${hsTxt(y)}${qView(arg.key, y.n, psg)}<p class="xp">${expHtml(expOf(arg.key, y.n)) || '<span class="mut">אין הסבר לשאלה הזו.</span>'}</p></details>`;
   }).join('') : '';
   return `<main><div style="display:flex;gap:8px;align-items:center"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${esc(e.title)} · ${esc(c.label || '')}</b>${k ? '<span class="tag">ניסיון חוזר</span>' : ''}</div>
   <div class="big-score">${r}/${c.questions}</div><div style="text-align:center" class="mut">${pct(r, c.questions)}% נכון · ${mmss(a.dur)} דקות${empty ? ` · ${empty} בלי תשובה` : ''}</div>
@@ -772,8 +786,8 @@ function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל הש�
     (c.sections || []).forEach(sec => {
       if (type && sec.type !== type) return;
       const qs = []; for (let n = sec.from; n <= sec.to; n++) if (!isVoid(key, n)) qs.push(n);
-      const groups = UNIT_TYPES.includes(sec.type) ? [qs] : qs.map(n => [n]);
-      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, done, pr, ei: EX.indexOf(e), seen: pr || done }); });
+      const groups = isUnit(sec) ? [qs] : qs.map(n => [n]);
+      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, unit: isUnit(sec), done, pr, ei: EX.indexOf(e), seen: pr || done }); });
     });
   });
   return out;
@@ -791,9 +805,9 @@ function startDrill(dom, type, title) {
     for (const t of types) {
       if (list.length >= 10) break;
       const u = byType[t].shift(); if (!u) continue; more = true;
-      const isUnit = UNIT_TYPES.includes(t);
-      if (isUnit && !type && list.some(y => y.unit)) continue;
-      u.qs.forEach((n, j) => list.push({ k: u.key, n, unit: isUnit ? { first: j === 0, from: u.qs[0], to: u.qs[u.qs.length - 1] } : null }));
+      const un = u.unit;
+      if (un && !type && list.some(y => y.unit)) continue;
+      u.qs.forEach((n, j) => list.push({ k: u.key, n, unit: un ? { first: j === 0, from: u.qs[0], to: u.qs[u.qs.length - 1] } : null }));
     }
   }
   if (!list.length) return toast('אין שאלות לתרגול כאן');

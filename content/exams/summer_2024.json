@@ -77,6 +77,17 @@
         {
           "type": "inference",
           "from": 7,
+          "to": 12
+        },
+        {
+          "type": "inference",
+          "from": 13,
+          "to": 14,
+          "psg": true
+        },
+        {
+          "type": "inference",
+          "from": 15,
           "to": 17
         },
         {

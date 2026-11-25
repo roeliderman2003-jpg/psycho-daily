@@ -78,6 +78,29 @@ def rule_below(pg, y):
     return min(ys) if ys else 9999
 
 
+def lift(pg, y):
+    """רועי 25/11 (חורף 2023, כמותי שני, שאלה 14): «x פעמים» מעל הסוגר המסולסל נכתב מעל השורה של מספר השאלה, ונחתך.
+    אם יש מעל המספר קו הפרדה קרוב (עד 60 נק׳), מה שבין הקו למספר ובטווח 30 נק׳ מעליו שייך לשאלה.
+    כותרת של חלק («שאלות הבנה והסקה (שאלות 7-18)», «הוראות לשאלות…», «השאלות») מודגשת: כשיש טקסט מודגש שם, לא מרימים.
+    מחזיר (y חדש, כמה שוליים מותר לקחת מעליו)."""
+    rules = []
+    for dr in pg.get_drawings():
+        for it in dr['items']:
+            if it[0] == 'l' and abs(it[1].y - it[2].y) < 1 and abs(it[1].x - it[2].x) > 400: rules.append(it[1].y)
+            elif it[0] == 're' and it[1].width > 400 and it[1].height < 3: rules.append(it[1].y1)
+    rules = [v for v in rules if y - 60 < v < y - 1]
+    if not rules: return y, 6
+    r = max(rules)
+    spans = [s for b in pg.get_text('dict')['blocks'] for l in b.get('lines', []) for s in l['spans'] if s['text'].strip() and r + 0.5 < s['bbox'][1] < y - 1]
+    if any(s['flags'] & 16 for s in spans): return y, 6  # כותרת או הוראות של חלק חדש
+    lo = max(r + 0.5, y - 30)
+    ys = [s['bbox'][1] for s in spans if s['bbox'][1] >= lo]
+    ys += [dr['rect'].y0 for dr in pg.get_drawings() if max(r + 1.5, lo) < dr['rect'].y0 < y - 1 and dr['rect'].height < 60 and dr['rect'].width < 400]
+    if not ys: return y, 6
+    y0 = min(ys)
+    return y0, max(0, min(6, y0 - r - 1.5))
+
+
 def content_bottom(pg, y_from):
     ys = [w[3] for w in pg.get_text('words') if y_from <= w[1] < BOT]
     for dr in pg.get_drawings():
@@ -98,9 +121,10 @@ def shot(d, segs, rule=False):
     """segs: [(page, y0, y1)] → תמונה אחת אפורה, חתוכה לגבולות התוכן (בלי שוליים ריקים),
     כדי שבאפליקציה הטקסט יוצג גדול ככל האפשר. rule: למחוק את קו ההפרדה שמתחת לשאלה."""
     ims = []
-    for p, y0, y1 in segs:
+    for sg in segs:
+        p, y0, y1 = sg[:3]; m = sg[3] if len(sg) > 3 else 6  # m: שוליים מעל (פחות, כשקו ההפרדה של השאלה הקודמת קרוב)
         if y1 - y0 < 8: continue
-        pix = d[p - 1].get_pixmap(matrix=fitz.Matrix(ZOOM, ZOOM), clip=fitz.Rect(X0, max(0, y0 - 6), X1, y1 + 6), colorspace=fitz.csGRAY)
+        pix = d[p - 1].get_pixmap(matrix=fitz.Matrix(ZOOM, ZOOM), clip=fitz.Rect(X0, max(0, y0 - m), X1, y1 + 6), colorspace=fitz.csGRAY)
         im = Image.open(io.BytesIO(pix.tobytes('png'))).convert('L')
         if rule:  # קו אופקי ארוך בתחתית = קו ההפרדה בין שאלות
             px = im.load(); W, H = im.size
@@ -139,10 +163,11 @@ def run(eid):
                 nx = M.get(n + 1)
                 cut = min([h[1] for h in H.values() if h[0] == p and h[1] > y + 5] or [9999])  # כותרת של סוג חדש באותו עמוד
                 cut = min(cut, rule_below(d[p - 1], y) + 4)  # או הקו שבסוף השאלה (ה-+4 כדי ש-shot ימחק אותו)
-                if nx and nx[0] == p: segs = [(p, y, min(nx[1], cut) - 2)]
-                elif cut < 9999: segs = [(p, y, cut - 2)]
+                top, m = lift(d[p - 1], y)  # טקסט שמעל שורת המספר (למשל «x פעמים» מעל סוגר)
+                if nx and nx[0] == p: segs = [(p, top, min(nx[1], cut) - 2, m)]
+                elif cut < 9999: segs = [(p, top, cut - 2, m)]
                 else:
-                    segs = [(p, y, content_bottom(d[p - 1], y))]
+                    segs = [(p, top, content_bottom(d[p - 1], y), m)]
                     # השאלה ממשיכה לעמוד הבא (בלי קטע חדש באמצע)
                     if nx and nx[0] == p + 1 and s and sec_of(n + 1) is s:
                         t = content_top(d[p])
@@ -150,13 +175,13 @@ def run(eid):
             else:  # המספר לא זוהה: כל העמוד
                 p = qp[n - 1]; segs = [(p, content_top(d[p - 1]), content_bottom(d[p - 1], TOP))]
             # בדיקה: בתמונה של שאלה צריכות להיות כל 4 התשובות (כשהטקסט שלהן נקרא), ורק פעם אחת כל אחת
-            seen = [re.sub(r'\D', '', w[4]) for p_, a, b in segs for w in d[p_ - 1].get_text('words') if w[4] in OPT and a - 2 <= w[1] <= b]
-            if any(w[4] in OPT for p_, a, b in segs for w in d[p_ - 1].get_text('words') if a - 2 <= w[1] <= b) and sorted(seen) != ['1', '2', '3', '4']:
+            seen = [re.sub(r'\D', '', w[4]) for p_, a, b, *_ in segs for w in d[p_ - 1].get_text('words') if w[4] in OPT and a - 2 <= w[1] <= b]
+            if any(w[4] in OPT for p_, a, b, *_ in segs for w in d[p_ - 1].get_text('words') if a - 2 <= w[1] <= b) and sorted(seen) != ['1', '2', '3', '4']:
                 bad.append(f'{ci}-{n}:{"".join(seen)}')
             open(f'{OUT}/{eid}/{ci}-{n}.png', 'wb').write(shot(d, segs, rule=True))
         # קטע קריאה / תרשים: מהעמוד שבו הוא מתחיל עד לפני השאלה הראשונה שלו
         for s in secs:
-            if s['type'] not in UNIT: continue
+            if s['type'] not in UNIT and not s.get('psg'): continue  # קטע משותף לכמה שאלות ("שאלות 10-12 נוגעות לקטע הבא")
             f = s['from']; pf, yf = M.get(f, (qp[f - 1], None))
             prev = M.get(f - 1)
             hd = H.get(f)
@@ -167,6 +192,11 @@ def run(eid):
                 y0 = hd[1] if hd and p == hd[0] else content_top(pg)
                 y1 = (yf - 2) if (p == pf and yf) else content_bottom(pg, y0)
                 if p == pf and not yf: y1 = content_bottom(pg, y0)
+                if p == pf and yf and s.get('psg'):  # סרטוט בצד שנמשך עד שורת השאלה הראשונה (סתיו 2023: התווית C)
+                    side = [dr['rect'].y1 for dr in pg.get_drawings() if dr['rect'].y0 < yf - 2 < dr['rect'].y1 and dr['rect'].x1 < 300]
+                    if side:  # התוויות של הסרטוט שבצד (משמאל לטקסט של השאלה)
+                        side += [w[3] for w in pg.get_text('words') if w[2] < 260 and yf - 4 < w[1] < yf + 20]
+                        y1 = max([y1] + side) + 1
                 if y1 - y0 > 20: segs.append((p, y0, y1))
             if not segs: segs = [(pf, content_top(d[pf - 1]), content_bottom(d[pf - 1], TOP))]
             open(f'{OUT}/{eid}/{ci}-s{f}.png', 'wb').write(shot(d, segs))
