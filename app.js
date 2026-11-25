@@ -349,6 +349,19 @@ function worth(pv, pq) { // אחוז במילולי ובכמותי → ציון 
 function scoreTrend(h) { // אחרי כל פרק: הרמה בכל תחום והציון שהיא שווה (רק כשיש כבר פרק בשני התחומים)
   return h.map((y, i) => { const v = level(h, 'verbal', i), q = level(h, 'quant', i); return { y, i, v, q, w: v && q ? worth(v[0], q[0]) : null }; });
 }
+// רועי 25/11: «במקום 0 עד 100 יותר מצומצם, שאבין מה באמת המיקום שלי». ציר y נחתך סביב הנתונים, עם קווים כל 5 או 10
+function zoomAxis(vals, o) { // o: {step, pad, lo, hi} → {min, max, ticks}
+  const v = vals.filter(x => x != null && isFinite(x)); if (!v.length) return { min: o.lo, max: o.hi, ticks: [o.lo, o.hi] };
+  let step = o.step, lo, hi;
+  for (;;) {
+    lo = Math.max(o.lo, Math.floor((Math.min(...v) - o.pad) / step) * step); hi = Math.min(o.hi, Math.ceil((Math.max(...v) + o.pad) / step) * step);
+    if (hi - lo < 2 * step) { if (hi + step <= o.hi) hi += step; else lo -= step; }
+    if ((hi - lo) / step <= 6) break; step *= 2;
+  }
+  const ticks = []; for (let t = lo; t <= hi + 1e-9; t += step) ticks.push(t);
+  return { min: lo, max: hi, ticks };
+}
+const pctAxis = vals => zoomAxis(vals, { step: 5, pad: 3, lo: 0, hi: 100 });
 function lineChart(series, o) { // גרף קווים פשוט: series = [{c, name, pts:[[i, v, tip]]}], ציר x = מספר הפרק לפי הסדר
   const W = 600, H = o.h || 260, L = 64, R = 74, T = 14, B = 34, N = Math.max(2, o.n);
   const X = i => L + i * (W - L - R) / (N - 1), Y = v => T + (o.max - v) * (H - T - B) / (o.max - o.min);
@@ -359,7 +372,7 @@ function lineChart(series, o) { // גרף קווים פשוט: series = [{c, nam
     if (!s.pts.length) return;
     if (s.pts.length > 1) g += `<polyline fill="none" stroke="${s.c}" stroke-width="3" stroke-linejoin="round" ${s.dash ? 'stroke-dasharray="5 4"' : ''} points="${s.pts.map(p => `${X(p[0])},${Y(p[1])}`).join(' ')}"/>`;
     if (s.dots) g += s.pts.map(p => `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="7" fill="${s.c}" stroke="var(--bg)" stroke-width="2"><title>${esc(p[2] || '')}</title></circle>`).join('');
-    const z = s.pts[s.pts.length - 1]; if (s.label) g += `<text x="${X(z[0]) + 12}" y="${Y(z[1]) + 7}" font-size="21" font-weight="700" fill="var(--ink)">${o.fmt(z[1])}</text>`;
+    const z = s.pts[s.pts.length - 1]; if (s.label) g += `<text x="${X(z[0]) + 12}" y="${Y(z[1]) + 7}" font-size="21" font-weight="700" fill="var(--ink)" stroke="var(--bg)" stroke-width="6" paint-order="stroke">${o.fmt(z[1])}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" role="img" aria-label="${esc(o.aria)}">${g}</svg>`;
 }
@@ -375,7 +388,8 @@ function typeTrendHtml(h) {
     }).filter(Boolean);
     if (!P.length) return '';
     const d = P[0].y.d, col = d === 'verbal' ? 'var(--o)' : 'var(--b)', last = P.slice(-LV_N), lv = last.reduce((s, p) => s + p.ok, 0) / last.reduce((s, p) => s + p.n, 0), p0 = P[0].ok / P[0].n;
-    const chart = P.length > 1 ? lineChart([{ c: col, dots: true, label: true, pts: P.map((p, i) => [i, 100 * p.ok / p.n, `${chTitle(p.y.x)}: ${p.ok}/${p.n}`]) }], { n: P.length, h: 200, min: 0, max: 100, ticks: [0, 50, 100], fmt: v => Math.round(v) + '%', xl: ['הראשון', 'האחרון'], aria: TYPE_HE[ty] }) : '';
+    const ax = pctAxis(P.map(p => 100 * p.ok / p.n));
+    const chart = P.length > 1 ? lineChart([{ c: col, dots: true, label: true, pts: P.map((p, i) => [i, 100 * p.ok / p.n, `${chTitle(p.y.x)}: ${p.ok}/${p.n}`]) }], { n: P.length, h: 200, ...ax, fmt: v => Math.round(v) + '%', xl: ['הראשון', 'האחרון'], aria: TYPE_HE[ty] }) : '';
     const T = P.filter(p => p.t != null), dl = Math.round((lv - p0) * 100);
     const tl = T.length ? `<p class="sm" style="margin:4px 0 0">⏱️ זמן לשאלה: ${T.length > 1 ? `${mmss(T[0].t)} בפעם הראשונה שנמדד → <b>${mmss(T[T.length - 1].t)}</b> בפרק האחרון` : `<b>${mmss(T[0].t)}</b> (נמדד בפרק אחד עד עכשיו)`}</p>` : '';
     return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b><span class="tag ${d[0]}">${DOM[d]}</span> ${TYPE_HE[ty]}</b><span class="sm">עכשיו <b>${pc(lv)}</b></span></div>
@@ -392,11 +406,12 @@ function trendHtml() {
   // גרף 1: אחוז נכון בכל פרק (נקודות), והרמה של LV_N הפרקים האחרונים (קו)
   const ser = d => [{ c: d === 'verbal' ? V : Q, dots: true, pts: h.map((y, i) => y.d === d ? [i, 100 * y.ok / y.n, tip(y)] : null).filter(Boolean) },
   { c: d === 'verbal' ? V : Q, label: true, pts: T.map(t => (d === 'verbal' ? t.v : t.q) && t.y.d === d ? [t.i, 100 * (d === 'verbal' ? t.v : t.q)[0]] : null).filter(Boolean) }];
-  const c1 = lineChart([...ser('verbal'), ...ser('quant')], { n: h.length, min: 0, max: 100, ticks: [0, 25, 50, 75, 100], fmt: v => Math.round(v) + '%', aria: 'אחוז נכון בכל פרק' });
+  const s1 = [...ser('verbal'), ...ser('quant')], ax1 = pctAxis(s1.flatMap(x => x.pts.map(p => p[1])));
+  const c1 = lineChart(s1, { n: h.length, ...ax1, fmt: v => Math.round(v) + '%', aria: 'אחוז נכון בכל פרק' });
   // גרף 2: הציון שהרמה שווה, אחרי כל פרק
   const sp = T.filter(t => t.w).map(t => [t.i, t.w.G, `אחרי ${tip(t.y)}: ${t.w.G}`]), gs = sp.map(p => p[1]);
-  const lo = Math.max(200, Math.floor((Math.min(...gs) - 40) / 50) * 50), hi = Math.min(800, Math.ceil((Math.max(...gs) + 40) / 50) * 50);
-  const c2 = lineChart([{ c: 'var(--g)', dots: true, label: true, pts: sp }], { n: h.length, min: lo, max: hi, ticks: [lo, Math.round((lo + hi) / 2), hi], fmt: v => Math.round(v), aria: 'הציון המשוער לפי הרמה שלך' });
+  const ax2 = zoomAxis(gs, { step: 10, pad: 8, lo: 200, hi: 800 });
+  const c2 = lineChart([{ c: 'var(--g)', dots: true, label: true, pts: sp }], { n: h.length, ...ax2, fmt: v => Math.round(v), aria: 'הציון המשוער לפי הרמה שלך' });
   const first1 = sp[0][1], dG = now.w.G - first1, [pv, nv] = now.v, [pq, nq] = now.q;
   // כמה שווה שיפור: שאלה נכונה נוספת בכל פרק, ויעדים באחוזים
   const plusV = worth(pv + 1 / 23, pq).G - now.w.G, plusQ = worth(pv, pq + 1 / 20).G - now.w.G;

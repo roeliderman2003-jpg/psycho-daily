@@ -1,5 +1,5 @@
 // רשת קודם, ובלי רשת מהמטמון: עדכונים מגיעים מיד, והאפליקציה עובדת גם בלי אינטרנט.
-const C = 'pd-v32';
+const C = 'pd-v33';
 self.addEventListener('install', e => self.skipWaiting());
 // מוחקים רק מטמונים ישנים של האפליקציה הזו (pd-). באותו דומיין יש אפליקציות אחרות (petornet-) ולא נוגעים בהן
 self.addEventListener('activate', e => e.waitUntil(caches.keys()
