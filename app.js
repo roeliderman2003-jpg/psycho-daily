@@ -806,32 +806,48 @@ function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל הש�
       if (type && sec.type !== type) return;
       const qs = []; for (let n = sec.from; n <= sec.to; n++) if (!isVoid(key, n)) qs.push(n);
       const groups = isUnit(sec) ? [qs] : qs.map(n => [n]);
-      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, unit: isUnit(sec), done, pr, ei: EX.indexOf(e), seen: pr || done }); });
+      // רמת קושי לפי המקום בתוך הסוג: אצל מאל״ו השאלות בכל סוג מסודרות בערך מהקלה לקשה. 0 שליש ראשון, 1 אמצע, 2 שליש אחרון
+      const tierOf = n => Math.min(2, Math.floor(3 * (n - sec.from) / (sec.to - sec.from + 1)));
+      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, unit: isUnit(sec), psg: !!sec.psg, tier: isUnit(sec) ? null : tierOf(g[0]), done, pr, ei: EX.indexOf(e), seen: pr || done }); });
     });
   });
   return out;
 }
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+// רועי 26/11: «איך נוודא שכל פרקי התרגול באותה רמה, אני רוצה שיבנו». כל סבב נבנה לפי תבנית קבועה: אותם סוגים ואותה חלוקה של קושי.
+// [סוג, קושי] — קושי null = יחידה שלמה (קטע קריאה / תרשים). כך סבב מעורב מילולי היום ומחר הם באותה רמה, ואפשר להשוות ביניהם.
+const DRILL_TPL = {
+  verbal: [['analogy', 0], ['analogy', 2], ['inference', 0], ['inference', 1], ['inference', 2], ['reading', null]],
+  quant: [['problem', 0], ['problem', 0], ['problem', 1], ['problem', 1], ['problem', 2], ['problem', 2], ['chart', null]],
+  all: [['analogy', 0], ['analogy', 2], ['inference', 1], ['inference', 2], ['problem', 0], ['problem', 1], ['problem', 1], ['problem', 2]],
+  one: [0, 0, 0, 1, 1, 1, 1, 2, 2, 2], // סוג אחד: 3 קלות, 4 בינוניות, 3 קשות
+};
+const TIER_HE = ['קלה', 'בינונית', 'קשה'];
+function drillMix(list) { // «3 קלות · 4 בינוניות · 3 קשות · קטע אחד»
+  const t = [0, 0, 0], u = new Set(); list.forEach(q => { if (q.unit) u.add(q.k + q.unit.from); else if (q.tier != null) t[q.tier]++; });
+  const w = (n, one, many) => n === 1 ? `1 ${one}` : `${n} ${many}`;
+  return [t[0] && w(t[0], 'קלה', 'קלות'), t[1] && w(t[1], 'בינונית', 'בינוניות'), t[2] && w(t[2], 'קשה', 'קשות'), u.size && (u.size === 1 ? 'קטע או תרשים אחד' : `${u.size} קטעים או תרשימים`)].filter(Boolean).join(' · ');
+}
 function startDrill(dom, type, title) {
   if (!Object.keys(SOL).length) return toast('צריך קודם לפתוח את המפתחות עם קוד הגישה');
   const U = pracUnits(dom, type), byType = {};
   const pool = shuffle(U.filter(u => !u.done && !u.pr)).sort((a, b) => b.ei - a.ei).concat(shuffle(U.filter(u => u.done && !u.pr)), shuffle(U.filter(u => u.pr)));
   pool.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
-  const types = shuffle(Object.keys(byType)), list = [];
-  let more = true;
-  while (list.length < 10 && more) { // מעורב: כל פעם סוג אחר. בסבב מעורב לכל היותר קטע אחד
-    more = false;
-    for (const t of types) {
-      if (list.length >= 10) break;
-      const u = byType[t].shift(); if (!u) continue; more = true;
-      const un = u.unit;
-      if (un && !type && list.some(y => y.unit)) continue;
-      u.qs.forEach((n, j) => list.push({ k: u.key, n, unit: un ? { first: j === 0, from: u.qs[0], to: u.qs[u.qs.length - 1] } : null }));
-    }
-  }
+  const take = (t, tier) => { // הראשונה בתור (לפי עדיפות: לא נראתה → נראתה בזמן → תורגלה) עם הקושי הזה; אם אין, הקרובה
+    const L = byType[t] || []; if (!L.length) return null;
+    const order = tier == null ? [null] : [tier, ...[0, 1, 2].filter(x => x !== tier).sort((a, b) => Math.abs(a - tier) - Math.abs(b - tier))];
+    for (const tr of order) { const i = L.findIndex(u => tier == null ? u.unit : (!u.psg && u.tier === tr)); if (i >= 0) return L.splice(i, 1)[0]; }
+    return null;
+  };
+  let slots;
+  if (type) slots = UNIT_TYPES.includes(type) ? [[type, null], [type, null]] : DRILL_TPL.one.map(tr => [type, tr]);
+  else slots = DRILL_TPL[dom || 'all'];
+  const picks = slots.map(([t, tr]) => take(t, tr)).filter(Boolean), singles = shuffle(picks.filter(u => !u.unit)), units = picks.filter(u => u.unit);
+  const list = [];
+  [...singles, ...units].forEach(u => u.qs.forEach((n, j) => list.push({ k: u.key, n, tier: u.tier, unit: u.unit ? { first: j === 0, from: u.qs[0], to: u.qs[u.qs.length - 1] } : null })));
   if (!list.length) return toast('אין שאלות לתרגול כאן');
   dArchive(S.drill); // סבב שנעזב באמצע נשמר בהיסטוריה עם מה שנענה בו
-  S.drill = { title, dom, type, list, i: 0, a: 0 }; save(); go('drill');
+  S.drill = { title, dom, type, list, i: 0, a: 0, tpl: type || dom || 'all' }; save(); go('drill');
 }
 function prac() {
   const locked0 = !Object.keys(SOL).length;
@@ -845,7 +861,7 @@ function prac() {
   ${locked0 ? codeCard() : ''}
   ${D ? `<div class="card"><b>באמצע: ${esc(D.title)}</b><p class="mut sm" style="margin:4px 0 8px">שאלה ${D.i + 1} מתוך ${D.list.length}</p><button class="btn blue" onclick="go('drill')">להמשיך</button></div>` : ''}
   <div class="card"><b>📜 היסטוריה</b><p class="mut sm" style="margin:4px 0 8px">${S.dh.length ? `${S.dh.length === 1 ? 'סבב אחד' : `${S.dh.length} סבבים`}. האחרון: ${esc(S.dh[S.dh.length - 1].title)}, ${dhScore(S.dh[S.dh.length - 1])}.` : 'כל סבב שתסיים יופיע כאן, עם כל שאלה, מה ענית וההסבר.'}</p><button class="btn ghost" onclick="go('hist')">לכל מה שתרגלתי</button></div>
-  <h2>מעורב</h2><div class="card"><p class="sm" style="margin-top:0">כ-10 שאלות, כל פעם מסוג אחר ומבחינה אחרת.</p>
+  <h2>מעורב</h2><div class="card"><p class="sm" style="margin-top:0">כל סבב בנוי באותה צורה: אותם סוגים ואותה חלוקה של שאלות קלות, בינוניות וקשות, כדי שאפשר יהיה להשוות בין סבבים. מילולי: 2 אנלוגיות, 3 הבנה והסקה וקטע. כמותי: 6 שאלות ותרשים.</p>
   <div class="row"><button class="btn blue" onclick="startDrill(null,null,'מעורב')">הכל</button><button class="btn ghost" onclick="startDrill('verbal',null,'מעורב מילולי')">מילולי</button><button class="btn ghost" onclick="startDrill('quant',null,'מעורב כמותי')">כמותי</button></div></div>
   <h2>לפי נושא</h2><div class="card list">${types.map(([d, ts]) => ts.map(t => `<div class="it" onclick="startDrill('${d}','${t}','${TYPE_HE[t]}')"><span class="tag ${d[0]}">${DOM[d]}</span><div class="grow"><b>${TYPE_HE[t]}</b><div class="mut sm">${st(t)}</div></div><b style="color:var(--b)">◀</b></div>`).join('')).join('')}</div>
   <p class="mut sm" style="margin-top:-4px">בהבנת הנקרא ובהסקה מתרשים, כל השאלות על אותו קטע באות ברצף.</p>
@@ -857,6 +873,7 @@ function drill() {
   const D = S.drill; if (!D) return prac();
   if (D.i >= D.list.length) return `<main><h1>🧘 ${esc(D.title)}</h1><div class="big-score">${D.a}/${D.list.length}</div><div style="text-align:center" class="mut">נכון בסבב הזה</div>
     <div class="row" style="margin-top:14px"><button class="btn blue" onclick="startDrill(S.drill.dom,S.drill.type,S.drill.title)">עוד סבב</button><button class="btn ghost" onclick="go('prac')">לתרגול</button></div>
+    ${D.tpl ? `<p class="mut sm" style="text-align:center;margin:8px 0 0">המבנה של הסבב: ${drillMix(D.list)}. כל סבב «${esc(D.title)}» בנוי ככה, אז אפשר להשוות ביניהם בהיסטוריה.</p>` : ''}
     ${dTimeLine(D.list)}
     <h2>השאלות בסבב</h2><p class="mut sm" style="margin-top:-6px">לוחצים על שאלה כדי לראות אותה שוב עם ההסבר. הסבב נשמר גם ב«📜 היסטוריה» בלשונית תרגול.</p>
     <div class="card list">${D.list.map(q => hRow(q, 'drill')).join('')}</div></main>` + navBar();
@@ -878,7 +895,7 @@ function dNext() { S.drill.i++; if (S.drill.i >= S.drill.list.length) dArchive(S
 function dArchive(D) { // סבב נכנס להיסטוריה פעם אחת, כשהסתיים או כשמתחילים סבב חדש באמצע
   if (!D || D.done || !D.list || !D.list.some(q => q.ans)) return;
   D.done = 1;
-  S.dh.push({ at: Date.now(), title: D.title, dom: D.dom, type: D.type, a: D.a, list: D.list.map(q => ({ k: q.k, n: q.n, ans: q.ans || 0, ...(q.t != null ? { t: q.t } : {}) })) });
+  S.dh.push({ at: Date.now(), title: D.title, dom: D.dom, type: D.type, a: D.a, ...(D.tpl ? { tpl: D.tpl } : {}), list: D.list.map(q => ({ k: q.k, n: q.n, ans: q.ans || 0, ...(q.t != null ? { t: q.t } : {}), ...(q.tier != null ? { tier: q.tier } : {}), ...(q.unit ? { unit: { from: q.unit.from } } : {}) })) });
   if (S.dh.length > 300) S.dh = S.dh.slice(-300);
 }
 // ===== סטופר לכל שאלה בתרגול (רועי 23/11): q.el = זמן שכבר נצבר במ״ש, q.t = שניות עד התשובה. עוצר כשיוצאים מהמסך או כשהמסך כבוי =====
@@ -908,14 +925,14 @@ let histArg = null;
 function hist() { // כל מה שתורגל: הסבבים (החדש למעלה), וכל שאלה שנענתה בתרגול לפי סוג
   const A = histArg = arg || histArg || { t: '', w: 0 };
   const R = S.dh.slice().reverse();
-  const rounds = R.length ? R.map((r, i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary><b>${esc(r.title)}</b> · ${dhScore(r)} <span class="mut sm">· ${fmtWhen(r.at)}${(s => s ? ` · ⏱ ${fmtT(s * 1000)}` : '')(r.list.reduce((x, q) => x + (q.ans && q.t ? q.t : 0), 0))}</span></summary><div class="list" style="margin-top:8px">${r.list.map(q => hRow(q, 'hist')).join('')}</div></details>`).join('')
+  const rounds = R.length ? R.map((r, i) => `<details class="card" ${i === 0 ? 'open' : ''}><summary><b>${esc(r.title)}</b>${r.tpl ? ' 📐' : ''} · ${dhScore(r)} <span class="mut sm">· ${fmtWhen(r.at)}${(s => s ? ` · ⏱ ${fmtT(s * 1000)}` : '')(r.list.reduce((x, q) => x + (q.ans && q.t ? q.t : 0), 0))}</span></summary><div class="list" style="margin-top:8px">${r.list.map(q => hRow(q, 'hist')).join('')}</div></details>`).join('')
     : '<div class="card"><p class="sm" style="margin:0">עוד אין סבבים שמורים. מעכשיו כל סבב שתסיים יישמר כאן.</p></div>';
   const all = [];
   Object.entries(S.prac).forEach(([k, P]) => { const x = chByKey[k]; if (!x || !keyOf(k)) return; (P.ans || []).forEach((v, i) => { if (!v) return; const right = +keyOf(k)[i]; if (A.t && typeOf(x.c, i + 1) !== A.t) return; if (A.w && (v === right || isVoid(k, i + 1))) return; all.push({ k, n: i + 1, ans: v, at: P.at || 0 }); }); });
   all.sort((a, b) => b.at - a.at);
   const tb = (t, l) => `<option value="${t}" ${A.t === t ? 'selected' : ''}>${l}</option>`;
   return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">📜 היסטוריית תרגול</span></div><main>
-  <h2>סבבים</h2>${rounds}
+  <h2>סבבים</h2><p class="mut sm" style="margin-top:-6px">📐 = סבב שנבנה במבנה הקבוע (מ-26/11). את אלה אפשר להשוות זה לזה, לפי אותו שם.</p>${rounds}
   <h2>כל השאלות שענית בתרגול</h2><p class="mut sm" style="margin-top:-6px">מכל הסבבים ומפרק שלם בלי שעון, גם מלפני שההיסטוריה נשמרה. התשובה האחרונה שלך לכל שאלה.</p>
   <select class="txt" style="margin:0" onchange="go('hist',{t:this.value,w:${A.w}})">${tb('', 'כל הסוגים')}${Object.entries(TYPE_HE).map(([t, l]) => tb(t, l)).join('')}</select>
   <label class="sm" style="display:flex;gap:8px;align-items:center;margin:10px 0"><input type="checkbox" style="width:20px;height:20px" ${A.w ? 'checked' : ''} onchange="go('hist',{t:'${A.t}',w:this.checked?1:0})">רק טעויות</label>
