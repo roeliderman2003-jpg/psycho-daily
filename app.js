@@ -794,7 +794,8 @@ const RESERVE = 8; // הבחינות החדשות נשמרות לפרקים בז
 const UNIT_TYPES = ['reading', 'chart']; // קטע קריאה ותרשים: כל השאלות על אותו קטע באות יחד
 const pracAns = (k, n) => ((S.prac[k] || {}).ans || [])[n - 1] || 0;
 // רועי 23/11: תרגול לא לוקח שאלות מפרק נקי (שלא נעשה בזמן ולא תורגל), כדי שהפרקים בזמן יישארו מבחן אמיתי.
-// הסדר: קודם שאלות מפרקים שכבר נעשו בזמן ועוד לא תורגלו, אחר כך שאלות חדשות בפרקים שכבר תורגלו בהם (מהבחינה הישנה ביותר), ובסוף שאלות שכבר תורגלו
+// הסדר (רועי 26/11: «התרגולים זה שאלות שנתקלתי בהם כבר, תעשה שלא»): קודם שאלות שלא ראית בכלל, מפרקים ישנים שכבר תרגלת בהם (מהבחינה הישנה ביותר),
+// אחר כך שאלות שראית רק בפרק בזמן, ובסוף שאלות שכבר תורגלו. פרק נקי עדיין לא נוגעים בו (נשמר לפרק בזמן), אלא אם מסמנים «לכלול גם פרקים נקיים»
 const cleanCh = x => !first(x.key) && !pracQs(x.key).length;
 function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל השאלות של קטע קריאה / תרשים
   const out = [], resv = new Set(EX.slice(0, S.pracAll ? 0 : RESERVE).map(e => e.id));
@@ -814,7 +815,7 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 function startDrill(dom, type, title) {
   if (!Object.keys(SOL).length) return toast('צריך קודם לפתוח את המפתחות עם קוד הגישה');
   const U = pracUnits(dom, type), byType = {};
-  const pool = shuffle(U.filter(u => u.done && !u.pr)).concat(shuffle(U.filter(u => !u.done && !u.pr)).sort((a, b) => b.ei - a.ei), shuffle(U.filter(u => u.pr)));
+  const pool = shuffle(U.filter(u => !u.done && !u.pr)).sort((a, b) => b.ei - a.ei).concat(shuffle(U.filter(u => u.done && !u.pr)), shuffle(U.filter(u => u.pr)));
   pool.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
   const types = shuffle(Object.keys(byType)), list = [];
   let more = true;
@@ -850,7 +851,7 @@ function prac() {
   <p class="mut sm" style="margin-top:-4px">בהבנת הנקרא ובהסקה מתרשים, כל השאלות על אותו קטע באות ברצף.</p>
   <h2>🔁 טעויות מפרקים בזמן</h2><div class="card"><p class="sm" style="margin-top:0">${M ? `${M} שאלות מחכות לפתרון חוזר.` : 'אין טעויות שמחכות.'}</p><button class="btn ghost" onclick="go('fix')">לטעויות</button></div>
   <h2>פרק שלם בלי שעון</h2><div class="card"><select class="txt" id="fch" style="margin:0 0 8px">${opts}</select><button class="btn ghost" onclick="go('free',{key:document.getElementById('fch').value})">לפתוח</button></div>
-  <div class="card"><label class="sm" style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${S.pracAll ? 'checked' : ''} onchange="S.pracAll=this.checked;save();render()">לכלול גם פרקים נקיים</label><p class="mut sm" style="margin:6px 0 0">בלי הסימון, התרגול לוקח שאלות קודם מפרקים שכבר עשית בזמן, ואחר כך מפרקים ישנים שכבר תרגלת בהם. פרק נקי (שלא נעשה בזמן ולא תורגל) וכל ${RESERVE} הבחינות החדשות נשמרים לפרק בזמן, כדי שהציון יהיה אמיתי.</p></div></main>` + navBar();
+  <div class="card"><label class="sm" style="display:flex;gap:8px;align-items:center"><input type="checkbox" style="width:20px;height:20px" ${S.pracAll ? 'checked' : ''} onchange="S.pracAll=this.checked;save();render()">לכלול גם פרקים נקיים</label><p class="mut sm" style="margin:6px 0 0">בלי הסימון, התרגול לוקח קודם שאלות שעוד לא ראית, מפרקים ישנים שכבר תרגלת בהם, ורק אחר כך שאלות שכבר ראית בפרק בזמן. פרק נקי (שלא נעשה בזמן ולא תורגל) וכל ${RESERVE} הבחינות החדשות נשמרים לפרק בזמן, כדי שהציון יהיה אמיתי.</p></div></main>` + navBar();
 }
 function drill() {
   const D = S.drill; if (!D) return prac();
