@@ -26,7 +26,13 @@
         {
           "type": "inference",
           "from": 7,
-          "to": 13
+          "to": 11
+        },
+        {
+          "type": "inference",
+          "from": 12,
+          "to": 13,
+          "fill": true
         },
         {
           "type": "inference",
@@ -88,6 +94,12 @@
         {
           "type": "inference",
           "from": 7,
+          "to": 9,
+          "fill": true
+        },
+        {
+          "type": "inference",
+          "from": 10,
           "to": 17
         },
         {

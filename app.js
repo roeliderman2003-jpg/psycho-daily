@@ -132,6 +132,10 @@ const cloudLine = () => cloudId ? (cloudErr ? '⚠️ השמירה בענן נכ
 const EX = (window.EXAMS || []);
 const DOM = { verbal: 'מילולי', quant: 'כמותי' };
 const TYPE_HE = { analogy: 'אנלוגיות', inference: 'הבנה והסקה', reading: 'הבנת הנקרא', problem: 'שאלות ובעיות', chart: 'הסקה מתרשים' };
+// רועי 26/11: «השלמת משפטים בפסקה קשה לי, ופה לא הופיע». בכל פרק מילולי יש 3 שאלות כאלה בתוך הבנה והסקה («בכל שאלה יש פסקה שחלק אחד או כמה חלקים ממנה חסרים»),
+// מסומנות ב-sec.fill במפת הפרקים. בסטטיסטיקה הן עדיין «הבנה והסקה», ובתרגול ובמגמה יש להן גם סוג משלהן.
+const SUB_HE = { fill: 'השלמת משפטים' };
+const inType = (c, n, ty) => ty === 'fill' ? !!((c.sections || []).find(s => n >= s.from && n <= s.to) || {}).fill : (c.sections || []).some(s => n >= s.from && n <= s.to && s.type === ty);
 // כל הפרקים של כל הבחינות, מהבחינה החדשה לישנה. סדר הימים: מילולי, כמותי, מילולי, כמותי באותה בחינה.
 const CH = [];
 EX.forEach(e => {
@@ -379,9 +383,9 @@ function lineChart(series, o) { // גרף קווים פשוט: series = [{c, nam
 // מגמה לכל סוג שאלה: אחוז נכון בכל פרק שהיה בו הסוג הזה (לפי הזמן), והזמן הממוצע לשאלה כשנמדד (a.t, מ-21/11)
 function typeTrendHtml(h) {
   const pc = v => Math.round(v * 100) + '%';
-  const cards = Object.keys(TYPE_HE).map(ty => {
+  const cards = ['analogy', 'inference', 'fill', 'reading', 'problem', 'chart'].map(ty => {
     const P = h.map(y => {
-      const a = first(y.x.key), key = keyOf(y.x.key), qs = []; for (let n = 1; n <= y.n; n++) if (typeOf(y.x.c, n) === ty) qs.push(n);
+      const a = first(y.x.key), key = keyOf(y.x.key), qs = []; for (let n = 1; n <= y.n; n++) if (inType(y.x.c, n, ty)) qs.push(n);
       if (!qs.length) return null;
       const ok = qs.filter(n => okQ(y.x.key, n, a.ans[n - 1], key, a.at)).length;
       return { y, ok, n: qs.length, t: a.t ? qs.reduce((s, n) => s + (a.t[n - 1] || 0), 0) / qs.length : null };
@@ -392,7 +396,7 @@ function typeTrendHtml(h) {
     const chart = P.length > 1 ? lineChart([{ c: col, dots: true, label: true, pts: P.map((p, i) => [i, 100 * p.ok / p.n, `${chTitle(p.y.x)}: ${p.ok}/${p.n}`]) }], { n: P.length, h: 200, ...ax, fmt: v => Math.round(v) + '%', xl: ['הראשון', 'האחרון'], aria: TYPE_HE[ty] }) : '';
     const T = P.filter(p => p.t != null), dl = Math.round((lv - p0) * 100);
     const tl = T.length ? `<p class="sm" style="margin:4px 0 0">⏱️ זמן לשאלה: ${T.length > 1 ? `${mmss(T[0].t)} בפעם הראשונה שנמדד → <b>${mmss(T[T.length - 1].t)}</b> בפרק האחרון` : `<b>${mmss(T[0].t)}</b> (נמדד בפרק אחד עד עכשיו)`}</p>` : '';
-    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b><span class="tag ${d[0]}">${DOM[d]}</span> ${TYPE_HE[ty]}</b><span class="sm">עכשיו <b>${pc(lv)}</b></span></div>
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b><span class="tag ${d[0]}">${DOM[d]}</span> ${TYPE_HE[ty] || SUB_HE[ty]}${ty === 'fill' ? ' <span class="mut sm">(חלק מהבנה והסקה)</span>' : ''}</b><span class="sm">עכשיו <b>${pc(lv)}</b></span></div>
       ${chart}
       <p class="sm" style="margin:4px 0 0">${P.length > 1 ? `בפרק הראשון ${pc(p0)} (${P[0].ok}/${P[0].n}) · ממוצע ${last.length} האחרונים ${pc(lv)} <b>(${sgn(dl)})</b>` : `פרק אחד עד עכשיו: ${P[0].ok}/${P[0].n}. מהפרק הבא תראה כאן קו.`}</p>${tl}</div>`;
   }).join('');
@@ -803,12 +807,12 @@ function pracUnits(dom, type) { // יחידה = שאלה אחת, או כל הש�
     const { e, c, key } = x, done = !!first(key); if (dom && c.domain !== dom) return;
     if (!S.pracAll && !done && (resv.has(e.id) || cleanCh(x))) return;
     (c.sections || []).forEach(sec => {
-      if (type && sec.type !== type) return;
+      if (type && (type === 'fill' ? !sec.fill : sec.type !== type)) return;
       const qs = []; for (let n = sec.from; n <= sec.to; n++) if (!isVoid(key, n)) qs.push(n);
       const groups = isUnit(sec) ? [qs] : qs.map(n => [n]);
       // רמת קושי לפי המקום בתוך הסוג: אצל מאל״ו השאלות בכל סוג מסודרות בערך מהקלה לקשה. 0 שליש ראשון, 1 אמצע, 2 שליש אחרון
       const tierOf = n => Math.min(2, Math.floor(3 * (n - sec.from) / (sec.to - sec.from + 1)));
-      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, unit: isUnit(sec), psg: !!sec.psg, tier: isUnit(sec) ? null : tierOf(g[0]), done, pr, ei: EX.indexOf(e), seen: pr || done }); });
+      groups.forEach(g => { if (!g.length) return; const pr = g.some(n => pracAns(key, n)); out.push({ key, type: sec.type, qs: g, unit: isUnit(sec), psg: !!sec.psg, fill: !!sec.fill, tier: isUnit(sec) ? null : tierOf(g[0]), done, pr, ei: EX.indexOf(e), seen: pr || done }); });
     });
   });
   return out;
@@ -817,9 +821,9 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.f
 // רועי 26/11: «איך נוודא שכל פרקי התרגול באותה רמה, אני רוצה שיבנו». כל סבב נבנה לפי תבנית קבועה: אותם סוגים ואותה חלוקה של קושי.
 // [סוג, קושי] — קושי null = יחידה שלמה (קטע קריאה / תרשים). כך סבב מעורב מילולי היום ומחר הם באותה רמה, ואפשר להשוות ביניהם.
 const DRILL_TPL = {
-  verbal: [['analogy', 0], ['analogy', 2], ['inference', 0], ['inference', 1], ['inference', 2], ['reading', null]],
+  verbal: [['analogy', 0], ['analogy', 2], ['fill', 1], ['inference', 0], ['inference', 1], ['inference', 2], ['reading', null]],
   quant: [['problem', 0], ['problem', 0], ['problem', 1], ['problem', 1], ['problem', 2], ['problem', 2], ['chart', null]],
-  all: [['analogy', 0], ['analogy', 2], ['inference', 1], ['inference', 2], ['problem', 0], ['problem', 1], ['problem', 1], ['problem', 2]],
+  all: [['analogy', 0], ['analogy', 2], ['fill', 1], ['inference', 2], ['problem', 0], ['problem', 1], ['problem', 1], ['problem', 2]],
   one: [0, 0, 0, 1, 1, 1, 1, 2, 2, 2], // סוג אחד: 3 קלות, 4 בינוניות, 3 קשות
 };
 const TIER_HE = ['קלה', 'בינונית', 'קשה'];
@@ -834,9 +838,10 @@ function startDrill(dom, type, title) {
   const pool = shuffle(U.filter(u => !u.done && !u.pr)).sort((a, b) => b.ei - a.ei).concat(shuffle(U.filter(u => u.done && !u.pr)), shuffle(U.filter(u => u.pr)));
   pool.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
   const take = (t, tier) => { // הראשונה בתור (לפי עדיפות: לא נראתה → נראתה בזמן → תורגלה) עם הקושי הזה; אם אין, הקרובה
-    const L = byType[t] || []; if (!L.length) return null;
+    const L = byType[t === 'fill' ? 'inference' : t] || []; if (!L.length) return null;
+    const kind = u => t === 'fill' ? u.fill : t === 'inference' && !type ? !u.fill : true; // במעורב: השלמת משפטים בנפרד משאר ההסקה
     const order = tier == null ? [null] : [tier, ...[0, 1, 2].filter(x => x !== tier).sort((a, b) => Math.abs(a - tier) - Math.abs(b - tier))];
-    for (const tr of order) { const i = L.findIndex(u => tier == null ? u.unit : (!u.psg && u.tier === tr)); if (i >= 0) return L.splice(i, 1)[0]; }
+    for (const tr of order) { const i = L.findIndex(u => tier == null ? u.unit : (!u.psg && kind(u) && u.tier === tr)); if (i >= 0) return L.splice(i, 1)[0]; }
     return null;
   };
   let slots;
@@ -851,8 +856,8 @@ function startDrill(dom, type, title) {
 }
 function prac() {
   const locked0 = !Object.keys(SOL).length;
-  const st = t => { let n = 0, ok = 0; CH.forEach(({ c, key }) => { const k = keyOf(key); if (!k) return; for (let q = 1; q <= c.questions; q++) if (typeOf(c, q) === t && pracAns(key, q)) { n++; if (pracAns(key, q) === +k[q - 1] || isVoid(key, q)) ok++; } }); return n ? `${ok}/${n} נכון בתרגול` : 'עוד לא תורגל'; };
-  const types = [['verbal', ['analogy', 'inference', 'reading']], ['quant', ['problem', 'chart']]];
+  const st = t => { let n = 0, ok = 0; CH.forEach(({ c, key }) => { const k = keyOf(key); if (!k) return; for (let q = 1; q <= c.questions; q++) if (inType(c, q, t) && pracAns(key, q)) { n++; if (pracAns(key, q) === +k[q - 1] || isVoid(key, q)) ok++; } }); return n ? `${ok}/${n} נכון בתרגול` : 'עוד לא תורגל'; };
+  const types = [['verbal', ['analogy', 'inference', 'fill', 'reading']], ['quant', ['problem', 'chart']]];
   const D = S.drill && S.drill.i < S.drill.list.length ? S.drill : null;
   const M = mistakes().length, opts = CH.filter(x => first(x.key) || S.pracAll || (EX.indexOf(x.e) >= RESERVE && !cleanCh(x))).map(x => `<option value="${x.key}">${esc(chTitle(x))}</option>`).join('');
   const nClean = d => CH.filter(x => x.c.domain === d && cleanCh(x)).length;
@@ -863,7 +868,7 @@ function prac() {
   <div class="card"><b>📜 היסטוריה</b><p class="mut sm" style="margin:4px 0 8px">${S.dh.length ? `${S.dh.length === 1 ? 'סבב אחד' : `${S.dh.length} סבבים`}. האחרון: ${esc(S.dh[S.dh.length - 1].title)}, ${dhScore(S.dh[S.dh.length - 1])}.` : 'כל סבב שתסיים יופיע כאן, עם כל שאלה, מה ענית וההסבר.'}</p><button class="btn ghost" onclick="go('hist')">לכל מה שתרגלתי</button></div>
   <h2>מעורב</h2><div class="card"><p class="sm" style="margin-top:0">כל סבב בנוי באותה צורה: אותם סוגים ואותה חלוקה של שאלות קלות, בינוניות וקשות, כדי שאפשר יהיה להשוות בין סבבים. מילולי: 2 אנלוגיות, 3 הבנה והסקה וקטע. כמותי: 6 שאלות ותרשים.</p>
   <div class="row"><button class="btn blue" onclick="startDrill(null,null,'מעורב')">הכל</button><button class="btn ghost" onclick="startDrill('verbal',null,'מעורב מילולי')">מילולי</button><button class="btn ghost" onclick="startDrill('quant',null,'מעורב כמותי')">כמותי</button></div></div>
-  <h2>לפי נושא</h2><div class="card list">${types.map(([d, ts]) => ts.map(t => `<div class="it" onclick="startDrill('${d}','${t}','${TYPE_HE[t]}')"><span class="tag ${d[0]}">${DOM[d]}</span><div class="grow"><b>${TYPE_HE[t]}</b><div class="mut sm">${st(t)}</div></div><b style="color:var(--b)">◀</b></div>`).join('')).join('')}</div>
+  <h2>לפי נושא</h2><div class="card list">${types.map(([d, ts]) => ts.map(t => `<div class="it" onclick="startDrill('${d}','${t}','${TYPE_HE[t] || SUB_HE[t]}')"><span class="tag ${d[0]}">${DOM[d]}</span><div class="grow"><b>${TYPE_HE[t] || SUB_HE[t]}</b>${t === 'fill' ? ' <span class="mut sm">(חלק מהבנה והסקה)</span>' : ''}<div class="mut sm">${st(t)}</div></div><b style="color:var(--b)">◀</b></div>`).join('')).join('')}</div>
   <p class="mut sm" style="margin-top:-4px">בהבנת הנקרא ובהסקה מתרשים, כל השאלות על אותו קטע באות ברצף.</p>
   <h2>🔁 טעויות מפרקים בזמן</h2><div class="card"><p class="sm" style="margin-top:0">${M ? `${M} שאלות מחכות לפתרון חוזר.` : 'אין טעויות שמחכות.'}</p><button class="btn ghost" onclick="go('fix')">לטעויות</button></div>
   <h2>פרק שלם בלי שעון</h2><div class="card"><select class="txt" id="fch" style="margin:0 0 8px">${opts}</select><button class="btn ghost" onclick="go('free',{key:document.getElementById('fch').value})">לפתוח</button></div>
@@ -882,7 +887,7 @@ function drill() {
   const btns = [1, 2, 3, 4].map(k => `<button class="${a ? (k === right ? 'ok' : k === a ? 'bad' : '') : ''}" ${a ? 'disabled' : `onclick="dAns(${k})"`}>${k}</button>`).join('');
   const ex = expOf(q.k, q.n), u = q.unit, what = t === 'chart' ? 'תרשים' : 'קטע', sp = u ? secPage(c, secOf(c, q.n)) : 0;
   return `<div class="xtop"><button class="icb" onclick="go('prac')">→ חזרה</button><span class="ttl">🧘 ${esc(D.title)} · ${D.i + 1}/${D.list.length} · ✓ ${D.a}</span><span class="grow"></span><b id="dsw" style="font-variant-numeric:tabular-nums">⏱ ${fmtT(a ? (q.t || 0) * 1000 : dEl())}</b></div>
-  <main class="${u ? 'full' : ''}">${u ? `<div class="two"><div class="side">${psgBox(q.k, secOf(c, q.n), u.first)}</div><div>` : ''}<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${TYPE_HE[t] || ''}</b></div>
+  <main class="${u ? 'full' : ''}">${u ? `<div class="two"><div class="side">${psgBox(q.k, secOf(c, q.n), u.first)}</div><div>` : ''}<div class="card"><div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span class="tag ${c.domain[0]}">${DOM[c.domain]}</span><b>${(secOf(c, q.n) || {}).fill ? SUB_HE.fill : TYPE_HE[t] || ''}</b></div>
   <p class="sm" style="margin:0 0 8px">${esc(e.title)} · ${esc(c.label || DOM[c.domain])} · <b>שאלה ${q.n}</b>${u ? `. שאלות ${u.from} עד ${u.to} הן על אותו ${what}.` : ''}</p></div>
   ${qBox(qid(q.k, q.n), pdf(e, qPage(c, q.n)))}${fmBox(q.k)}
   <p style="margin:14px 0 0">התשובה שלך:</p><div class="bub big">${btns}</div>
